@@ -69,9 +69,9 @@ func (e *Exchange) transformToResp(cs []*models.Market) []*Market {
 }
 
 type Market struct {
-	BaseCurrency   string `json:"base_currency"`
-	MarketCurrency string `json:"market_currency"`
-	Symbol         string `json:"symbol"`
+	BaseCurrency   string `json:"BaseCurrency"`
+	MarketCurrency string `json:"MarketCurrency"`
+	Symbol         string `json:"Symbol"`
 }
 
 func assembleMarket(c *models.Market) *Market {
@@ -83,14 +83,14 @@ func assembleMarket(c *models.Market) *Market {
 }
 
 type Order struct {
-	ID       uint    `json:"id"`
-	Symbol   string  `json:"symbol"`
-	Price    float64 `json:"price"`
-	Quantity uint    `json:"quantity"`
-	Type     string  `json:"type"`
-	Status   string  `json:"status"`
-	Side     string  `json:"side"`
-	Time     string  `json:"time"`
+	ID       uint    `json:"ID"`
+	Symbol   string  `json:"Symbol"`
+	Price    float64 `json:"Price"`
+	Quantity uint    `json:"Quantity"`
+	Type     string  `json:"Type"`
+	Status   string  `json:"Status"`
+	Side     string  `json:"Side"`
+	Time     string  `json:"Time"`
 }
 
 func assembleOrder(o *models.Order) *Order {

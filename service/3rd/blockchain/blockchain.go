@@ -3,6 +3,7 @@ package blockchain
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -10,8 +11,14 @@ import (
 )
 
 const (
+	dumpPrivKeyMethod       = "dumpprivkey"
 	getAccountAddressMethod = "getaccountaddress"
-	dumpPrivKey             = "dumpprivkey"
+
+	// wallet methods
+	listAccountsMethod           = "listaccounts"
+	getAccountMethod             = "getaccount"
+	encryptDataMethod            = "encryptdata"
+	getBalanceByPrivateKeyMethod = "getbalancebyprivatekey"
 )
 
 type Blockchain struct {
@@ -68,7 +75,7 @@ func (b *Blockchain) GetAccountAddress(params string) (paymentAddress, readonlyK
 }
 
 func (b *Blockchain) DumpPrivKey(params string) (string, error) {
-	body, err := b.post(b.buildRequestPayload(dumpPrivKey, params))
+	body, err := b.post(b.buildRequestPayload(dumpPrivKeyMethod, params))
 	if err != nil {
 		return "", errors.Wrap(err, "b.post")
 	}
@@ -80,7 +87,7 @@ func (b *Blockchain) DumpPrivKey(params string) (string, error) {
 	return resp.Result.PrivateKey, nil
 }
 
-func (b *Blockchain) buildRequestPayload(method, params string) map[string]interface{} {
+func (b *Blockchain) buildRequestPayload(method string, params interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		"jsonrpc": "1.0",
 		"method":  method,
@@ -113,4 +120,35 @@ func (b *Blockchain) post(args map[string]interface{}) ([]byte, error) {
 	}
 
 	return body, nil
+}
+
+func (b *Blockchain) walletAPI(method string, params interface{}) (interface{}, error) {
+	body, err := b.post(b.buildRequestPayload(method, params))
+	if err != nil {
+		return nil, errors.Wrap(err, "b.post")
+	}
+
+	fmt.Printf("string(body) = %+v\n", string(body))
+
+	var v interface{}
+	if err := json.Unmarshal(body, &v); err != nil {
+		return nil, errors.Wrap(err, "json.Unmarshal")
+	}
+	return v, nil
+}
+
+func (b *Blockchain) ListAccounts(params interface{}) (interface{}, error) {
+	return b.walletAPI(listAccountsMethod, params)
+}
+
+func (b *Blockchain) GetAccount(params interface{}) (interface{}, error) {
+	return b.walletAPI(getAccountMethod, params)
+}
+
+func (b *Blockchain) EncryptData(params interface{}) (interface{}, error) {
+	return b.walletAPI(encryptDataMethod, []interface{}{params})
+}
+
+func (b *Blockchain) GetBalanceByPrivateKey(params string) (interface{}, error) {
+	return b.walletAPI(getBalanceByPrivateKeyMethod, []interface{}{params})
 }

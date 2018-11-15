@@ -1,13 +1,13 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
+	"github.com/ninjadotorg/constant-api-service/pubsub"
 	"github.com/ninjadotorg/constant-api-service/service"
 )
 
@@ -47,17 +47,7 @@ func (s *Server) CreateOrder(c *gin.Context) {
 	case service.ErrInvalidOrderSide, service.ErrInvalidOrderType, service.ErrInvalidSymbol:
 		c.JSON(http.StatusBadRequest, response{Error: err.(*service.Error)})
 	case nil:
-		go func() {
-			b, err := json.Marshal(order)
-			if err != nil {
-				s.logger.Error("json.Marshal", zap.Error(err))
-				return
-			}
-			select {
-			case s.hub.message <- b:
-			default:
-			}
-		}()
+		go s.ps.Publish(order)
 		c.JSON(http.StatusOK, response{Data: order})
 	default:
 		s.logger.Error("s.exchangeSvc.CreateOrder", zap.Error(err))
@@ -73,13 +63,7 @@ func (s *Server) ExchangeWS(c *gin.Context) {
 		return
 	}
 
-	client := &client{
-		hub:    s.hub,
-		logger: s.logger.With(zap.String("module", "client")),
-		conn:   conn,
-		send:   make(chan []byte, 1024),
-	}
-	client.hub.register <- client
-
-	go client.write()
+	logger := s.logger.With(zap.String("module", "client"))
+	ws := newWS(pubsub.NewSubscriber(s.ps), conn, logger)
+	go ws.sendMessage()
 }

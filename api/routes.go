@@ -24,9 +24,17 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 
 	// exchange API group
 	exch := s.g.Group("/exchange")
+	exch.Any("/ws/trades", s.ExchangeWS)
 	exch.Use(authMw.MiddlewareFunc())
 	{
 		exch.GET("/markets", s.ListMarkets)
 		exch.POST("/orders", s.CreateOrder)
+	}
+
+	wallet := s.g.Group("/wallet")
+	wallet.GET("/accounts", s.ListAccounts)
+	wallet.Use(authMw.MiddlewareFunc())
+	{
+		wallet.GET("/balance", s.GetBalanceByPrivateKey)
 	}
 }

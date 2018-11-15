@@ -29,6 +29,7 @@ type User struct {
 	ReadonlyKey    string
 	PrivKey        string
 	Type           UserType
+	IsActive       bool
 }
 
 func GetUserType(kind string) UserType {
@@ -42,7 +43,7 @@ func GetUserType(kind string) UserType {
 	}
 }
 
-type UserRecovery struct {
+type UserVerification struct {
 	gorm.Model
 
 	User   *User
@@ -51,4 +52,10 @@ type UserRecovery struct {
 	Token     string
 	IsValid   bool
 	ExpiredAt time.Time
+}
+
+type UserLenderVerification struct {
+	UserVerification
+
+	EncryptedString string
 }

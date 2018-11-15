@@ -15,6 +15,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/api"
 	"github.com/ninjadotorg/constant-api-service/conf"
 	"github.com/ninjadotorg/constant-api-service/dao"
+	"github.com/ninjadotorg/constant-api-service/pubsub"
 	"github.com/ninjadotorg/constant-api-service/service"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
@@ -74,10 +75,14 @@ func main() {
 
 		exchangeDAO = dao.NewExchange(db)
 		exchangeSvc = service.NewExchange(exchangeDAO)
+
+		walletSvc = service.NewWallet(bc)
+
+		pubsubSvc = pubsub.NewService()
 	)
 
 	r := gin.Default()
-	svr := api.NewServer(r upgrader, userSvc, portalSvc, exchangeSvc, logger, mailer)
+	svr := api.NewServer(r, pubsubSvc, upgrader, userSvc, portalSvc, exchangeSvc, walletSvc, logger, mailer)
 	authMw := api.AuthMiddleware(string(conf.TokenSecretKey), svr.Authenticate)
 	svr.Routes(authMw)
 
@@ -85,27 +90,3 @@ func main() {
 		logger.Fatal("router.Run", zap.Error(err))
 	}
 }
-
-// func AuthorizeHandler() gin.HandlerFunc {
-//         return func(context *gin.Context) {
-//                 configuration := config.GetConfig()
-//                 result, err := request.ParseFromRequest(context.Request, request.OAuth2Extractor, func(token *jwt.Token) (interface{}, error) {
-//                         return []byte(configuration.TokenSecretKey), nil
-//                 })
-//                 if err != nil {
-//                         if err == request.ErrNoTokenInRequest {
-//                                 context.Next()
-//                                 return
-//                         }
-//                 }
-//
-//                 mapClaims := result.Claims.(jwt.MapClaims)
-//                 id, ok := mapClaims["id"]
-//                 if ok {
-//                         context.Set(constants.USER_ID, id)
-//                 } else {
-//                         context.Set(constants.USER_ID, 0)
-//                 }
-//                 context.Next()
-//         }
-// }

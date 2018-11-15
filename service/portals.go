@@ -127,13 +127,13 @@ func (p *Portal) transformToResp(bs []*models.Borrow) []*Borrow {
 }
 
 type Borrow struct {
-	ID             uint   `json:"id"`
-	Amount         int64  `json:"amount"`
-	Hash           string `json:"hash"`
-	TxID           string `json:"tx_id"`
-	PaymentAddress string `json:"payment_address"`
-	State          string `json:"state"`
-	CreatedAt      string `json:"created_at"`
+	ID             uint   `json:"ID"`
+	Amount         int64  `json:"Amount"`
+	Hash           string `json:"Hash"`
+	TxID           string `json:"TxID"`
+	PaymentAddress string `json:"PaymentAddress"`
+	State          string `json:"State"`
+	CreatedAt      string `json:"CreatedAt"`
 }
 
 func assembleBorrow(b *models.Borrow) *Borrow {

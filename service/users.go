@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -17,9 +18,9 @@ func init() {
 }
 
 const (
-	tokenLength                  = 10
-	letters                      = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	recoveryTokenExpiredDuration = 24 * time.Hour
+	tokenLength                      = 10
+	letters                          = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	verificationTokenExpiredDuration = 24 * time.Hour
 )
 
 type User struct {
@@ -34,7 +35,7 @@ func NewUserService(r *dao.User, bc *blockchain.Blockchain) *User {
 	}
 }
 
-func (u *User) Register(firstName, lastName, email, password, confirmPassword, userTypeS string) error {
+func (u *User) Register(firstName, lastName, email, password, confirmPassword, uType string, publicKey *string) error {
 	if email == "" {
 		return ErrInvalidEmail
 	}
@@ -44,7 +45,7 @@ func (u *User) Register(firstName, lastName, email, password, confirmPassword, u
 	if password != confirmPassword {
 		return ErrPasswordMismatch
 	}
-	userType := models.GetUserType(userTypeS)
+	userType := models.GetUserType(uType)
 	if userType == models.InvalidUserType {
 		return ErrInvalidUserType
 	}
@@ -66,6 +67,22 @@ func (u *User) Register(firstName, lastName, email, password, confirmPassword, u
 	if err != nil {
 		return errors.Wrap(err, "bcrypt.GenerateFromPassword")
 	}
+
+	token := u.generateVerificationToken()
+	encrypted, err := u.bc.EncryptData(token)
+	if err != nil {
+		return errors.Wrap(err, "u.bc.EncryptData")
+	}
+	fmt.Printf("encrypted = %+v\n", encrypted)
+	// ul := &models.UserLenderVerification{
+	//         UserVerification: models.UserVerification{
+	//                 User:      user,
+	//                 Token:     token,
+	//                 IsValid:   true,
+	//                 ExpiredAt: time.Now().Add(verificationTokenExpiredDuration),
+	//         },
+	//         EncryptedString: encrypted.(string),
+	// }
 	if err := u.r.Create(&models.User{
 		FirstName:      firstName,
 		LastName:       lastName,
@@ -114,11 +131,11 @@ func (u *User) ForgotPassword(email string) error {
 		return ErrInvalidEmail
 	}
 
-	if err := u.r.CreateRecovery(&models.UserRecovery{
+	if err := u.r.CreateVerification(&models.UserVerification{
 		User:      user,
-		Token:     u.GenerateRecoveryToken(),
+		Token:     u.generateVerificationToken(),
 		IsValid:   true,
-		ExpiredAt: time.Now().Add(recoveryTokenExpiredDuration),
+		ExpiredAt: time.Now().Add(verificationTokenExpiredDuration),
 	}); err != nil {
 		return errors.Wrap(err, "u.r.CreateRecovery")
 	}
@@ -126,7 +143,7 @@ func (u *User) ForgotPassword(email string) error {
 	return nil
 }
 
-func (u *User) GenerateRecoveryToken() string {
+func (u *User) generateVerificationToken() string {
 	b := make([]byte, tokenLength)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]

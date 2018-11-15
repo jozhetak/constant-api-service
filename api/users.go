@@ -30,16 +30,17 @@ func (s *Server) Authenticate(c *gin.Context) (interface{}, error) {
 
 func (s *Server) Register(c *gin.Context) {
 	type request struct {
-		FirstName       string `json:"first_name"`
-		LastName        string `json:"last_name"`
-		Email           string `json:"email"`
-		Password        string `json:"password"`
-		ConfirmPassword string `json:"confirm_password"`
-		Type            string `json:"type"`
+		FirstName       string  `json:"first_name"`
+		LastName        string  `json:"last_name"`
+		Email           string  `json:"email"`
+		Password        string  `json:"password"`
+		ConfirmPassword string  `json:"confirm_password"`
+		Type            string  `json:"type"`
+		PublicKey       *string `json:"public_key"`
 	}
 	type response struct {
-		Message string         `json:"message"`
-		Error   *service.Error `json:"error"`
+		Message string         `json:"Message"`
+		Error   *service.Error `json:"Error"`
 	}
 
 	var req request
@@ -48,7 +49,7 @@ func (s *Server) Register(c *gin.Context) {
 		return
 	}
 
-	err := s.userSvc.Register(req.FirstName, req.LastName, req.Email, req.Password, req.ConfirmPassword, req.Type)
+	err := s.userSvc.Register(req.FirstName, req.LastName, req.Email, req.Password, req.ConfirmPassword, req.Type, req.PublicKey)
 	switch err {
 	case service.ErrInvalidEmail, service.ErrInvalidPassword, service.ErrInvalidUserType, service.ErrPasswordMismatch, service.ErrEmailAlreadyExists:
 		c.JSON(http.StatusBadRequest, response{Error: err.(*service.Error)})
