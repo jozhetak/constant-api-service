@@ -8,6 +8,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/service"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"github.com/ninjadotorg/constant-api-service/serializers"
 )
 
 func (s *Server) Authenticate(c *gin.Context) (interface{}, error) {
@@ -29,21 +30,13 @@ func (s *Server) Authenticate(c *gin.Context) (interface{}, error) {
 }
 
 func (s *Server) Register(c *gin.Context) {
-	type request struct {
-		FirstName       string  `json:"first_name"`
-		LastName        string  `json:"last_name"`
-		Email           string  `json:"email"`
-		Password        string  `json:"password"`
-		ConfirmPassword string  `json:"confirm_password"`
-		Type            string  `json:"type"`
-		PublicKey       *string `json:"public_key"`
-	}
+
 	type response struct {
 		Message string         `json:"Message"`
 		Error   *service.Error `json:"Error"`
 	}
 
-	var req request
+	var req serializers.UserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, response{Error: service.ErrInvalidArgument})
 		return
