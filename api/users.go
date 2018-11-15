@@ -33,9 +33,9 @@ func (s *Server) Register(c *gin.Context) {
 	}
 
 	resp, err := s.userSvc.Register(req.FirstName, req.LastName, req.Email, req.Password, req.ConfirmPassword, req.Type, req.PublicKey)
-	switch err := errors.Cause(err); err {
+	switch cErr := errors.Cause(err); cErr {
 	case service.ErrInvalidEmail, service.ErrInvalidPassword, service.ErrInvalidUserType, service.ErrPasswordMismatch, service.ErrEmailAlreadyExists, service.ErrMissingPubKey:
-		c.JSON(http.StatusBadRequest, serializers.Resp{Error: err.(*service.Error)})
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
 		c.JSON(http.StatusOK, serializers.Resp{Result: resp})
 	default:
@@ -52,9 +52,9 @@ func (s *Server) ForgotPassword(c *gin.Context) {
 	}
 
 	err := s.userSvc.ForgotPassword(req.Email)
-	switch err := errors.Cause(err); err {
+	switch cErr := errors.Cause(err); cErr {
 	case service.ErrInvalidEmail:
-		c.JSON(http.StatusBadRequest, serializers.Resp{Error: err.(*service.Error)})
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
 		c.JSON(http.StatusOK, serializers.Resp{Result: serializers.MessageResp{Message: "request to reset password successfully"}})
 	default:

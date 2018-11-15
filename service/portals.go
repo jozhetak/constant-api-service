@@ -8,6 +8,7 @@ import (
 
 	"github.com/ninjadotorg/constant-api-service/dao/portal"
 	"github.com/ninjadotorg/constant-api-service/models"
+	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
 
@@ -23,7 +24,7 @@ func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
 	}
 }
 
-func (p *Portal) CreateBorrow(u *models.User, amount int64, hash, txID, paymentAddr string) (*Borrow, error) {
+func (p *Portal) CreateBorrow(u *models.User, amount int64, hash, txID, paymentAddr string) (*serializers.BorrowResp, error) {
 	if u.Type != models.Borrower {
 		return nil, errors.New("user type must be borrower to create borrow")
 	}
@@ -41,7 +42,7 @@ func (p *Portal) CreateBorrow(u *models.User, amount int64, hash, txID, paymentA
 	return assembleBorrow(borrow), nil
 }
 
-func (p *Portal) ListBorrowsByUser(user *models.User, state, limit, page string) ([]*Borrow, error) {
+func (p *Portal) ListBorrowsByUser(user *models.User, state, limit, page string) ([]*serializers.BorrowResp, error) {
 	l, pg, err := p.parseQuery(limit, page)
 	if err != nil {
 		return nil, errors.Wrapf(err, "b.parseQuery %s %s", limit, page)
@@ -64,7 +65,7 @@ func (p *Portal) ListBorrowsByUser(user *models.User, state, limit, page string)
 	return p.transformToResp(borrows), nil
 }
 
-func (p *Portal) ListAllBorrows(state, limit, page string) ([]*Borrow, error) {
+func (p *Portal) ListAllBorrows(state, limit, page string) ([]*serializers.BorrowResp, error) {
 	l, pg, err := p.parseQuery(limit, page)
 	if err != nil {
 		return nil, errors.Wrapf(err, "b.parseQuery %s %s", limit, page)
@@ -87,7 +88,7 @@ func (p *Portal) ListAllBorrows(state, limit, page string) ([]*Borrow, error) {
 	return p.transformToResp(borrows), nil
 }
 
-func (p *Portal) FindBorrowByID(idS string) (*Borrow, error) {
+func (p *Portal) FindBorrowByID(idS string) (*serializers.BorrowResp, error) {
 	id, err := strconv.Atoi(idS)
 	if err != nil {
 		return nil, errors.Wrapf(err, "strconv.Atoi %s", idS)
@@ -118,26 +119,16 @@ func (p *Portal) parseQuery(limitS, pageS string) (limit, page int, err error) {
 	return
 }
 
-func (p *Portal) transformToResp(bs []*models.Borrow) []*Borrow {
-	resp := make([]*Borrow, 0, len(bs))
+func (p *Portal) transformToResp(bs []*models.Borrow) []*serializers.BorrowResp {
+	resp := make([]*serializers.BorrowResp, 0, len(bs))
 	for _, br := range bs {
 		resp = append(resp, assembleBorrow(br))
 	}
 	return resp
 }
 
-type Borrow struct {
-	ID             uint   `json:"ID"`
-	Amount         int64  `json:"Amount"`
-	Hash           string `json:"Hash"`
-	TxID           string `json:"TxID"`
-	PaymentAddress string `json:"PaymentAddress"`
-	State          string `json:"State"`
-	CreatedAt      string `json:"CreatedAt"`
-}
-
-func assembleBorrow(b *models.Borrow) *Borrow {
-	return &Borrow{
+func assembleBorrow(b *models.Borrow) *serializers.BorrowResp {
+	return &serializers.BorrowResp{
 		ID:             b.ID,
 		Amount:         b.Amount,
 		Hash:           b.Hash,

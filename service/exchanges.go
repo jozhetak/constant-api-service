@@ -7,6 +7,7 @@ import (
 
 	"github.com/ninjadotorg/constant-api-service/dao/exchange"
 	"github.com/ninjadotorg/constant-api-service/models"
+	"github.com/ninjadotorg/constant-api-service/serializers"
 )
 
 type Exchange struct {
@@ -17,15 +18,15 @@ func NewExchange(r *exchange.Exchange) *Exchange {
 	return &Exchange{r}
 }
 
-func (e *Exchange) ListMarkets(base string) ([]*Market, error) {
+func (e *Exchange) ListMarkets(base string) ([]*serializers.MarketResp, error) {
 	markets, err := e.r.ListMarkets(base)
 	if err != nil {
 		return nil, errors.Wrap(err, "c.r.ListByBase")
 	}
-	return e.transformToResp(markets), nil
+	return e.transformToMarketResp(markets), nil
 }
 
-func (e *Exchange) CreateOrder(u *models.User, symbol string, price float64, quantity uint, typ, side string) (*Order, error) {
+func (e *Exchange) CreateOrder(u *models.User, symbol string, price float64, quantity uint, typ, side string) (*serializers.OrderResp, error) {
 	oTyp := models.GetOrderType(typ)
 	if oTyp == models.InvalidOrderType {
 		return nil, ErrInvalidOrderType
@@ -60,41 +61,24 @@ func (e *Exchange) CreateOrder(u *models.User, symbol string, price float64, qua
 	return assembleOrder(order), nil
 }
 
-func (e *Exchange) transformToResp(cs []*models.Market) []*Market {
-	resp := make([]*Market, 0, len(cs))
+func (e *Exchange) transformToMarketResp(cs []*models.Market) []*serializers.MarketResp {
+	resp := make([]*serializers.MarketResp, 0, len(cs))
 	for _, cr := range cs {
 		resp = append(resp, assembleMarket(cr))
 	}
 	return resp
 }
 
-type Market struct {
-	BaseCurrency   string `json:"BaseCurrency"`
-	MarketCurrency string `json:"MarketCurrency"`
-	Symbol         string `json:"Symbol"`
-}
-
-func assembleMarket(c *models.Market) *Market {
-	return &Market{
+func assembleMarket(c *models.Market) *serializers.MarketResp {
+	return &serializers.MarketResp{
 		BaseCurrency:   c.BaseCurrency,
 		Symbol:         c.Symbol,
 		MarketCurrency: c.MarketCurrency,
 	}
 }
 
-type Order struct {
-	ID       uint    `json:"ID"`
-	Symbol   string  `json:"Symbol"`
-	Price    float64 `json:"Price"`
-	Quantity uint    `json:"Quantity"`
-	Type     string  `json:"Type"`
-	Status   string  `json:"Status"`
-	Side     string  `json:"Side"`
-	Time     string  `json:"Time"`
-}
-
-func assembleOrder(o *models.Order) *Order {
-	return &Order{
+func assembleOrder(o *models.Order) *serializers.OrderResp {
+	return &serializers.OrderResp{
 		ID:       o.ID,
 		Symbol:   o.Market.Symbol,
 		Price:    o.Price,

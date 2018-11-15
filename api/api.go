@@ -35,8 +35,3 @@ func NewServer(g *gin.Engine, ps *pubsub.Service, up *websocket.Upgrader, userSv
 		logger:      logger,
 	}
 }
-
-type response struct {
-	Data  interface{}    `json:"Data"`
-	Error *service.Error `json:"Error"`
-}
