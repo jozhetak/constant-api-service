@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/ninjadotorg/constant-api-service/models"
+	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service"
 )
 
@@ -36,45 +37,36 @@ func AuthMiddleware(key string, authenticator func(c *gin.Context) (interface{},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			user, err := authenticator(c)
 			if err != nil {
-				return nil, jwt.ErrFailedAuthentication
+				// return nil, jwt.ErrFailedAuthentication
+				return nil, err
 			}
 			return user, nil
 		},
-		// Authorizator: func(data interface{}, c *gin.Context) bool {
-		//         if v, ok := data.(*models.User); ok && v.Email == "admin" {
-		//                 return true
-		//         }
-		//
-		//         return false
-		// },
-		Unauthorized: func(c *gin.Context, code int, message string) {
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"Data":  nil,
-				"Error": service.ErrInvalidCredentials,
+		HTTPStatusMessageFunc: func(err error, c *gin.Context) string {
+			return err.Error()
+		},
+		Unauthorized: func(c *gin.Context, _ int, _ string) {
+			c.JSON(http.StatusUnauthorized, serializers.Resp{
+				Result: nil,
+				Error:  service.ErrInvalidCredentials,
 			})
 		},
 		LoginResponse: func(c *gin.Context, code int, token string, expire time.Time) {
-			c.JSON(http.StatusOK, gin.H{
-				"Data": struct {
-					Token  string
-					Expire string
-				}{
-					Token:  token,
-					Expire: expire.Format(time.RFC3339),
+			c.JSON(http.StatusOK, serializers.Resp{
+				Result: serializers.UserLoginResp{
+					Token:   token,
+					Expired: expire.Format(time.RFC3339),
 				},
-				"Error": nil,
+				Error: nil,
 			})
 		},
 		RefreshResponse: func(c *gin.Context, code int, token string, expire time.Time) {
-			c.JSON(http.StatusOK, gin.H{
-				"Data": struct {
-					Token  string
-					Expire string
-				}{
-					Token:  token,
-					Expire: expire.Format(time.RFC3339),
+			c.JSON(http.StatusOK, serializers.Resp{
+				Result: serializers.UserLoginResp{
+					Token:   token,
+					Expired: expire.Format(time.RFC3339),
 				},
-				"Result": nil,
+				Error: nil,
 			})
 		},
 	})

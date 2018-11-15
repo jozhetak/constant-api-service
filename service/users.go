@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 
 	"github.com/ninjadotorg/constant-api-service/dao"
 	"github.com/ninjadotorg/constant-api-service/models"
+	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
 
@@ -35,7 +35,7 @@ func NewUserService(r *dao.User, bc *blockchain.Blockchain) *User {
 	}
 }
 
-func (u *User) Register(firstName, lastName, email, password, confirmPassword, uType string, publicKey *string) error {
+func (u *User) validate(firstName, lastName, email, password, confirmPassword string) error {
 	if email == "" {
 		return ErrInvalidEmail
 	}
@@ -45,45 +45,69 @@ func (u *User) Register(firstName, lastName, email, password, confirmPassword, u
 	if password != confirmPassword {
 		return ErrPasswordMismatch
 	}
+	return nil
+}
+
+func (u *User) createLenderUser(user *models.User, pubKey string) (*serializers.UserRegisterResp, error) {
+	token := u.generateVerificationToken()
+	encrypted, err := u.bc.EncryptData(pubKey, token)
+	if err != nil {
+		return nil, errors.Wrap(err, "u.bc.EncryptData")
+	}
+
+	v := &models.UserLenderVerification{
+		UserVerification: models.UserVerification{
+			User:      user,
+			Token:     token,
+			IsValid:   true,
+			ExpiredAt: time.Now().Add(verificationTokenExpiredDuration),
+		},
+		EncryptedString: encrypted,
+	}
+	if err := u.r.CreateLenderUser(user, v); err != nil {
+		return nil, errors.Wrap(err, "u.createLenderUser")
+	}
+	return &serializers.UserRegisterResp{
+		EncryptedString: &encrypted,
+	}, nil
+}
+
+func (u *User) createNormalUser(user *models.User) (*serializers.UserRegisterResp, error) {
+	if err := u.r.Create(user); err != nil {
+		return nil, errors.Wrap(err, "u.r.Create")
+	}
+	return &serializers.UserRegisterResp{}, nil
+}
+
+func (u *User) Register(firstName, lastName, email, password, confirmPassword, uType string, pubKey *string) (*serializers.UserRegisterResp, error) {
+	if err := u.validate(firstName, lastName, email, password, confirmPassword); err != nil {
+		return nil, errors.Wrap(err, "u.validate")
+	}
+
 	userType := models.GetUserType(uType)
 	if userType == models.InvalidUserType {
-		return ErrInvalidUserType
+		return nil, ErrInvalidUserType
 	}
 
 	user, err := u.r.FindByEmail(email)
 	if err != nil {
-		return errors.Wrap(err, "u.r.FindByEmail")
+		return nil, errors.Wrap(err, "u.r.FindByEmail")
 	}
 	if user != nil {
-		return ErrEmailAlreadyExists
+		return nil, ErrEmailAlreadyExists
 	}
 
 	paymentAddress, readonlyKey, privKey, err := u.bc.GetAccountWallet(email)
 	if err != nil {
-		return errors.Wrap(err, "u.bc.GetAccountWallet")
+		return nil, errors.Wrap(err, "u.bc.GetAccountWallet")
 	}
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.Wrap(err, "bcrypt.GenerateFromPassword")
+		return nil, errors.Wrap(err, "bcrypt.GenerateFromPassword")
 	}
 
-	token := u.generateVerificationToken()
-	encrypted, err := u.bc.EncryptData(token)
-	if err != nil {
-		return errors.Wrap(err, "u.bc.EncryptData")
-	}
-	fmt.Printf("encrypted = %+v\n", encrypted)
-	// ul := &models.UserLenderVerification{
-	//         UserVerification: models.UserVerification{
-	//                 User:      user,
-	//                 Token:     token,
-	//                 IsValid:   true,
-	//                 ExpiredAt: time.Now().Add(verificationTokenExpiredDuration),
-	//         },
-	//         EncryptedString: encrypted.(string),
-	// }
-	if err := u.r.Create(&models.User{
+	user = &models.User{
 		FirstName:      firstName,
 		LastName:       lastName,
 		Email:          email,
@@ -92,11 +116,17 @@ func (u *User) Register(firstName, lastName, email, password, confirmPassword, u
 		ReadonlyKey:    readonlyKey,
 		PrivKey:        privKey,
 		Type:           userType,
-	}); err != nil {
-		return errors.Wrap(err, "u.r.Create")
+		IsActive:       true,
 	}
+	if userType == models.Lender {
+		if pubKey == nil {
+			return nil, ErrMissingPubKey
+		}
 
-	return nil
+		user.IsActive = false
+		return u.createLenderUser(user, *pubKey)
+	}
+	return u.createNormalUser(user)
 }
 
 func (u *User) FindByID(id int) (*models.User, error) {
@@ -114,6 +144,9 @@ func (u *User) Authenticate(email, password string) (*UserResp, error) {
 	}
 	if user == nil {
 		return nil, ErrEmailNotExists
+	}
+	if !user.IsActive {
+		return nil, ErrInactiveAccount
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {

@@ -7,18 +7,12 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
+	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service"
 )
 
 func (s *Server) CreateNewBorrow(c *gin.Context) {
-	type request struct {
-		Amount         int64  `json:"amount" binding:"required"`
-		Hash           string `json:"hash" binding:"required"`
-		TxID           string `json:"tx_id" binding:"required"`
-		PaymentAddress string `json:"payment_address" binding:"required"`
-	}
-
-	var req request
+	var req serializers.BorrowReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, response{Error: service.ErrInvalidArgument})
 		return

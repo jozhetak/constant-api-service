@@ -4,19 +4,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ninjadotorg/constant-api-service/models"
-	"github.com/ninjadotorg/constant-api-service/service"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+
+	"github.com/ninjadotorg/constant-api-service/models"
+	"github.com/ninjadotorg/constant-api-service/serializers"
+	"github.com/ninjadotorg/constant-api-service/service"
 )
 
 func (s *Server) Authenticate(c *gin.Context) (interface{}, error) {
-	type request struct {
-		Email    string `json:"email" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
-
-	var req request
+	var req serializers.UserReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		return nil, err
 	}
@@ -29,83 +26,59 @@ func (s *Server) Authenticate(c *gin.Context) (interface{}, error) {
 }
 
 func (s *Server) Register(c *gin.Context) {
-	type request struct {
-		FirstName       string  `json:"first_name"`
-		LastName        string  `json:"last_name"`
-		Email           string  `json:"email"`
-		Password        string  `json:"password"`
-		ConfirmPassword string  `json:"confirm_password"`
-		Type            string  `json:"type"`
-		PublicKey       *string `json:"public_key"`
-	}
-	type response struct {
-		Message string         `json:"Message"`
-		Error   *service.Error `json:"Error"`
-	}
-
-	var req request
+	var req serializers.UserReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, response{Error: service.ErrInvalidArgument})
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
 		return
 	}
 
-	err := s.userSvc.Register(req.FirstName, req.LastName, req.Email, req.Password, req.ConfirmPassword, req.Type, req.PublicKey)
-	switch err {
-	case service.ErrInvalidEmail, service.ErrInvalidPassword, service.ErrInvalidUserType, service.ErrPasswordMismatch, service.ErrEmailAlreadyExists:
-		c.JSON(http.StatusBadRequest, response{Error: err.(*service.Error)})
+	resp, err := s.userSvc.Register(req.FirstName, req.LastName, req.Email, req.Password, req.ConfirmPassword, req.Type, req.PublicKey)
+	switch err := errors.Cause(err); err {
+	case service.ErrInvalidEmail, service.ErrInvalidPassword, service.ErrInvalidUserType, service.ErrPasswordMismatch, service.ErrEmailAlreadyExists, service.ErrMissingPubKey:
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: err.(*service.Error)})
 	case nil:
-		c.JSON(http.StatusOK, response{Message: "Register successfully"})
+		c.JSON(http.StatusOK, serializers.Resp{Result: resp})
 	default:
 		s.logger.Error("u.svc.Register", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, response{Error: service.ErrInternalServerError})
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 	}
 }
 
 func (s *Server) ForgotPassword(c *gin.Context) {
-	type request struct {
-		Email string `json:"email"`
-	}
-
-	var req request
+	var req serializers.UserReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, response{Error: service.ErrInvalidArgument})
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
 		return
 	}
 
 	err := s.userSvc.ForgotPassword(req.Email)
 	switch err := errors.Cause(err); err {
 	case service.ErrInvalidEmail:
-		c.JSON(http.StatusBadRequest, response{Error: err.(*service.Error)})
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: err.(*service.Error)})
 	case nil:
-		c.JSON(http.StatusOK, gin.H{"message": "request successfully"})
+		c.JSON(http.StatusOK, serializers.Resp{Result: serializers.MessageResp{Message: "request to reset password successfully"}})
 	default:
 		s.logger.Error("s.userSvc.ForgotPassword", zap.String("email", req.Email), zap.Error(err))
-		c.JSON(http.StatusInternalServerError, response{Error: service.ErrInternalServerError})
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 	}
 }
 
 func (s *Server) ResetPassword(c *gin.Context) {
-	type request struct {
-		Token              string `json:"token" binding:"required"`
-		NewPassword        string `json:"new_password" binding:"required"`
-		ConfirmNewPassword string `json:"confirm_new_password" binding:"required"`
-	}
-
-	var req request
+	var req serializers.UserResetPasswordReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, response{Error: service.ErrInvalidArgument})
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
 		return
 	}
 
 	err := s.userSvc.ResetPassword(req.Token, req.NewPassword, req.ConfirmNewPassword)
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrInvalidPassword, service.ErrPasswordMismatch, service.ErrInvalidRecoveryToken:
-		c.JSON(http.StatusBadRequest, response{Error: cErr.(*service.Error)})
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
-		c.JSON(http.StatusOK, gin.H{"message": "update password successfully"})
+		c.JSON(http.StatusOK, serializers.Resp{Result: serializers.MessageResp{Message: "update password successfully"}})
 	default:
 		s.logger.Error("s.userSvc.ResetPassword", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, response{Error: service.ErrInternalServerError})
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 	}
 }
 

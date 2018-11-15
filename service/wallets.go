@@ -18,10 +18,6 @@ func (w *Wallet) GetAccount(params string) (interface{}, error) {
 	return w.bc.GetAccount(params)
 }
 
-func (w *Wallet) EncryptData(params string) (interface{}, error) {
-	return w.bc.EncryptData(params)
-}
-
 func (w *Wallet) GetBalanceByPrivateKey(privKey string) (interface{}, error) {
 	return w.bc.GetBalanceByPrivateKey(privKey)
 }

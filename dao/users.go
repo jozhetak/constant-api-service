@@ -19,7 +19,7 @@ func (u *User) Create(user *models.User) error {
 	return errors.Wrap(u.db.Create(user).Error, "u.db.Create")
 }
 
-func (u *User) CreateLenderUser(user *models.User, v *models.UserVerification) (err error) {
+func (u *User) CreateLenderUser(user *models.User, v *models.UserLenderVerification) (err error) {
 	tx := u.db.Begin()
 	if tErr := tx.Error; tErr != nil {
 		err = errors.Wrap(tErr, "tx.Error")

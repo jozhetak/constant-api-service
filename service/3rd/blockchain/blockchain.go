@@ -145,8 +145,22 @@ func (b *Blockchain) GetAccount(params interface{}) (interface{}, error) {
 	return b.walletAPI(getAccountMethod, params)
 }
 
-func (b *Blockchain) EncryptData(params interface{}) (interface{}, error) {
-	return b.walletAPI(encryptDataMethod, []interface{}{params})
+func (b *Blockchain) EncryptData(pubKey string, params interface{}) (string, error) {
+	resp, err := b.walletAPI(encryptDataMethod, []interface{}{pubKey, params})
+	if err != nil {
+		return "", errors.Wrap(err, "b.walletAPI")
+	}
+
+	v, ok := resp.(map[string]interface{})
+	if !ok {
+		return "", errors.New("invalid response from blockchain core api")
+	}
+
+	encrypted, ok := v["Result"].(string)
+	if !ok {
+		return "", nil
+	}
+	return encrypted, nil
 }
 
 func (b *Blockchain) GetBalanceByPrivateKey(params string) (interface{}, error) {

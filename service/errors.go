@@ -11,6 +11,8 @@ var (
 	ErrEmailAlreadyExists   = &Error{Code: -1005, Message: "email already exists"}
 	ErrInvalidCredentials   = &Error{Code: -1006, Message: "invalid credentials"}
 	ErrInvalidRecoveryToken = &Error{Code: -1007, Message: "invalid recovery token"}
+	ErrInactiveAccount      = &Error{Code: -1008, Message: "your account is inactive"}
+	ErrMissingPubKey        = &Error{Code: -1009, Message: "public key is required for lender user"}
 
 	// portal api errors
 
