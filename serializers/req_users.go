@@ -15,3 +15,7 @@ type UserResetPasswordReq struct {
 	NewPassword        string `json:"NewPassword" binding:"required"`
 	ConfirmNewPassword string `json:"ConfirmNewPassword" binding:"required"`
 }
+
+type UserLenderVerificationReq struct {
+	Token string `json:"Token"`
+}

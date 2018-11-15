@@ -121,7 +121,7 @@ func (u *User) ResetPassword(r *models.UserVerification) (err error) {
 	return
 }
 
-func (u *User) VerifyLenderUser(v *models.UserLenderVerification) (err error) {
+func (u *User) VerifyLender(v *models.UserLenderVerification) (err error) {
 	tx := u.db.Begin()
 	if tErr := tx.Error; tErr != nil {
 		err = errors.Wrap(tErr, "tx.Error")

@@ -15,7 +15,7 @@ const (
 )
 
 func (u UserType) String() string {
-	return [...]string{"borrower", "lender"}[u]
+	return [...]string{"invalid", "borrower", "lender"}[u]
 }
 
 type User struct {

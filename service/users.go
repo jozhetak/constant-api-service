@@ -213,7 +213,7 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 	return nil
 }
 
-func (u *User) VerifyLenderUser(token string) error {
+func (u *User) VerifyLender(token string) error {
 	v, err := u.r.FindLenderVerificationToken(token)
 	if err != nil {
 		return errors.Wrap(err, "u.r.FindRecoveryToken")
@@ -224,7 +224,7 @@ func (u *User) VerifyLenderUser(token string) error {
 
 	v.IsValid = false
 	v.User.IsActive = true
-	if err := u.r.VerifyLenderUser(v); err != nil {
+	if err := u.r.VerifyLender(v); err != nil {
 		return errors.Wrap(err, "u.r.VerifyLenderUser")
 	}
 	return nil

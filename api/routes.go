@@ -11,6 +11,7 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	auth.POST("/login", authMw.LoginHandler)
 	auth.POST("/forgot", s.ForgotPassword)
 	auth.POST("/reset", s.ResetPassword)
+	auth.POST("/verify_lender", s.VerifyLender)
 
 	// portal API group
 	portal := s.g.Group("/portal")

@@ -82,6 +82,25 @@ func (s *Server) ResetPassword(c *gin.Context) {
 	}
 }
 
+func (s *Server) VerifyLender(c *gin.Context) {
+	var req serializers.UserLenderVerificationReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
+		return
+	}
+
+	err := s.userSvc.VerifyLender(req.Token)
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrInvalidVerificationToken:
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
+	case nil:
+		c.JSON(http.StatusOK, serializers.Resp{Result: serializers.MessageResp{Message: "verify successfully"}})
+	default:
+		s.logger.Error("s.userSvc.VerifyLenderUser", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+	}
+}
+
 func (s *Server) userFromContext(c *gin.Context) (*models.User, error) {
 	userIDVal, ok := c.Get(userIDKey)
 	if !ok {
