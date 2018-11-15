@@ -8,8 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/websocket"
-	"github.com/jinzhu/gorm"
-	sendgrid "github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go"
 	"go.uber.org/zap"
 
 	"github.com/ninjadotorg/constant-api-service/api"
@@ -18,6 +17,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/pubsub"
 	"github.com/ninjadotorg/constant-api-service/service"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
+	"github.com/ninjadotorg/constant-api-service/database"
 )
 
 func main() {
@@ -54,9 +54,9 @@ func main() {
 
 	mailer := sendgrid.NewSendClient(conf.SendgridAPIKey)
 
-	db, err := gorm.Open("mysql", conf.Db)
+	db, err := database.Init(conf)
 	if err != nil {
-		logger.Fatal("failed to open mysql db conn", zap.Error(err))
+		panic(err)
 	}
 
 	if err := dao.AutoMigrate(db); err != nil {
