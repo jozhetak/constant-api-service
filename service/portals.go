@@ -6,17 +6,17 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ninjadotorg/constant-api-service/dao"
+	"github.com/ninjadotorg/constant-api-service/dao/portal"
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
 
 type Portal struct {
-	r  *dao.Portal
+	r  *portal.Portal
 	bc *blockchain.Blockchain
 }
 
-func NewPortal(r *dao.Portal, bc *blockchain.Blockchain) *Portal {
+func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
 	return &Portal{
 		r:  r,
 		bc: bc,

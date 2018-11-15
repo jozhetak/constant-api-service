@@ -18,6 +18,8 @@ import (
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/database"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/sendgrid"
+	"github.com/ninjadotorg/constant-api-service/dao/portal"
+	"github.com/ninjadotorg/constant-api-service/dao/exchange"
 )
 
 func main() {
@@ -51,10 +53,10 @@ func main() {
 		userDAO = dao.NewUser(db)
 		userSvc = service.NewUserService(userDAO, bc)
 
-		portalDAO = dao.NewPortal(db)
+		portalDAO = portal.NewPortal(db)
 		portalSvc = service.NewPortal(portalDAO, bc)
 
-		exchangeDAO = dao.NewExchange(db)
+		exchangeDAO = exchange.NewExchange(db)
 		exchangeSvc = service.NewExchange(exchangeDAO)
 
 		walletSvc = service.NewWallet(bc)

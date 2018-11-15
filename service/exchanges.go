@@ -5,15 +5,15 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ninjadotorg/constant-api-service/dao"
+	"github.com/ninjadotorg/constant-api-service/dao/exchange"
 	"github.com/ninjadotorg/constant-api-service/models"
 )
 
 type Exchange struct {
-	r *dao.Exchange
+	r *exchange.Exchange
 }
 
-func NewExchange(r *dao.Exchange) *Exchange {
+func NewExchange(r *exchange.Exchange) *Exchange {
 	return &Exchange{r}
 }
 
