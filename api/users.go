@@ -72,7 +72,7 @@ func (s *Server) ResetPassword(c *gin.Context) {
 
 	err := s.userSvc.ResetPassword(req.Token, req.NewPassword, req.ConfirmNewPassword)
 	switch cErr := errors.Cause(err); cErr {
-	case service.ErrInvalidPassword, service.ErrPasswordMismatch, service.ErrInvalidRecoveryToken:
+	case service.ErrInvalidPassword, service.ErrPasswordMismatch, service.ErrInvalidVerificationToken:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
 		c.JSON(http.StatusOK, serializers.Resp{Result: serializers.MessageResp{Message: "update password successfully"}})

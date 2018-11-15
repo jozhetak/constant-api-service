@@ -5,8 +5,19 @@ type Resp struct {
 	Error  interface{} `json:"Error"`
 }
 
+type UserResp struct {
+	ID             uint   `json:"ID"`
+	UserName       string `json:"UserName"`
+	FirstName      string `json:"FirstName"`
+	LasstName      string `json:"LasstName"`
+	Email          string `json:"Email"`
+	PaymentAddress string `json:"PaymentAddress"`
+	Type           string `json:"Type"`
+}
+
 type UserRegisterResp struct {
-	EncryptedString *string `json:"EncryptedString"`
+	Message         string `json:"Message,omitempty"`
+	EncryptedString string `json:"EncryptedString,omitempty"`
 }
 
 type UserLoginResp struct {

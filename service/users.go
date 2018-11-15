@@ -68,7 +68,7 @@ func (u *User) createLenderUser(user *models.User, pubKey string) (*serializers.
 		return nil, errors.Wrap(err, "u.createLenderUser")
 	}
 	return &serializers.UserRegisterResp{
-		EncryptedString: &encrypted,
+		EncryptedString: encrypted,
 	}, nil
 }
 
@@ -76,7 +76,7 @@ func (u *User) createNormalUser(user *models.User) (*serializers.UserRegisterRes
 	if err := u.r.Create(user); err != nil {
 		return nil, errors.Wrap(err, "u.r.Create")
 	}
-	return &serializers.UserRegisterResp{}, nil
+	return &serializers.UserRegisterResp{Message: "register successfully"}, nil
 }
 
 func (u *User) Register(firstName, lastName, email, password, confirmPassword, uType string, pubKey *string) (*serializers.UserRegisterResp, error) {
@@ -137,7 +137,7 @@ func (u *User) FindByID(id int) (*models.User, error) {
 	return user, nil
 }
 
-func (u *User) Authenticate(email, password string) (*UserResp, error) {
+func (u *User) Authenticate(email, password string) (*serializers.UserResp, error) {
 	user, err := u.r.FindByEmail(email)
 	if err != nil {
 		return nil, errors.Wrap(err, "u.r.FindByEmail")
@@ -192,12 +192,12 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 		return ErrPasswordMismatch
 	}
 
-	recovery, err := u.r.FindRecoveryToken(token)
+	v, err := u.r.FindVerificationToken(token)
 	if err != nil {
 		return errors.Wrap(err, "u.r.FindRecoveryToken")
 	}
-	if recovery == nil {
-		return ErrInvalidRecoveryToken
+	if v == nil {
+		return ErrInvalidVerificationToken
 	}
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -205,27 +205,33 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 		return errors.Wrap(err, "bcrypt.GenerateFromPassword")
 	}
 
-	recovery.IsValid = false
-	recovery.User.Password = string(hashed)
-	if err := u.r.ResetPasswordAndInvalidateToken(recovery); err != nil {
+	v.IsValid = false
+	v.User.Password = string(hashed)
+	if err := u.r.ResetPassword(v); err != nil {
 		return errors.Wrap(err, "u.r.Update")
 	}
-
 	return nil
 }
 
-type UserResp struct {
-	ID             uint   `json:"id"`
-	UserName       string `json:"user_name"`
-	FirstName      string `json:"first_name"`
-	LasstName      string `json:"lasst_name"`
-	Email          string `json:"email"`
-	PaymentAddress string `json:"payment_address"`
-	Type           string `json:"type"`
+func (u *User) VerifyLenderUser(token string) error {
+	v, err := u.r.FindLenderVerificationToken(token)
+	if err != nil {
+		return errors.Wrap(err, "u.r.FindRecoveryToken")
+	}
+	if v == nil {
+		return ErrInvalidVerificationToken
+	}
+
+	v.IsValid = false
+	v.User.IsActive = true
+	if err := u.r.VerifyLenderUser(v); err != nil {
+		return errors.Wrap(err, "u.r.VerifyLenderUser")
+	}
+	return nil
 }
 
-func assembleUser(u *models.User) *UserResp {
-	return &UserResp{
+func assembleUser(u *models.User) *serializers.UserResp {
+	return &serializers.UserResp{
 		ID:             u.ID,
 		UserName:       u.UserName,
 		FirstName:      u.FirstName,
