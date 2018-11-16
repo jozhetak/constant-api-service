@@ -13,13 +13,14 @@ import (
 	"github.com/ninjadotorg/constant-api-service/api"
 	"github.com/ninjadotorg/constant-api-service/conf"
 	"github.com/ninjadotorg/constant-api-service/dao"
+	"github.com/ninjadotorg/constant-api-service/dao/exchange"
+	"github.com/ninjadotorg/constant-api-service/dao/portal"
+	"github.com/ninjadotorg/constant-api-service/database"
 	"github.com/ninjadotorg/constant-api-service/pubsub"
 	"github.com/ninjadotorg/constant-api-service/service"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
-	"github.com/ninjadotorg/constant-api-service/database"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/sendgrid"
-	"github.com/ninjadotorg/constant-api-service/dao/portal"
-	"github.com/ninjadotorg/constant-api-service/dao/exchange"
+	"github.com/ninjadotorg/constant-api-service/templates/email"
 )
 
 func main() {
@@ -35,8 +36,6 @@ func main() {
 		CheckOrigin: func(r *http.Request) bool { return true },
 	}
 
-	mailClient := sendgrid.Init(conf)
-
 	db, err := database.Init(conf)
 	if err != nil {
 		panic(err)
@@ -50,8 +49,11 @@ func main() {
 		client = &http.Client{}
 		bc     = blockchain.New(client, "http://127.0.0.1:9334")
 
+		mailClient  = sendgrid.Init(conf)
+		emailHelper = email.New(mailClient)
+
 		userDAO = dao.NewUser(db)
-		userSvc = service.NewUserService(userDAO, bc)
+		userSvc = service.NewUserService(userDAO, bc, emailHelper)
 
 		portalDAO = portal.NewPortal(db)
 		portalSvc = service.NewPortal(portalDAO, bc)
@@ -65,7 +67,7 @@ func main() {
 	)
 
 	r := gin.Default()
-	svr := api.NewServer(r, pubsubSvc, upgrader, userSvc, portalSvc, exchangeSvc, walletSvc, logger, mailClient)
+	svr := api.NewServer(r, pubsubSvc, upgrader, userSvc, portalSvc, exchangeSvc, walletSvc, logger)
 	authMw := api.AuthMiddleware(string(conf.TokenSecretKey), svr.Authenticate)
 	svr.Routes(authMw)
 

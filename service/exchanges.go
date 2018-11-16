@@ -69,18 +69,26 @@ func (e *Exchange) transformToMarketResp(cs []*models.Market) []*serializers.Mar
 	return resp
 }
 
-func assembleMarket(c *models.Market) *serializers.MarketResp {
+func assembleMarket(m *models.Market) *serializers.MarketResp {
 	return &serializers.MarketResp{
-		BaseCurrency:   c.BaseCurrency,
-		Symbol:         c.Symbol,
-		MarketCurrency: c.MarketCurrency,
+		BaseCurrency:         m.BaseCurrency,
+		QuoteCurrency:        m.QuoteCurrency,
+		DisplayName:          m.DisplayName,
+		State:                m.State.String(),
+		SymbolCode:           m.SymbolCode,
+		Icon:                 m.Icon,
+		TradeEnabled:         m.TradeEnabled,
+		FeePrecision:         m.FeePrecision,
+		TradePricePrecision:  m.TradePricePrecision,
+		TradeTotalPrecision:  m.TradeTotalPrecision,
+		TradeAmountPrecision: m.TradeAmountPrecision,
 	}
 }
 
 func assembleOrder(o *models.Order) *serializers.OrderResp {
 	return &serializers.OrderResp{
 		ID:       o.ID,
-		Symbol:   o.Market.Symbol,
+		Symbol:   o.Market.DisplayName,
 		Price:    o.Price,
 		Quantity: o.Quantity,
 		Type:     o.Type.String(),

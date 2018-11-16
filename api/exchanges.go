@@ -13,12 +13,12 @@ import (
 )
 
 func (s *Server) ListMarkets(c *gin.Context) {
-	currencies, err := s.exchangeSvc.ListMarkets(c.Query("base"))
+	markets, err := s.exchangeSvc.ListMarkets(c.Query("base"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
 	}
-	c.JSON(http.StatusOK, serializers.Resp{Result: currencies})
+	c.JSON(http.StatusOK, serializers.Resp{Result: markets})
 }
 
 func (s *Server) CreateOrder(c *gin.Context) {

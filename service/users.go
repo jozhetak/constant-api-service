@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
+	emailHelper "github.com/ninjadotorg/constant-api-service/templates/email"
 )
 
 func init() {
@@ -21,17 +23,21 @@ const (
 	tokenLength                      = 10
 	letters                          = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	verificationTokenExpiredDuration = 24 * time.Hour
+
+	resetPasswordBaseURL = "https://google.com"
 )
 
 type User struct {
-	r  *dao.User
-	bc *blockchain.Blockchain
+	r      *dao.User
+	bc     *blockchain.Blockchain
+	mailer *emailHelper.Email
 }
 
-func NewUserService(r *dao.User, bc *blockchain.Blockchain) *User {
+func NewUserService(r *dao.User, bc *blockchain.Blockchain, mailer *emailHelper.Email) *User {
 	return &User{
-		r:  r,
-		bc: bc,
+		r:      r,
+		bc:     bc,
+		mailer: mailer,
 	}
 }
 
@@ -164,15 +170,23 @@ func (u *User) ForgotPassword(email string) error {
 		return ErrInvalidEmail
 	}
 
+	token := u.generateVerificationToken()
 	if err := u.r.CreateVerification(&models.UserVerification{
 		User:      user,
-		Token:     u.generateVerificationToken(),
+		Token:     token,
 		IsValid:   true,
 		ExpiredAt: time.Now().Add(verificationTokenExpiredDuration),
 	}); err != nil {
 		return errors.Wrap(err, "u.r.CreateRecovery")
 	}
 
+	if err := u.mailer.SendForgotPasswordEmail(&emailHelper.ForgotPassword{
+		Email: user.Email,
+		Name:  user.FirstName,
+		Link:  fmt.Sprintf("%s/?token=%s", resetPasswordBaseURL, token),
+	}); err != nil {
+		return errors.Wrap(err, "u.sendForgotPasswordEmail")
+	}
 	return nil
 }
 
@@ -199,6 +213,12 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 	if v == nil {
 		return ErrInvalidVerificationToken
 	}
+	if !v.IsValid {
+		return ErrInvalidVerificationToken
+	}
+	if v.ExpiredAt.After(time.Now()) {
+		return ErrInvalidVerificationToken
+	}
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -219,6 +239,12 @@ func (u *User) VerifyLender(token string) error {
 		return errors.Wrap(err, "u.r.FindRecoveryToken")
 	}
 	if v == nil {
+		return ErrInvalidVerificationToken
+	}
+	if !v.IsValid {
+		return ErrInvalidVerificationToken
+	}
+	if v.ExpiredAt.After(time.Now()) {
 		return ErrInvalidVerificationToken
 	}
 

@@ -1,9 +1,17 @@
 package serializers
 
 type MarketResp struct {
-	BaseCurrency   string `json:"BaseCurrency"`
-	MarketCurrency string `json:"MarketCurrency"`
-	Symbol         string `json:"Symbol"`
+	BaseCurrency         string `json:"BaseCurrency"`
+	QuoteCurrency        string `json:"QuoteCurrency"`
+	DisplayName          string `json:"DisplayName"`
+	State                string `json:"State"`
+	SymbolCode           string `json:"SymbolCode"`
+	Icon                 string `json:"Icon"`
+	TradeEnabled         bool   `json:"TradeEnabled"`
+	FeePrecision         int    `json:"FeePrecision"`
+	TradePricePrecision  int    `json:"TradePricePrecision"`
+	TradeTotalPrecision  int    `json:"TradeTotalPrecision"`
+	TradeAmountPrecision int    `json:"TradeAmountPrecision"`
 }
 
 type OrderResp struct {

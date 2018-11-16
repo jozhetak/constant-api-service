@@ -73,7 +73,7 @@ func (u *User) CreateVerification(r *models.UserVerification) error {
 
 func (u *User) FindVerificationToken(token string) (*models.UserVerification, error) {
 	var r models.UserVerification
-	if err := u.db.Preload("User").Where("token = ?", token).Where("is_valid = 1").First(&r).Error; err != nil {
+	if err := u.db.Preload("User").Where("token = ?", token).First(&r).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}

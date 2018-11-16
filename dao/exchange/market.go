@@ -1,9 +1,10 @@
 package exchange
 
 import (
-	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+
+	"github.com/ninjadotorg/constant-api-service/models"
 )
 
 func (e *Exchange) ListMarkets(base string) ([]*models.Market, error) {
@@ -11,7 +12,7 @@ func (e *Exchange) ListMarkets(base string) ([]*models.Market, error) {
 
 	query := e.db.Order("id ASC")
 	if base != "" {
-		query = query.Where("base = ?", base)
+		query = query.Where("base_currency = ?", base)
 	}
 	if err := query.Find(&currencies).Error; err != nil {
 		return nil, errors.Wrap(err, "c.db.Where.Find")
