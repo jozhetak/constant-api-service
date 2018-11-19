@@ -48,6 +48,32 @@ func (s *Server) CreateOrder(c *gin.Context) {
 	}
 }
 
+func (s *Server) OrderHistory(c *gin.Context) {
+	user, err := s.userFromContext(c)
+	if err != nil {
+		s.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
+	var (
+		status = c.DefaultQuery("status", "")
+		page   = c.DefaultQuery("page", "1")
+		limit  = c.DefaultQuery("limit", "10")
+	)
+
+	orders, err := s.exchangeSvc.OrderHistory(user, status, limit, page)
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrInvalidArgument, service.ErrInvalidLimit, service.ErrInvalidPage:
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
+	case nil:
+		c.JSON(http.StatusOK, serializers.Resp{Result: orders})
+	default:
+		s.logger.Error("s.exchangeSvc.OrderHistory", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+	}
+}
+
 func (s *Server) ExchangeWS(c *gin.Context) {
 	conn, err := s.up.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {

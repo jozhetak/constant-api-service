@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -63,7 +64,7 @@ func (*Order) TableName() string {
 }
 
 func GetOrderType(t string) OrderType {
-	switch t {
+	switch strings.ToLower(t) {
 	case "limit":
 		return Limit
 	default:
@@ -72,12 +73,23 @@ func GetOrderType(t string) OrderType {
 }
 
 func GetOrderSide(s string) OrderSide {
-	switch s {
+	switch strings.ToLower(s) {
 	case "buy":
 		return Buy
 	case "sell":
 		return Sell
 	default:
 		return InvalidOrderSide
+	}
+}
+
+func GetOrderStatus(s string) OrderStatus {
+	switch strings.ToLower(s) {
+	case "new":
+		return New
+	case "filled":
+		return Filled
+	default:
+		return InvalidOrderStatus
 	}
 }

@@ -15,12 +15,12 @@ type MarketResp struct {
 }
 
 type OrderResp struct {
-	ID       uint    `json:"ID"`
-	Symbol   string  `json:"Symbol"`
-	Price    float64 `json:"Price"`
-	Quantity uint    `json:"Quantity"`
-	Type     string  `json:"Type"`
-	Status   string  `json:"Status"`
-	Side     string  `json:"Side"`
-	Time     string  `json:"Time"`
+	ID         uint    `json:"ID"`
+	SymbolCode string  `json:"SymbolCode"`
+	Price      float64 `json:"Price"`
+	Quantity   uint    `json:"Quantity"`
+	Type       string  `json:"Type"`
+	Status     string  `json:"Status"`
+	Side       string  `json:"Side"`
+	Time       string  `json:"Time"`
 }

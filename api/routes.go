@@ -29,7 +29,9 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	exch.Use(authMw.MiddlewareFunc())
 	{
 		exch.GET("/markets", s.ListMarkets)
+		exch.GET("/market_histories", nil)
 		exch.POST("/orders", s.CreateOrder)
+		exch.GET("/orders", s.OrderHistory)
 	}
 
 	wallet := s.g.Group("/wallet")

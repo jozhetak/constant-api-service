@@ -23,7 +23,7 @@ func (e *Exchange) ListMarkets(base string) ([]*serializers.MarketResp, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "c.r.ListByBase")
 	}
-	return e.transformToMarketResp(markets), nil
+	return toMarketResp(markets), nil
 }
 
 func (e *Exchange) CreateOrder(u *models.User, symbol string, price float64, quantity uint, typ, side string) (*serializers.OrderResp, error) {
@@ -61,10 +61,40 @@ func (e *Exchange) CreateOrder(u *models.User, symbol string, price float64, qua
 	return assembleOrder(order), nil
 }
 
-func (e *Exchange) transformToMarketResp(cs []*models.Market) []*serializers.MarketResp {
+func (e *Exchange) OrderHistory(u *models.User, status, limit, page string) ([]*serializers.OrderResp, error) {
+	l, p, err := parsePaginationQuery(limit, page)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsePaginationQuery")
+	}
+
+	var s *models.OrderStatus
+	if status != "" {
+		st := models.GetOrderStatus(status)
+		if st == models.InvalidOrderStatus {
+			return nil, ErrInvalidArgument
+		}
+		s = &st
+	}
+
+	orders, err := e.r.OrderHistory(u, s, l, p)
+	if err != nil {
+		return nil, errors.Wrap(err, "e.r.OrderHistory")
+	}
+	return toOrderResp(orders), nil
+}
+
+func toMarketResp(cs []*models.Market) []*serializers.MarketResp {
 	resp := make([]*serializers.MarketResp, 0, len(cs))
 	for _, cr := range cs {
 		resp = append(resp, assembleMarket(cr))
+	}
+	return resp
+}
+
+func toOrderResp(cs []*models.Order) []*serializers.OrderResp {
+	resp := make([]*serializers.OrderResp, 0, len(cs))
+	for _, cr := range cs {
+		resp = append(resp, assembleOrder(cr))
 	}
 	return resp
 }
@@ -87,13 +117,13 @@ func assembleMarket(m *models.Market) *serializers.MarketResp {
 
 func assembleOrder(o *models.Order) *serializers.OrderResp {
 	return &serializers.OrderResp{
-		ID:       o.ID,
-		Symbol:   o.Market.DisplayName,
-		Price:    o.Price,
-		Quantity: o.Quantity,
-		Type:     o.Type.String(),
-		Status:   o.Status.String(),
-		Side:     o.Side.String(),
-		Time:     o.Time.Format(time.RFC3339),
+		ID:         o.ID,
+		SymbolCode: o.Market.DisplayName,
+		Price:      o.Price,
+		Quantity:   o.Quantity,
+		Type:       o.Type.String(),
+		Status:     o.Status.String(),
+		Side:       o.Side.String(),
+		Time:       o.Time.Format(time.RFC3339),
 	}
 }
