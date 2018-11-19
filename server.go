@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/websocket"
@@ -67,6 +68,7 @@ func main() {
 	)
 
 	r := gin.Default()
+	r.Use(cors.Default())
 	svr := api.NewServer(r, pubsubSvc, upgrader, userSvc, portalSvc, exchangeSvc, walletSvc, logger)
 	authMw := api.AuthMiddleware(string(conf.TokenSecretKey), svr.Authenticate)
 	svr.Routes(authMw)
