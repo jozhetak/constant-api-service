@@ -26,10 +26,10 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	// exchange API group
 	exch := s.g.Group("/exchange")
 	exch.Any("/ws/trades", s.ExchangeWS)
+	exch.GET("/markets", s.ListMarkets)
+	exch.GET("/market_histories", nil)
 	exch.Use(authMw.MiddlewareFunc())
 	{
-		exch.GET("/markets", s.ListMarkets)
-		exch.GET("/market_histories", nil)
 		exch.POST("/orders", s.CreateOrder)
 		exch.GET("/orders", s.UserOrderHistory)
 	}
