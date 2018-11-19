@@ -216,7 +216,7 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 	if !v.IsValid {
 		return ErrInvalidVerificationToken
 	}
-	if v.ExpiredAt.After(time.Now()) {
+	if v.ExpiredAt.Before(time.Now()) {
 		return ErrInvalidVerificationToken
 	}
 
@@ -244,7 +244,7 @@ func (u *User) VerifyLender(token string) error {
 	if !v.IsValid {
 		return ErrInvalidVerificationToken
 	}
-	if v.ExpiredAt.After(time.Now()) {
+	if v.ExpiredAt.Before(time.Now()) {
 		return ErrInvalidVerificationToken
 	}
 

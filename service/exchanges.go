@@ -61,22 +61,25 @@ func (e *Exchange) CreateOrder(u *models.User, symbol string, price float64, qua
 	return assembleOrder(order), nil
 }
 
-func (e *Exchange) OrderHistory(u *models.User, status, limit, page string) ([]*serializers.OrderResp, error) {
+func (e *Exchange) UserOrderHistory(u *models.User, symbol, status, limit, page string) ([]*serializers.OrderResp, error) {
+	if symbol == "" {
+		return nil, ErrInvalidSymbol
+	}
 	l, p, err := parsePaginationQuery(limit, page)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsePaginationQuery")
 	}
 
-	var s *models.OrderStatus
+	var oStatus *models.OrderStatus
 	if status != "" {
 		st := models.GetOrderStatus(status)
 		if st == models.InvalidOrderStatus {
-			return nil, ErrInvalidArgument
+			return nil, ErrInvalidOrderStatus
 		}
-		s = &st
+		oStatus = &st
 	}
 
-	orders, err := e.r.OrderHistory(u, s, l, p)
+	orders, err := e.r.UserOrderHistory(u, symbol, oStatus, l, p)
 	if err != nil {
 		return nil, errors.Wrap(err, "e.r.OrderHistory")
 	}

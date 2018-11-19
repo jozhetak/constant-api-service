@@ -7,7 +7,6 @@ import (
 	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 
-	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service"
 )
@@ -25,7 +24,7 @@ func AuthMiddleware(key string, authenticator func(c *gin.Context) (interface{},
 		MaxRefresh:  time.Hour,
 		IdentityKey: userIDKey,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			if v, ok := data.(*models.User); ok {
+			if v, ok := data.(*serializers.UserResp); ok {
 				return jwt.MapClaims{
 					userIDKey:    v.ID,
 					userEmailKey: v.Email,

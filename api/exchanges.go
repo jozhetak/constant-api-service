@@ -48,7 +48,7 @@ func (s *Server) CreateOrder(c *gin.Context) {
 	}
 }
 
-func (s *Server) OrderHistory(c *gin.Context) {
+func (s *Server) UserOrderHistory(c *gin.Context) {
 	user, err := s.userFromContext(c)
 	if err != nil {
 		s.logger.Error("s.userFromContext", zap.Error(err))
@@ -57,14 +57,15 @@ func (s *Server) OrderHistory(c *gin.Context) {
 	}
 
 	var (
-		status = c.DefaultQuery("status", "")
+		symbol = c.Query("symbol")
+		status = c.DefaultQuery("status", "new")
 		page   = c.DefaultQuery("page", "1")
 		limit  = c.DefaultQuery("limit", "10")
 	)
 
-	orders, err := s.exchangeSvc.OrderHistory(user, status, limit, page)
+	orders, err := s.exchangeSvc.UserOrderHistory(user, symbol, status, limit, page)
 	switch cErr := errors.Cause(err); cErr {
-	case service.ErrInvalidArgument, service.ErrInvalidLimit, service.ErrInvalidPage:
+	case service.ErrInvalidSymbol, service.ErrInvalidOrderStatus, service.ErrInvalidLimit, service.ErrInvalidPage:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
 		c.JSON(http.StatusOK, serializers.Resp{Result: orders})

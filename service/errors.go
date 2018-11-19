@@ -21,9 +21,10 @@ var (
 
 	// exchange api errors
 
-	ErrInvalidOrderType = &Error{Code: -3000, Message: "invalid order type"}
-	ErrInvalidOrderSide = &Error{Code: -3001, Message: "invalid order side"}
-	ErrInvalidSymbol    = &Error{Code: -3002, Message: "invalid symbol"}
+	ErrInvalidOrderType   = &Error{Code: -3000, Message: "invalid order type"}
+	ErrInvalidOrderSide   = &Error{Code: -3001, Message: "invalid order side"}
+	ErrInvalidSymbol      = &Error{Code: -3002, Message: "invalid symbol"}
+	ErrInvalidOrderStatus = &Error{Code: -3003, Message: "invalid order status"}
 
 	// general api errors
 
