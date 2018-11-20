@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	"github.com/ninjadotorg/constant-api-service/serializers"
 )
 
 const (
@@ -19,6 +20,10 @@ const (
 	getAccountMethod             = "getaccount"
 	encryptDataMethod            = "encryptdata"
 	getBalanceByPrivateKeyMethod = "getbalancebyprivatekey"
+
+	// tx
+	createandsendtransaction   = "createandsendtransaction"
+	sendcustomtokentransaction = "sendcustomtokentransaction"
 
 	// custom token
 	getlistcustomtokenbalance = "getlistcustomtokenbalance"
@@ -193,4 +198,39 @@ func (b *Blockchain) GetListCustomTokenBalance(paymentAddress string) (*ListCust
 		return nil, err
 	}
 	return &result, nil
+}
+
+func (b *Blockchain) Createandsendtransaction(prvKey string, req serializers.WalletSend) error {
+	param := []interface{}{prvKey, req.PaymentAddresses, -1, 8}
+	resp, err := b.walletAPI(createandsendtransaction, param)
+	if err != nil {
+		return err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return errors.New("Fail")
+	}
+	return nil
+}
+
+func (b *Blockchain) Sendcustomtokentransaction(prvKey string, req serializers.WalletSend) error {
+	param := []interface{}{prvKey, -1, 8}
+	tokenData := map[string]interface{}{}
+	tokenData["TokenID"] = req.TokenID
+	tokenData["TokenTxType"] = 1
+	tokenData["TokenName"] = req.TokenName
+	tokenData["TokenSymbol"] = req.TokenSymbol
+	tokenData["TokenReceivers"] = req.PaymentAddresses
+	param = append(param, tokenData)
+	resp, err := b.walletAPI(sendcustomtokentransaction, param)
+	if err != nil {
+		return err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return errors.New("Fail")
+	}
+	return nil
 }

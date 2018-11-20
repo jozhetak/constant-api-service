@@ -68,3 +68,20 @@ func (w *Wallet) GetCoinAndCustomTokenBalance(privKey string, paymentAddress str
 	}
 	return result, nil
 }
+
+func (w *Wallet) Send(privKey string, req serializers.WalletSend) error {
+	var err error
+	switch req.Type {
+	case 0:
+		{
+			// send coin constant
+			err = w.bc.Createandsendtransaction(privKey, req)
+		}
+	case 1:
+		{
+			// send coin constant
+			err = w.bc.Sendcustomtokentransaction(privKey, req)
+		}
+	}
+	return err
+}
