@@ -41,7 +41,7 @@ func (w *Wallet) GetCoinAndCustomTokenBalance(privKey string, paymentAddress str
 	if err != nil {
 		return nil, err
 	}
-	result.Address = listCustomTokenBalances.Address
+	result.PaymentAddress = listCustomTokenBalances.Address
 	// TODO check with order table of exchange
 	inOrder := uint64(0)
 	// end TODO

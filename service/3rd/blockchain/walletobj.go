@@ -1,7 +1,7 @@
 package blockchain
 
 type ListCustomTokenBalance struct {
-	Address                string               `json:"Address"`
+	Address                string               `json:"PaymentAddress"`
 	ListCustomTokenBalance []CustomTokenBalance `json:"ListCustomTokenBalance"`
 }
 

@@ -1,8 +1,8 @@
 package serializers
 
 type WalletBalances struct {
-	Address      string
-	ListBalances []WalletBalance
+	PaymentAddress string
+	ListBalances   []WalletBalance
 }
 
 type WalletBalance struct {
