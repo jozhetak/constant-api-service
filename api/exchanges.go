@@ -57,7 +57,7 @@ func (s *Server) UserOrderHistory(c *gin.Context) {
 	}
 
 	var (
-		symbol = c.Query("symbol")
+		symbol = c.Query("symbol_code")
 		status = c.DefaultQuery("status", "new")
 		page   = c.DefaultQuery("page", "1")
 		limit  = c.DefaultQuery("limit", "10")
@@ -71,6 +71,38 @@ func (s *Server) UserOrderHistory(c *gin.Context) {
 		c.JSON(http.StatusOK, serializers.Resp{Result: orders})
 	default:
 		s.logger.Error("s.exchangeSvc.OrderHistory", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+	}
+}
+
+func (s *Server) MarketHistory(c *gin.Context) {
+	var (
+		symbol = c.Query("symbol_code")
+		page   = c.DefaultQuery("page", "1")
+		limit  = c.DefaultQuery("limit", "10")
+	)
+
+	orders, err := s.exchangeSvc.MarketHistory(symbol, limit, page)
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrInvalidSymbol, service.ErrInvalidLimit, service.ErrInvalidPage:
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
+	case nil:
+		c.JSON(http.StatusOK, serializers.Resp{Result: orders})
+	default:
+		s.logger.Error("s.exchangeSvc.OrderHistory", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+	}
+}
+
+func (s *Server) SymbolRates(c *gin.Context) {
+	rates, err := s.exchangeSvc.SymbolRates(c.DefaultQuery("range", "24h"))
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrInvalidArgument:
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
+	case nil:
+		c.JSON(http.StatusOK, serializers.Resp{Result: rates})
+	default:
+		s.logger.Error("s.exchangeSvc.SymbolRates", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 	}
 }

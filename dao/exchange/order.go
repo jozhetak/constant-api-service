@@ -13,12 +13,15 @@ func (e *Exchange) CreateOrder(o *models.Order) (*models.Order, error) {
 	return o, nil
 }
 
-func (e *Exchange) UserOrderHistory(u *models.User, symbol string, status *models.OrderStatus, limit, page int) ([]*models.Order, error) {
+func (e *Exchange) OrderHistory(symbol string, status *models.OrderStatus, limit, page int, u *models.User) ([]*models.Order, error) {
 	var (
 		orders []*models.Order
 		offset = page*limit - limit
 	)
-	query := e.db.Preload("Market", "symbol_code = ?", symbol).Where("user_id = ?", u.ID)
+	query := e.db.Table("exchange_orders").Joins("JOIN exchange_markets em ON em.id = exchange_orders.market_id").Where("em.symbol_code = ?", symbol)
+	if u != nil {
+		query = query.Where("user_id = ?", u.ID)
+	}
 	if status != nil {
 		query = query.Where("status = ?", *status)
 	}

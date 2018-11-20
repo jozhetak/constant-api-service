@@ -79,11 +79,48 @@ func (e *Exchange) UserOrderHistory(u *models.User, symbol, status, limit, page 
 		oStatus = &st
 	}
 
-	orders, err := e.r.UserOrderHistory(u, symbol, oStatus, l, p)
+	orders, err := e.r.OrderHistory(symbol, oStatus, l, p, u)
 	if err != nil {
 		return nil, errors.Wrap(err, "e.r.OrderHistory")
 	}
 	return toOrderResp(orders), nil
+}
+
+func (e *Exchange) MarketHistory(symbol, limit, page string) ([]*serializers.OrderResp, error) {
+	if symbol == "" {
+		return nil, ErrInvalidSymbol
+	}
+	l, p, err := parsePaginationQuery(limit, page)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsePaginationQuery")
+	}
+
+	status := models.Filled
+	orders, err := e.r.OrderHistory(symbol, &status, l, p, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "e.r.OrderHistory")
+	}
+	return toOrderResp(orders), nil
+}
+
+func (e *Exchange) SymbolRates(timeRange string) ([]exchange.SymbolRate, error) {
+	var from, to time.Time
+	switch timeRange {
+	case "1h":
+		from, to = time.Now().Add(-1*time.Hour), time.Now()
+	case "4h":
+		from, to = time.Now().Add(-4*time.Hour), time.Now()
+	case "24h":
+		from, to = time.Now().Add(-24*time.Hour), time.Now()
+	default:
+		return nil, ErrInvalidArgument
+	}
+
+	rates, err := e.r.SymbolRates(from, to)
+	if err != nil {
+		return nil, errors.Wrap(err, "e.r.SymbolRates")
+	}
+	return rates, nil
 }
 
 func toMarketResp(cs []*models.Market) []*serializers.MarketResp {
@@ -121,7 +158,7 @@ func assembleMarket(m *models.Market) *serializers.MarketResp {
 func assembleOrder(o *models.Order) *serializers.OrderResp {
 	return &serializers.OrderResp{
 		ID:         o.ID,
-		SymbolCode: o.Market.DisplayName,
+		SymbolCode: o.Market.SymbolCode,
 		Price:      o.Price,
 		Quantity:   o.Quantity,
 		Type:       o.Type.String(),
