@@ -19,6 +19,9 @@ const (
 	getAccountMethod             = "getaccount"
 	encryptDataMethod            = "encryptdata"
 	getBalanceByPrivateKeyMethod = "getbalancebyprivatekey"
+
+	// custom token
+	getlistcustomtokenbalance = "getlistcustomtokenbalance"
 )
 
 type Blockchain struct {
@@ -163,6 +166,31 @@ func (b *Blockchain) EncryptData(pubKey string, params interface{}) (string, err
 	return encrypted, nil
 }
 
-func (b *Blockchain) GetBalanceByPrivateKey(params string) (interface{}, error) {
-	return b.walletAPI(getBalanceByPrivateKeyMethod, []interface{}{params})
+func (b *Blockchain) GetBalanceByPrivateKey(privKey string) (uint64, error) {
+	resp, err := b.walletAPI(getBalanceByPrivateKeyMethod, []interface{}{privKey})
+	if err != nil {
+		return 0, err
+	}
+	data := resp.(map[string]interface{})
+	return uint64(data["Result"].(float64)), nil
+}
+
+func (b *Blockchain) GetListCustomTokenBalance(paymentAddress string) (*ListCustomTokenBalance, error) {
+	resp, err := b.walletAPI(getlistcustomtokenbalance, []interface{}{paymentAddress})
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"].(map[string]interface{})
+	_ = data["Error"]
+	result := ListCustomTokenBalance{}
+	resultRespStr, err := json.Marshal(resultResp)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(resultRespStr), &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }

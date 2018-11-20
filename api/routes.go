@@ -1,7 +1,7 @@
 package api
 
 import (
-	jwt "github.com/appleboy/gin-jwt"
+	"github.com/appleboy/gin-jwt"
 )
 
 func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
@@ -39,6 +39,7 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	wallet.GET("/accounts", s.ListAccounts)
 	wallet.Use(authMw.MiddlewareFunc())
 	{
-		wallet.GET("/balance", s.GetBalanceByPrivateKey)
+		wallet.GET("/coinbalance", s.GetCoinBalance)
+		wallet.GET("/balances", s.GetCoinAndCustomTokenBalance)
 	}
 }
