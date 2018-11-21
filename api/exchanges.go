@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -40,7 +41,7 @@ func (s *Server) CreateOrder(c *gin.Context) {
 	case service.ErrInvalidOrderSide, service.ErrInvalidOrderType, service.ErrInvalidSymbol:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
-		go s.ps.Publish(order)
+		go s.ps.Publish(toOrderMsg("add", order))
 		c.JSON(http.StatusOK, serializers.Resp{Result: order})
 	default:
 		s.logger.Error("s.exchangeSvc.CreateOrder", zap.Error(err))
@@ -131,4 +132,18 @@ func (s *Server) ExchangeWS(c *gin.Context) {
 	logger := s.logger.With(zap.String("module", "client"))
 	ws := newWS(pubsub.NewSubscriber(s.ps), conn, logger)
 	go ws.sendMessage()
+}
+
+func toOrderMsg(typ string, o *serializers.OrderResp) *serializers.OrderPubMsg {
+	return &serializers.OrderPubMsg{
+		Type: typ,
+		Order: &serializers.OrderMsg{
+			ID:     int(o.ID),
+			Price:  o.Price,
+			Size:   o.Quantity,
+			Side:   strings.ToLower(o.Side),
+			Symbol: o.SymbolCode,
+			Type:   o.Type,
+		},
+	}
 }

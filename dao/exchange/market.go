@@ -24,10 +24,11 @@ func (e *Exchange) ListMarkets(base string) ([]*models.Market, error) {
 
 func (e *Exchange) FindMarketBySymbol(s string) (*models.Market, error) {
 	var m models.Market
-	if err := e.db.Where("symbol = ?", s).First(&m).Error; err != nil {
+	if err := e.db.Where("symbol_code = ?", s).First(&m).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
+		return nil, errors.Wrap(err, "e.db.Where")
 	}
 	return &m, nil
 }

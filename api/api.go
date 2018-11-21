@@ -12,7 +12,7 @@ import (
 type Server struct {
 	g           *gin.Engine
 	up          *websocket.Upgrader
-	ps          *pubsub.Service
+	ps          *pubsub.Pubsub
 	userSvc     *service.User
 	portalSvc   *service.Portal
 	exchangeSvc *service.Exchange
@@ -20,7 +20,7 @@ type Server struct {
 	logger      *zap.Logger
 }
 
-func NewServer(g *gin.Engine, ps *pubsub.Service, up *websocket.Upgrader, userSvc *service.User, portalSvc *service.Portal, exchangeSvc *service.Exchange, walletSvc *service.Wallet, logger *zap.Logger) *Server {
+func NewServer(g *gin.Engine, ps *pubsub.Pubsub, up *websocket.Upgrader, userSvc *service.User, portalSvc *service.Portal, exchangeSvc *service.Exchange, walletSvc *service.Wallet, logger *zap.Logger) *Server {
 	return &Server{
 		g:           g,
 		up:          up,
