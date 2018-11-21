@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/jinzhu/gorm"
+	"time"
 )
 
 type BorrowState int
@@ -11,19 +12,22 @@ const (
 	Pending
 	Approved
 	Rejected
+	Payment
 )
 
 type Borrow struct {
 	gorm.Model
-
-	User   *User
-	UserID int
-
-	Amount         int64
-	Hash           string
-	TxID           string
-	PaymentAddress string
-	State          BorrowState `gorm:"not null;default:0"`
+	PaymentAddress      string
+	Amount              int64
+	Hash                string
+	CollateralTxID      string
+	Collateral          string
+	StartDate           time.Time
+	EndDate             time.Time
+	Rate                float64
+	ConstantLoanTxID    string
+	ConstantPaymentTxID string
+	State               BorrowState `gorm:"not null;default:0"`
 }
 
 func (*Borrow) TableName() string {

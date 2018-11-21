@@ -13,13 +13,20 @@ func (p *Portal) CreateBorrow(b *models.Borrow) (*models.Borrow, error) {
 	return b, nil
 }
 
-func (p *Portal) ListBorrowByUser(user *models.User, state *models.BorrowState, limit, page int) ([]*models.Borrow, error) {
+func (p *Portal) UpdateBorrow(b *models.Borrow) (*models.Borrow, error) {
+	if err := p.db.Save(b).Error; err != nil {
+		return nil, errors.Wrap(err, "b.db.Update")
+	}
+	return b, nil
+}
+
+func (p *Portal) ListBorrowByUser(paymentAddress string, state *models.BorrowState, limit, page int) ([]*models.Borrow, error) {
 	var (
 		bs     []*models.Borrow
 		offset = page*limit - limit
 	)
 
-	query := p.db.Where("user_id = ?", user.ID)
+	query := p.db.Where("payment_address = ?", paymentAddress)
 	if state != nil {
 		query = query.Where("state = ?", *state)
 	}

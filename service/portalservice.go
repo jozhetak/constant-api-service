@@ -10,6 +10,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
+	"github.com/ninjadotorg/constant-api-service/common"
 )
 
 type Portal struct {
@@ -24,25 +25,36 @@ func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
 	}
 }
 
-func (p *Portal) CreateBorrow(u *models.User, amount int64, hash, txID, paymentAddr string) (*serializers.BorrowResp, error) {
+func (p *Portal) CreateBorrow(req serializers.BorrowReq) (*serializers.BorrowResp, error) {
 	// if u.Type != models.Borrower {
 	//         return nil, errors.New("user type must be borrower to create borrow")
 	// }
+	endDate, err := time.Parse(common.DateTimeLayoutFormat, req.EndDate)
+	if err != nil {
+		return nil, errors.Wrap(err, "b.r.Create")
+	}
+	startDate, err := time.Parse(common.DateTimeLayoutFormat, req.StartDate)
+	if err != nil {
+		return nil, errors.Wrap(err, "b.r.Create")
+	}
 	borrow, err := p.r.CreateBorrow(&models.Borrow{
-		User:           u,
-		Amount:         amount,
-		Hash:           hash,
-		TxID:           txID,
-		PaymentAddress: paymentAddr,
+		Amount:         req.Amount,
+		Hash:           req.HashKey,
+		CollateralTxID: req.CollateralTxID,
 		State:          models.Pending,
+		Collateral:     req.Collateral,
+		StartDate:      startDate,
+		EndDate:        endDate,
+		Rate:           req.Rate,
+		PaymentAddress: req.PaymentAddress,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
-	return assembleBorrow(borrow), nil
+	return AssembleBorrow(borrow), nil
 }
 
-func (p *Portal) ListBorrowsByUser(user *models.User, state, limit, page string) ([]*serializers.BorrowResp, error) {
+func (p *Portal) ListBorrowsByUser(paymentAddress string, state, limit, page string) ([]*serializers.BorrowResp, error) {
 	l, pg, err := p.parseQuery(limit, page)
 	if err != nil {
 		return nil, errors.Wrapf(err, "b.parseQuery %s %s", limit, page)
@@ -57,7 +69,7 @@ func (p *Portal) ListBorrowsByUser(user *models.User, state, limit, page string)
 		s = &st
 	}
 
-	borrows, err := p.r.ListBorrowByUser(user, s, l, pg)
+	borrows, err := p.r.ListBorrowByUser(paymentAddress, s, l, pg)
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.ListByUser")
 	}
@@ -88,7 +100,7 @@ func (p *Portal) ListAllBorrows(state, limit, page string) ([]*serializers.Borro
 	return p.transformToResp(borrows), nil
 }
 
-func (p *Portal) FindBorrowByID(idS string) (*serializers.BorrowResp, error) {
+func (p *Portal) FindBorrowByID(idS string) (*models.Borrow, error) {
 	id, err := strconv.Atoi(idS)
 	if err != nil {
 		return nil, errors.Wrapf(err, "strconv.Atoi %s", idS)
@@ -100,11 +112,7 @@ func (p *Portal) FindBorrowByID(idS string) (*serializers.BorrowResp, error) {
 	if borrow == nil {
 		return nil, ErrBorrowNotFound
 	}
-	return assembleBorrow(borrow), nil
-}
-
-func (p *Portal) Approve(idS string) {
-	// call to bccore
+	return borrow, nil
 }
 
 func (p *Portal) parseQuery(limitS, pageS string) (limit, page int, err error) {
@@ -122,19 +130,80 @@ func (p *Portal) parseQuery(limitS, pageS string) (limit, page int, err error) {
 func (p *Portal) transformToResp(bs []*models.Borrow) []*serializers.BorrowResp {
 	resp := make([]*serializers.BorrowResp, 0, len(bs))
 	for _, br := range bs {
-		resp = append(resp, assembleBorrow(br))
+		resp = append(resp, AssembleBorrow(br))
 	}
 	return resp
 }
 
-func assembleBorrow(b *models.Borrow) *serializers.BorrowResp {
+func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 	return &serializers.BorrowResp{
 		ID:             b.ID,
 		Amount:         b.Amount,
 		Hash:           b.Hash,
-		TxID:           b.TxID,
-		PaymentAddress: b.PaymentAddress,
+		CollateralTxID: b.CollateralTxID,
 		State:          b.State.String(),
+		StartDate:      b.StartDate.Format(common.DateTimeLayoutFormat),
+		EndDate:        b.EndDate.Format(common.DateTimeLayoutFormat),
+		Rate:           b.Rate,
+		Collateral:     b.Collateral,
 		CreatedAt:      b.CreatedAt.Format(time.RFC3339),
+		PaymentAdrress: b.PaymentAddress,
 	}
+}
+
+func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, constantLoanTxId string) (bool, error) {
+	switch action {
+	case "r":
+		{
+			// TODO call web3 to eth to check
+			b.State = models.Rejected
+			_, err := p.r.UpdateBorrow(b)
+			if err != nil {
+
+				return false, err
+			}
+			return true, nil
+		}
+	case "a":
+		{
+			// TODO check with blockchain node to get tx
+			b.State = models.Approved
+			b.ConstantLoanTxID = constantLoanTxId
+			_, err := p.r.UpdateBorrow(b)
+			if err != nil {
+				return false, err
+			}
+			return true, nil
+		}
+	default:
+		return false, nil
+	}
+}
+
+func (p *Portal) PaymentTxForLoanRequestByID(b *models.Borrow, constantPaymentTxId string) (*blockchain.TransactionDetail, error) {
+	var txPayment *blockchain.TransactionDetail
+	retry := 10
+	for true {
+		var err error
+		txPayment, err = p.bc.GetTxByHash(constantPaymentTxId)
+		if err != nil {
+			return txPayment, err
+		}
+		// retry 10 times = 30s
+		time.Sleep((3 * time.Millisecond))
+		retry --
+		if retry == 0 {
+			break
+		}
+	}
+	if txPayment != nil {
+		b.State = models.Payment
+		b.ConstantPaymentTxID = txPayment.Hash
+		_, err := p.r.UpdateBorrow(b)
+		if err != nil {
+			return txPayment, err
+		}
+		return txPayment, nil
+	}
+	return txPayment, errors.New("Not found payment tx")
 }

@@ -24,6 +24,7 @@ const (
 	// tx
 	createandsendtransaction   = "createandsendtransaction"
 	sendcustomtokentransaction = "sendcustomtokentransaction"
+	gettransactionbyhash       = "gettransactionbyhash"
 
 	// custom token
 	getlistcustomtokenbalance = "getlistcustomtokenbalance"
@@ -130,7 +131,7 @@ func (b *Blockchain) post(args map[string]interface{}) ([]byte, error) {
 	return body, nil
 }
 
-func (b *Blockchain) walletAPI(method string, params interface{}) (interface{}, error) {
+func (b *Blockchain) blockchainAPI(method string, params interface{}) (interface{}, error) {
 	body, err := b.post(b.buildRequestPayload(method, params))
 	if err != nil {
 		return nil, errors.Wrap(err, "b.post")
@@ -146,17 +147,17 @@ func (b *Blockchain) walletAPI(method string, params interface{}) (interface{}, 
 }
 
 func (b *Blockchain) ListAccounts(params interface{}) (interface{}, error) {
-	return b.walletAPI(listAccountsMethod, params)
+	return b.blockchainAPI(listAccountsMethod, params)
 }
 
 func (b *Blockchain) GetAccount(params interface{}) (interface{}, error) {
-	return b.walletAPI(getAccountMethod, params)
+	return b.blockchainAPI(getAccountMethod, params)
 }
 
 func (b *Blockchain) EncryptData(pubKey string, params interface{}) (string, error) {
-	resp, err := b.walletAPI(encryptDataMethod, []interface{}{pubKey, params})
+	resp, err := b.blockchainAPI(encryptDataMethod, []interface{}{pubKey, params})
 	if err != nil {
-		return "", errors.Wrap(err, "b.walletAPI")
+		return "", errors.Wrap(err, "b.blockchainAPI")
 	}
 
 	v, ok := resp.(map[string]interface{})
@@ -172,7 +173,7 @@ func (b *Blockchain) EncryptData(pubKey string, params interface{}) (string, err
 }
 
 func (b *Blockchain) GetBalanceByPrivateKey(privKey string) (uint64, error) {
-	resp, err := b.walletAPI(getBalanceByPrivateKeyMethod, []interface{}{privKey})
+	resp, err := b.blockchainAPI(getBalanceByPrivateKeyMethod, []interface{}{privKey})
 	if err != nil {
 		return 0, err
 	}
@@ -181,7 +182,7 @@ func (b *Blockchain) GetBalanceByPrivateKey(privKey string) (uint64, error) {
 }
 
 func (b *Blockchain) GetListCustomTokenBalance(paymentAddress string) (*ListCustomTokenBalance, error) {
-	resp, err := b.walletAPI(getlistcustomtokenbalance, []interface{}{paymentAddress})
+	resp, err := b.blockchainAPI(getlistcustomtokenbalance, []interface{}{paymentAddress})
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +203,7 @@ func (b *Blockchain) GetListCustomTokenBalance(paymentAddress string) (*ListCust
 
 func (b *Blockchain) Createandsendtransaction(prvKey string, req serializers.WalletSend) error {
 	param := []interface{}{prvKey, req.PaymentAddresses, -1, 8}
-	resp, err := b.walletAPI(createandsendtransaction, param)
+	resp, err := b.blockchainAPI(createandsendtransaction, param)
 	if err != nil {
 		return err
 	}
@@ -223,7 +224,7 @@ func (b *Blockchain) Sendcustomtokentransaction(prvKey string, req serializers.W
 	tokenData["TokenSymbol"] = req.TokenSymbol
 	tokenData["TokenReceivers"] = req.PaymentAddresses
 	param = append(param, tokenData)
-	resp, err := b.walletAPI(sendcustomtokentransaction, param)
+	resp, err := b.blockchainAPI(sendcustomtokentransaction, param)
 	if err != nil {
 		return err
 	}
@@ -233,4 +234,27 @@ func (b *Blockchain) Sendcustomtokentransaction(prvKey string, req serializers.W
 		return errors.New("Fail")
 	}
 	return nil
+}
+
+func (b *Blockchain) GetTxByHash(txHash string) (*TransactionDetail, error) {
+	param := []interface{}{txHash}
+	resp, err := b.blockchainAPI(gettransactionbyhash, param)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"].(map[string]interface{})
+	if resultResp["Hash"] == nil {
+		return nil, errors.New("Not exist tx")
+	}
+	result := TransactionDetail{}
+	resultRespStr, err := json.Marshal(resultResp)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(resultRespStr), &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }

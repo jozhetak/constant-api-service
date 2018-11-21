@@ -18,14 +18,7 @@ func (s *Server) CreateNewBorrow(c *gin.Context) {
 		return
 	}
 
-	user, err := s.userFromContext(c)
-	if err != nil {
-		s.logger.Error("s.userFromContext", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
-		return
-	}
-
-	b, err := s.portalSvc.CreateBorrow(user, req.Amount, req.Hash, req.TxID, req.PaymentAddress)
+	b, err := s.portalSvc.CreateBorrow(req)
 	if err != nil {
 		s.logger.Error("s.borrowSvc.Create", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
@@ -36,20 +29,14 @@ func (s *Server) CreateNewBorrow(c *gin.Context) {
 }
 
 func (s *Server) ListBorrowsByUser(c *gin.Context) {
-	user, err := s.userFromContext(c)
-	if err != nil {
-		s.logger.Error("s.userFromContext", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
-		return
-	}
-
 	var (
-		state = c.DefaultQuery("state", "")
-		page  = c.DefaultQuery("page", "1")
-		limit = c.DefaultQuery("limit", "10")
+		paymentAddress = c.DefaultQuery("payment_address", "")
+		state          = c.DefaultQuery("state", "")
+		page           = c.DefaultQuery("page", "1")
+		limit          = c.DefaultQuery("limit", "10")
 	)
 
-	bs, err := s.portalSvc.ListBorrowsByUser(user, state, limit, page)
+	bs, err := s.portalSvc.ListBorrowsByUser(paymentAddress, state, limit, page)
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrInvalidBorrowState, service.ErrInvalidLimit, service.ErrInvalidPage:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
@@ -86,10 +73,47 @@ func (s *Server) FindByID(c *gin.Context) {
 	case service.ErrBorrowNotFound:
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
-		c.JSON(http.StatusOK, serializers.Resp{Result: b})
+		c.JSON(http.StatusOK, serializers.Resp{Result: service.AssembleBorrow(b)})
 	default:
 		s.logger.Error("s.borrowSvc.FindByID", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 
+	}
+}
+
+func (s *Server) UpdateStatusByID(c *gin.Context) {
+	b, err := s.portalSvc.FindBorrowByID(c.Param("id"))
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrBorrowNotFound:
+		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
+	}
+
+	result, err := s.portalSvc.UpdateStatusBorrowRequest(b, c.DefaultQuery("action", ""), c.DefaultQuery("costant_loan_tx_id", ""))
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrBorrowNotFound:
+		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
+	default:
+		c.JSON(http.StatusOK, serializers.Resp{Result: result})
+	}
+}
+
+func (s *Server) PayByID(c *gin.Context) {
+	// call blockchain to check tx payment
+	b, err := s.portalSvc.FindBorrowByID(c.Param("id"))
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrBorrowNotFound:
+		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
+	}
+	paymentTx, err := s.portalSvc.PaymentTxForLoanRequestByID(b, c.DefaultQuery("costant_payment_tx_id", ""))
+	if paymentTx != nil {
+		switch b.Collateral {
+		case "ETH":
+			// TODO call web3 to process collateral
+			//
+			//
+		}
+		c.JSON(http.StatusOK, serializers.Resp{Result: true})
+	} else {
+		c.JSON(http.StatusOK, serializers.Resp{Result: false})
 	}
 }
