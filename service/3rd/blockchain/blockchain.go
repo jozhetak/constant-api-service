@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/pkg/errors"
+	"github.com/ninjadotorg/constant-api-service/serializers"
 )
 
 const (
@@ -19,6 +20,13 @@ const (
 	getAccountMethod             = "getaccount"
 	encryptDataMethod            = "encryptdata"
 	getBalanceByPrivateKeyMethod = "getbalancebyprivatekey"
+
+	// tx
+	createandsendtransaction   = "createandsendtransaction"
+	sendcustomtokentransaction = "sendcustomtokentransaction"
+
+	// custom token
+	getlistcustomtokenbalance = "getlistcustomtokenbalance"
 )
 
 type Blockchain struct {
@@ -163,6 +171,66 @@ func (b *Blockchain) EncryptData(pubKey string, params interface{}) (string, err
 	return encrypted, nil
 }
 
-func (b *Blockchain) GetBalanceByPrivateKey(params string) (interface{}, error) {
-	return b.walletAPI(getBalanceByPrivateKeyMethod, []interface{}{params})
+func (b *Blockchain) GetBalanceByPrivateKey(privKey string) (uint64, error) {
+	resp, err := b.walletAPI(getBalanceByPrivateKeyMethod, []interface{}{privKey})
+	if err != nil {
+		return 0, err
+	}
+	data := resp.(map[string]interface{})
+	return uint64(data["Result"].(float64)), nil
+}
+
+func (b *Blockchain) GetListCustomTokenBalance(paymentAddress string) (*ListCustomTokenBalance, error) {
+	resp, err := b.walletAPI(getlistcustomtokenbalance, []interface{}{paymentAddress})
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"].(map[string]interface{})
+	_ = data["Error"]
+	result := ListCustomTokenBalance{}
+	resultRespStr, err := json.Marshal(resultResp)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(resultRespStr), &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (b *Blockchain) Createandsendtransaction(prvKey string, req serializers.WalletSend) error {
+	param := []interface{}{prvKey, req.PaymentAddresses, -1, 8}
+	resp, err := b.walletAPI(createandsendtransaction, param)
+	if err != nil {
+		return err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return errors.New("Fail")
+	}
+	return nil
+}
+
+func (b *Blockchain) Sendcustomtokentransaction(prvKey string, req serializers.WalletSend) error {
+	param := []interface{}{prvKey, -1, 8}
+	tokenData := map[string]interface{}{}
+	tokenData["TokenID"] = req.TokenID
+	tokenData["TokenTxType"] = 1
+	tokenData["TokenName"] = req.TokenName
+	tokenData["TokenSymbol"] = req.TokenSymbol
+	tokenData["TokenReceivers"] = req.PaymentAddresses
+	param = append(param, tokenData)
+	resp, err := b.walletAPI(sendcustomtokentransaction, param)
+	if err != nil {
+		return err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return errors.New("Fail")
+	}
+	return nil
 }
