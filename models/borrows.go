@@ -22,10 +22,9 @@ type Borrow struct {
 
 	Amount         int64
 	Hash           string
-	TxID           string
-	PaymentAddress string
+	CollateralTxID string
 	StartDate      time.Time
-	EndDate time.Time
+	EndDate        time.Time
 	Collateral     string
 	Rate           float64
 	State          BorrowState `gorm:"not null;default:0"`

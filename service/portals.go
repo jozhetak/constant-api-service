@@ -10,6 +10,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
+	"github.com/ninjadotorg/constant-api-service/common"
 )
 
 type Portal struct {
@@ -28,20 +29,19 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 	// if u.Type != models.Borrower {
 	//         return nil, errors.New("user type must be borrower to create borrow")
 	// }
-	endDate, err := time.Parse("2006-01-02", req.EndDate)
+	endDate, err := time.Parse(common.DateTimeLayoutFormat, req.EndDate)
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
-	startDate, err := time.Parse("2006-01-02", req.EndDate)
+	startDate, err := time.Parse(common.DateTimeLayoutFormat, req.EndDate)
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
 	borrow, err := p.r.CreateBorrow(&models.Borrow{
 		User:           u,
 		Amount:         req.Amount,
-		Hash:           req.Hash,
-		TxID:           req.TxID,
-		PaymentAddress: u.PaymentAddress,
+		Hash:           req.HashKey,
+		CollateralTxID: req.CollateralTxID,
 		State:          models.Pending,
 		Collateral:     req.Collateral,
 		StartDate:      startDate,
@@ -145,9 +145,12 @@ func assembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 		ID:             b.ID,
 		Amount:         b.Amount,
 		Hash:           b.Hash,
-		TxID:           b.TxID,
-		PaymentAddress: b.PaymentAddress,
+		CollateralTxID: b.CollateralTxID,
 		State:          b.State.String(),
+		StartDate:      b.StartDate.Format(common.DateTimeLayoutFormat),
+		EndDate:        b.EndDate.Format(common.DateTimeLayoutFormat),
+		Rate:           b.Rate,
+		Collateral:     b.Collateral,
 		CreatedAt:      b.CreatedAt.Format(time.RFC3339),
 	}
 }
