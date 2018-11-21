@@ -13,11 +13,9 @@ func (e *Exchange) CreateOrder(o *models.Order) (*models.Order, error) {
 	return o, nil
 }
 
-func (e *Exchange) OrderHistory(symbol string, status *models.OrderStatus, limit, page int, u *models.User) ([]*models.Order, error) {
-	var (
-		orders []*models.Order
-		offset = page*limit - limit
-	)
+func (e *Exchange) OrderHistory(symbol string, status *models.OrderStatus, side *models.OrderSide, limit, page *int, u *models.User) ([]*models.Order, error) {
+	var orders []*models.Order
+
 	query := e.db.Table("exchange_orders").Joins("JOIN exchange_markets em ON em.id = exchange_orders.market_id").Where("em.symbol_code = ?", symbol)
 	if u != nil {
 		query = query.Where("user_id = ?", u.ID)
@@ -25,7 +23,11 @@ func (e *Exchange) OrderHistory(symbol string, status *models.OrderStatus, limit
 	if status != nil {
 		query = query.Where("status = ?", int(*status))
 	}
-	query = query.Order("created_at DESC").Limit(limit).Offset(offset)
+	if limit != nil && page != nil {
+		offset := (*page)*(*limit) - *limit
+		query = query.Limit(*limit).Offset(offset)
+	}
+	query = query.Order("created_at DESC")
 
 	if err := query.Find(&orders).Error; err != nil {
 		return nil, errors.Wrap(err, "e.db.Where")
