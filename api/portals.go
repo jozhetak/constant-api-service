@@ -73,10 +73,26 @@ func (s *Server) FindByID(c *gin.Context) {
 	case service.ErrBorrowNotFound:
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
-		c.JSON(http.StatusOK, serializers.Resp{Result: b})
+		c.JSON(http.StatusOK, serializers.Resp{Result: service.AssembleBorrow(b)})
 	default:
 		s.logger.Error("s.borrowSvc.FindByID", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 
+	}
+}
+
+func (s *Server) UpdateStatusByID(c *gin.Context) {
+	b, err := s.portalSvc.FindBorrowByID(c.Param("id"))
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrBorrowNotFound:
+		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
+	}
+
+	result, err := s.portalSvc.UpdateStatusBorrowRequest(b, c.DefaultQuery("action", ""), c.DefaultQuery("costant_tx_id", ""))
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrBorrowNotFound:
+		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
+	default:
+		c.JSON(http.StatusOK, serializers.Resp{Result: result})
 	}
 }

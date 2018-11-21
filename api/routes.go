@@ -16,6 +16,7 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	portal := s.g.Group("/portal")
 	portal.POST("/borrows", s.CreateNewBorrow)
 	portal.GET("/borrows/:id", s.FindByID)
+	portal.PUT("/borrows/:id", s.UpdateStatusByID)
 	portal.GET("/borrows", s.ListBorrowsByUser)
 	portal.GET("/all_borrows", s.ListAllBorrows)
 	portal.Use(authMw.MiddlewareFunc())

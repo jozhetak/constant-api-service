@@ -13,6 +13,13 @@ func (p *Portal) CreateBorrow(b *models.Borrow) (*models.Borrow, error) {
 	return b, nil
 }
 
+func (p *Portal) UpdateBorrow(b *models.Borrow) (*models.Borrow, error) {
+	if err := p.db.Save(b).Error; err != nil {
+		return nil, errors.Wrap(err, "b.db.Update")
+	}
+	return b, nil
+}
+
 func (p *Portal) ListBorrowByUser(paymentAddress string, state *models.BorrowState, limit, page int) ([]*models.Borrow, error) {
 	var (
 		bs     []*models.Borrow

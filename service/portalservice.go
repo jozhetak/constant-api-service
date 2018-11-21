@@ -51,7 +51,7 @@ func (p *Portal) CreateBorrow(req serializers.BorrowReq) (*serializers.BorrowRes
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
-	return assembleBorrow(borrow), nil
+	return AssembleBorrow(borrow), nil
 }
 
 func (p *Portal) ListBorrowsByUser(paymentAddress string, state, limit, page string) ([]*serializers.BorrowResp, error) {
@@ -100,7 +100,7 @@ func (p *Portal) ListAllBorrows(state, limit, page string) ([]*serializers.Borro
 	return p.transformToResp(borrows), nil
 }
 
-func (p *Portal) FindBorrowByID(idS string) (*serializers.BorrowResp, error) {
+func (p *Portal) FindBorrowByID(idS string) (*models.Borrow, error) {
 	id, err := strconv.Atoi(idS)
 	if err != nil {
 		return nil, errors.Wrapf(err, "strconv.Atoi %s", idS)
@@ -112,7 +112,7 @@ func (p *Portal) FindBorrowByID(idS string) (*serializers.BorrowResp, error) {
 	if borrow == nil {
 		return nil, ErrBorrowNotFound
 	}
-	return assembleBorrow(borrow), nil
+	return borrow, nil
 }
 
 func (p *Portal) Approve(idS string) {
@@ -134,12 +134,12 @@ func (p *Portal) parseQuery(limitS, pageS string) (limit, page int, err error) {
 func (p *Portal) transformToResp(bs []*models.Borrow) []*serializers.BorrowResp {
 	resp := make([]*serializers.BorrowResp, 0, len(bs))
 	for _, br := range bs {
-		resp = append(resp, assembleBorrow(br))
+		resp = append(resp, AssembleBorrow(br))
 	}
 	return resp
 }
 
-func assembleBorrow(b *models.Borrow) *serializers.BorrowResp {
+func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 	return &serializers.BorrowResp{
 		ID:             b.ID,
 		Amount:         b.Amount,
@@ -152,5 +152,34 @@ func assembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 		Collateral:     b.Collateral,
 		CreatedAt:      b.CreatedAt.Format(time.RFC3339),
 		PaymentAdrress: b.PaymentAddress,
+	}
+}
+
+func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, constantTxId string) (bool, error) {
+	switch action {
+	case "r":
+		{
+			// TODO call web3 to eth to check
+			b.State = models.Rejected
+			_, err := p.r.UpdateBorrow(b)
+			if err != nil {
+
+				return false, err
+			}
+			return true, nil
+		}
+	case "a":
+		{
+			// TODO check with blockchain node to get tx
+			b.State = models.Approved
+			b.ConstantTxID = constantTxId
+			_, err := p.r.UpdateBorrow(b)
+			if err != nil {
+				return false, err
+			}
+			return true, nil
+		}
+	default:
+		return false, nil
 	}
 }
