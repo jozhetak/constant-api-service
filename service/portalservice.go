@@ -115,10 +115,6 @@ func (p *Portal) FindBorrowByID(idS string) (*models.Borrow, error) {
 	return borrow, nil
 }
 
-func (p *Portal) Approve(idS string) {
-	// call to bccore
-}
-
 func (p *Portal) parseQuery(limitS, pageS string) (limit, page int, err error) {
 	page, err = strconv.Atoi(pageS)
 	if err != nil {
@@ -155,7 +151,7 @@ func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 	}
 }
 
-func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, constantTxId string) (bool, error) {
+func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, constantLoanTxId string) (bool, error) {
 	switch action {
 	case "r":
 		{
@@ -172,7 +168,7 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 		{
 			// TODO check with blockchain node to get tx
 			b.State = models.Approved
-			b.ConstantTxID = constantTxId
+			b.ConstantLoanTxID = constantLoanTxId
 			_, err := p.r.UpdateBorrow(b)
 			if err != nil {
 				return false, err
@@ -182,4 +178,32 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 	default:
 		return false, nil
 	}
+}
+
+func (p *Portal) PaymentTxForLoanRequestByID(b *models.Borrow, constantPaymentTxId string) (*blockchain.TransactionDetail, error) {
+	var txPayment *blockchain.TransactionDetail
+	retry := 10
+	for true {
+		var err error
+		txPayment, err = p.bc.GetTxByHash(constantPaymentTxId)
+		if err != nil {
+			return txPayment, err
+		}
+		// retry 10 times = 30s
+		time.Sleep((3 * time.Millisecond))
+		retry --
+		if retry == 0 {
+			break
+		}
+	}
+	if txPayment != nil {
+		b.State = models.Payment
+		b.ConstantPaymentTxID = txPayment.Hash
+		_, err := p.r.UpdateBorrow(b)
+		if err != nil {
+			return txPayment, err
+		}
+		return txPayment, nil
+	}
+	return txPayment, errors.New("Not found payment tx")
 }

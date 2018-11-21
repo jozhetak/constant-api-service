@@ -88,11 +88,32 @@ func (s *Server) UpdateStatusByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
 	}
 
-	result, err := s.portalSvc.UpdateStatusBorrowRequest(b, c.DefaultQuery("action", ""), c.DefaultQuery("costant_tx_id", ""))
+	result, err := s.portalSvc.UpdateStatusBorrowRequest(b, c.DefaultQuery("action", ""), c.DefaultQuery("costant_loan_tx_id", ""))
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrBorrowNotFound:
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
 	default:
 		c.JSON(http.StatusOK, serializers.Resp{Result: result})
+	}
+}
+
+func (s *Server) PayByID(c *gin.Context) {
+	// call blockchain to check tx payment
+	b, err := s.portalSvc.FindBorrowByID(c.Param("id"))
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrBorrowNotFound:
+		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
+	}
+	paymentTx, err := s.portalSvc.PaymentTxForLoanRequestByID(b, c.DefaultQuery("costant_payment_tx_id", ""))
+	if paymentTx != nil {
+		switch b.Collateral {
+		case "ETH":
+			// TODO call web3 to process collateral
+			//
+			//
+		}
+		c.JSON(http.StatusOK, serializers.Resp{Result: true})
+	} else {
+		c.JSON(http.StatusOK, serializers.Resp{Result: false})
 	}
 }

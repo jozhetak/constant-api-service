@@ -12,20 +12,22 @@ const (
 	Pending
 	Approved
 	Rejected
+	Payment
 )
 
 type Borrow struct {
 	gorm.Model
-	PaymentAddress string
-	Amount         int64
-	Hash           string
-	CollateralTxID string
-	Collateral     string
-	StartDate      time.Time
-	EndDate        time.Time
-	Rate           float64
-	ConstantTxID   string
-	State          BorrowState `gorm:"not null;default:0"`
+	PaymentAddress      string
+	Amount              int64
+	Hash                string
+	CollateralTxID      string
+	Collateral          string
+	StartDate           time.Time
+	EndDate             time.Time
+	Rate                float64
+	ConstantLoanTxID    string
+	ConstantPaymentTxID string
+	State               BorrowState `gorm:"not null;default:0"`
 }
 
 func (*Borrow) TableName() string {
