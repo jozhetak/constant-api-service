@@ -11,7 +11,6 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	auth.POST("/login", authMw.LoginHandler)
 	auth.POST("/forgot", s.ForgotPassword)
 	auth.POST("/reset", s.ResetPassword)
-	auth.POST("/verify_lender", s.VerifyLender)
 
 	// portal API group
 	portal := s.g.Group("/portal")
@@ -29,6 +28,7 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	exch.GET("/markets", s.ListMarkets)
 	exch.GET("/market_histories", s.MarketHistory)
 	exch.GET("/symbol_rates", s.SymbolRates)
+	exch.GET("/market_rates", s.MarketRates)
 	exch.Use(authMw.MiddlewareFunc())
 	{
 		exch.POST("/orders", s.CreateOrder)

@@ -107,6 +107,19 @@ func (s *Server) SymbolRates(c *gin.Context) {
 	}
 }
 
+func (s *Server) MarketRates(c *gin.Context) {
+	rates, err := s.exchangeSvc.MarketRates()
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrInvalidArgument:
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
+	case nil:
+		c.JSON(http.StatusOK, serializers.Resp{Result: rates})
+	default:
+		s.logger.Error("s.exchangeSvc.SymbolRates", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+	}
+}
+
 func (s *Server) ExchangeWS(c *gin.Context) {
 	conn, err := s.up.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {

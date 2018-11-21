@@ -1,13 +1,11 @@
 package serializers
 
 type UserReq struct {
-	FirstName       string  `json:"FirstName"`
-	LastName        string  `json:"LastName"`
-	Email           string  `json:"Email" binding:"required"`
-	Password        string  `json:"Password"`
-	ConfirmPassword string  `json:"ConfirmPassword"`
-	Type            string  `json:"Type"`
-	PublicKey       *string `json:"PublicKey"`
+	FirstName       string `json:"FirstName"`
+	LastName        string `json:"LastName"`
+	Email           string `json:"Email" binding:"required"`
+	Password        string `json:"Password"`
+	ConfirmPassword string `json:"ConfirmPassword"`
 }
 
 type UserResetPasswordReq struct {

@@ -26,7 +26,7 @@ func (e *Exchange) ListMarkets(base string) ([]*serializers.MarketResp, error) {
 	return toMarketResp(markets), nil
 }
 
-func (e *Exchange) CreateOrder(u *models.User, symbol string, price float64, quantity uint, typ, side string) (*serializers.OrderResp, error) {
+func (e *Exchange) CreateOrder(u *models.User, symbol string, price uint64, quantity uint64, typ, side string) (*serializers.OrderResp, error) {
 	oTyp := models.GetOrderType(typ)
 	if oTyp == models.InvalidOrderType {
 		return nil, ErrInvalidOrderType
@@ -103,7 +103,7 @@ func (e *Exchange) MarketHistory(symbol, limit, page string) ([]*serializers.Ord
 	return toOrderResp(orders), nil
 }
 
-func (e *Exchange) SymbolRates(timeRange string) ([]exchange.SymbolRate, error) {
+func (e *Exchange) SymbolRates(timeRange string) ([]serializers.SymbolRate, error) {
 	var from, to time.Time
 	switch timeRange {
 	case "1h":
@@ -120,7 +120,31 @@ func (e *Exchange) SymbolRates(timeRange string) ([]exchange.SymbolRate, error) 
 	if err != nil {
 		return nil, errors.Wrap(err, "e.r.SymbolRates")
 	}
-	return rates, nil
+	return toSymbolRatesResp(rates), nil
+}
+
+func (e *Exchange) MarketRates() ([]*serializers.MarketRate, error) {
+	rates, err := e.r.MarketRates()
+	if err != nil {
+		return nil, errors.Wrap(err, "e.r.MarketRates")
+	}
+	return toMarketRatesResp(rates), nil
+}
+
+func toSymbolRatesResp(cs []exchange.SymbolRate) []serializers.SymbolRate {
+	resp := make([]serializers.SymbolRate, 0, len(cs))
+	for _, cr := range cs {
+		resp = append(resp, assembleSymbolRate(cr))
+	}
+	return resp
+}
+
+func toMarketRatesResp(cs []*exchange.MarketRate) []*serializers.MarketRate {
+	resp := make([]*serializers.MarketRate, 0, len(cs))
+	for _, cr := range cs {
+		resp = append(resp, assembleMarketRate(cr))
+	}
+	return resp
 }
 
 func toMarketResp(cs []*models.Market) []*serializers.MarketResp {
@@ -152,6 +176,30 @@ func assembleMarket(m *models.Market) *serializers.MarketResp {
 		TradePricePrecision:  m.TradePricePrecision,
 		TradeTotalPrecision:  m.TradeTotalPrecision,
 		TradeAmountPrecision: m.TradeAmountPrecision,
+	}
+}
+
+func assembleSymbolRate(m exchange.SymbolRate) serializers.SymbolRate {
+	return serializers.SymbolRate{
+		SymbolCode: m.SymbolCode,
+		Volume:     m.Volume,
+		Last:       m.Last,
+		High:       m.High,
+		Low:        m.Low,
+		PrevPrice:  m.PrevPrice,
+		PrevVolume: m.PrevVolume,
+	}
+}
+
+func assembleMarketRate(m *exchange.MarketRate) *serializers.MarketRate {
+	return &serializers.MarketRate{
+		SymbolCode: m.SymbolCode,
+		Last:       m.Last,
+		Bid:        m.Bid,
+		Ask:        m.Ask,
+		Volume:     m.Volume,
+		High24h:    m.High24h,
+		Low24h:     m.Low24h,
 	}
 }
 

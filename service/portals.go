@@ -25,9 +25,9 @@ func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
 }
 
 func (p *Portal) CreateBorrow(u *models.User, amount int64, hash, txID, paymentAddr string) (*serializers.BorrowResp, error) {
-	if u.Type != models.Borrower {
-		return nil, errors.New("user type must be borrower to create borrow")
-	}
+	// if u.Type != models.Borrower {
+	//         return nil, errors.New("user type must be borrower to create borrow")
+	// }
 	borrow, err := p.r.CreateBorrow(&models.Borrow{
 		User:           u,
 		Amount:         amount,

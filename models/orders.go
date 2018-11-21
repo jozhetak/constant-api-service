@@ -51,8 +51,8 @@ type Order struct {
 	Market   *Market
 	MarketID int
 
-	Price    float64
-	Quantity uint
+	Price    uint64
+	Quantity uint64
 	Type     OrderType
 	Status   OrderStatus
 	Side     OrderSide

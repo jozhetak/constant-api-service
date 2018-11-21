@@ -23,7 +23,7 @@ func (e *Exchange) OrderHistory(symbol string, status *models.OrderStatus, limit
 		query = query.Where("user_id = ?", u.ID)
 	}
 	if status != nil {
-		query = query.Where("status = ?", *status)
+		query = query.Where("status = ?", int(*status))
 	}
 	query = query.Order("created_at DESC").Limit(limit).Offset(offset)
 

@@ -28,7 +28,6 @@ type User struct {
 	PaymentAddress string
 	ReadonlyKey    string
 	PrivKey        string
-	Type           UserType
 	IsActive       bool
 }
 
@@ -52,10 +51,4 @@ type UserVerification struct {
 	Token     string
 	IsValid   bool
 	ExpiredAt time.Time
-}
-
-type UserLenderVerification struct {
-	UserVerification
-
-	EncryptedString string
 }

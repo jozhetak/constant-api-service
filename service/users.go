@@ -54,30 +54,6 @@ func (u *User) validate(firstName, lastName, email, password, confirmPassword st
 	return nil
 }
 
-func (u *User) createLenderUser(user *models.User, pubKey string) (*serializers.UserRegisterResp, error) {
-	token := u.generateVerificationToken()
-	encrypted, err := u.bc.EncryptData(pubKey, token)
-	if err != nil {
-		return nil, errors.Wrap(err, "u.bc.EncryptData")
-	}
-
-	v := &models.UserLenderVerification{
-		UserVerification: models.UserVerification{
-			User:      user,
-			Token:     token,
-			IsValid:   true,
-			ExpiredAt: time.Now().Add(verificationTokenExpiredDuration),
-		},
-		EncryptedString: encrypted,
-	}
-	if err := u.r.CreateLenderUser(user, v); err != nil {
-		return nil, errors.Wrap(err, "u.createLenderUser")
-	}
-	return &serializers.UserRegisterResp{
-		EncryptedString: encrypted,
-	}, nil
-}
-
 func (u *User) createNormalUser(user *models.User) (*serializers.UserRegisterResp, error) {
 	if err := u.r.Create(user); err != nil {
 		return nil, errors.Wrap(err, "u.r.Create")
@@ -85,14 +61,9 @@ func (u *User) createNormalUser(user *models.User) (*serializers.UserRegisterRes
 	return &serializers.UserRegisterResp{Message: "register successfully"}, nil
 }
 
-func (u *User) Register(firstName, lastName, email, password, confirmPassword, uType string, pubKey *string) (*serializers.UserRegisterResp, error) {
+func (u *User) Register(firstName, lastName, email, password, confirmPassword string) (*serializers.UserRegisterResp, error) {
 	if err := u.validate(firstName, lastName, email, password, confirmPassword); err != nil {
 		return nil, errors.Wrap(err, "u.validate")
-	}
-
-	userType := models.GetUserType(uType)
-	if userType == models.InvalidUserType {
-		return nil, ErrInvalidUserType
 	}
 
 	user, err := u.r.FindByEmail(email)
@@ -121,16 +92,7 @@ func (u *User) Register(firstName, lastName, email, password, confirmPassword, u
 		PaymentAddress: paymentAddress,
 		ReadonlyKey:    readonlyKey,
 		PrivKey:        privKey,
-		Type:           userType,
 		IsActive:       true,
-	}
-	if userType == models.Lender {
-		if pubKey == nil {
-			return nil, ErrMissingPubKey
-		}
-
-		user.IsActive = false
-		return u.createLenderUser(user, *pubKey)
 	}
 	return u.createNormalUser(user)
 }
@@ -233,29 +195,6 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 	return nil
 }
 
-func (u *User) VerifyLender(token string) error {
-	v, err := u.r.FindLenderVerificationToken(token)
-	if err != nil {
-		return errors.Wrap(err, "u.r.FindRecoveryToken")
-	}
-	if v == nil {
-		return ErrInvalidVerificationToken
-	}
-	if !v.IsValid {
-		return ErrInvalidVerificationToken
-	}
-	if v.ExpiredAt.Before(time.Now()) {
-		return ErrInvalidVerificationToken
-	}
-
-	v.IsValid = false
-	v.User.IsActive = true
-	if err := u.r.VerifyLender(v); err != nil {
-		return errors.Wrap(err, "u.r.VerifyLenderUser")
-	}
-	return nil
-}
-
 func assembleUser(u *models.User) *serializers.UserResp {
 	return &serializers.UserResp{
 		ID:             u.ID,
@@ -264,6 +203,5 @@ func assembleUser(u *models.User) *serializers.UserResp {
 		LasstName:      u.LastName,
 		Email:          u.Email,
 		PaymentAddress: u.PaymentAddress,
-		Type:           u.Type.String(),
 	}
 }
