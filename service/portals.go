@@ -24,17 +24,30 @@ func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
 	}
 }
 
-func (p *Portal) CreateBorrow(u *models.User, amount int64, hash, txID, paymentAddr string) (*serializers.BorrowResp, error) {
+func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*serializers.BorrowResp, error) {
 	// if u.Type != models.Borrower {
 	//         return nil, errors.New("user type must be borrower to create borrow")
 	// }
+	endDate, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		return nil, errors.Wrap(err, "b.r.Create")
+	}
+	startDate, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		return nil, errors.Wrap(err, "b.r.Create")
+	}
 	borrow, err := p.r.CreateBorrow(&models.Borrow{
 		User:           u,
-		Amount:         amount,
-		Hash:           hash,
-		TxID:           txID,
-		PaymentAddress: paymentAddr,
+		Amount:         req.Amount,
+		Hash:           req.Hash,
+		TxID:           req.TxID,
+		PaymentAddress: u.PaymentAddress,
 		State:          models.Pending,
+		Collateral:     req.Collateral,
+		StartDate:      startDate,
+		EndDate:        endDate,
+		Rate:           req.Rate,
+		UserID:         int(u.ID),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")

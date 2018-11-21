@@ -25,7 +25,7 @@ func (s *Server) CreateNewBorrow(c *gin.Context) {
 		return
 	}
 
-	b, err := s.portalSvc.CreateBorrow(user, req.Amount, req.Hash, req.TxID, req.PaymentAddress)
+	b, err := s.portalSvc.CreateBorrow(user, req)
 	if err != nil {
 		s.logger.Error("s.borrowSvc.Create", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})

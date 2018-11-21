@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/jinzhu/gorm"
+	"time"
 )
 
 type BorrowState int
@@ -23,6 +24,10 @@ type Borrow struct {
 	Hash           string
 	TxID           string
 	PaymentAddress string
+	StartDate      time.Time
+	EndDate time.Time
+	Collateral     string
+	Rate           float64
 	State          BorrowState `gorm:"not null;default:0"`
 }
 
