@@ -8,4 +8,5 @@ type BorrowReq struct {
 	StartDate      string  `json:"StartDate"`
 	EndDate        string  `json:"EndDate"`
 	Rate           float64 `json:"Rate"`
+	PaymentAddress string  `json:"PaymentAddress"`
 }

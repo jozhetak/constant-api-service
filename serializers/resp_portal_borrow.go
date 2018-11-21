@@ -11,4 +11,5 @@ type BorrowResp struct {
 	Rate           float64 `json:"Rate"`
 	State          string  `json:"State"`
 	CreatedAt      string  `json:"CreatedAt"`
+	PaymentAdrress string  `json:"payment_adrress"`
 }

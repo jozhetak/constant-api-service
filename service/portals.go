@@ -25,7 +25,7 @@ func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
 	}
 }
 
-func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*serializers.BorrowResp, error) {
+func (p *Portal) CreateBorrow(req serializers.BorrowReq) (*serializers.BorrowResp, error) {
 	// if u.Type != models.Borrower {
 	//         return nil, errors.New("user type must be borrower to create borrow")
 	// }
@@ -38,7 +38,6 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
 	borrow, err := p.r.CreateBorrow(&models.Borrow{
-		User:           u,
 		Amount:         req.Amount,
 		Hash:           req.HashKey,
 		CollateralTxID: req.CollateralTxID,
@@ -47,7 +46,7 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 		StartDate:      startDate,
 		EndDate:        endDate,
 		Rate:           req.Rate,
-		UserID:         int(u.ID),
+		PaymentAddress: req.PaymentAddress,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
@@ -55,7 +54,7 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 	return assembleBorrow(borrow), nil
 }
 
-func (p *Portal) ListBorrowsByUser(user *models.User, state, limit, page string) ([]*serializers.BorrowResp, error) {
+func (p *Portal) ListBorrowsByUser(paymentAddress string, state, limit, page string) ([]*serializers.BorrowResp, error) {
 	l, pg, err := p.parseQuery(limit, page)
 	if err != nil {
 		return nil, errors.Wrapf(err, "b.parseQuery %s %s", limit, page)
@@ -70,7 +69,7 @@ func (p *Portal) ListBorrowsByUser(user *models.User, state, limit, page string)
 		s = &st
 	}
 
-	borrows, err := p.r.ListBorrowByUser(user, s, l, pg)
+	borrows, err := p.r.ListBorrowByUser(paymentAddress, s, l, pg)
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.ListByUser")
 	}
@@ -152,5 +151,6 @@ func assembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 		Rate:           b.Rate,
 		Collateral:     b.Collateral,
 		CreatedAt:      b.CreatedAt.Format(time.RFC3339),
+		PaymentAdrress: b.PaymentAddress,
 	}
 }

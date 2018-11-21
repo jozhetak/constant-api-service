@@ -18,14 +18,7 @@ func (s *Server) CreateNewBorrow(c *gin.Context) {
 		return
 	}
 
-	user, err := s.userFromContext(c)
-	if err != nil {
-		s.logger.Error("s.userFromContext", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
-		return
-	}
-
-	b, err := s.portalSvc.CreateBorrow(user, req)
+	b, err := s.portalSvc.CreateBorrow(req)
 	if err != nil {
 		s.logger.Error("s.borrowSvc.Create", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
@@ -36,20 +29,14 @@ func (s *Server) CreateNewBorrow(c *gin.Context) {
 }
 
 func (s *Server) ListBorrowsByUser(c *gin.Context) {
-	user, err := s.userFromContext(c)
-	if err != nil {
-		s.logger.Error("s.userFromContext", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
-		return
-	}
-
 	var (
-		state = c.DefaultQuery("state", "")
-		page  = c.DefaultQuery("page", "1")
-		limit = c.DefaultQuery("limit", "10")
+		paymentAddress = c.DefaultQuery("payment_address", "")
+		state          = c.DefaultQuery("state", "")
+		page           = c.DefaultQuery("page", "1")
+		limit          = c.DefaultQuery("limit", "10")
 	)
 
-	bs, err := s.portalSvc.ListBorrowsByUser(user, state, limit, page)
+	bs, err := s.portalSvc.ListBorrowsByUser(paymentAddress, state, limit, page)
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrInvalidBorrowState, service.ErrInvalidLimit, service.ErrInvalidPage:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
