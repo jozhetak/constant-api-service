@@ -33,7 +33,7 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
-	startDate, err := time.Parse(common.DateTimeLayoutFormat, req.EndDate)
+	startDate, err := time.Parse(common.DateTimeLayoutFormat, req.StartDate)
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
