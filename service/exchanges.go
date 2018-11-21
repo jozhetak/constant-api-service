@@ -79,7 +79,7 @@ func (e *Exchange) UserOrderHistory(u *models.User, symbol, status, limit, page 
 		oStatus = &st
 	}
 
-	orders, err := e.r.OrderHistory(symbol, oStatus, l, p, u)
+	orders, err := e.r.OrderHistory(symbol, oStatus, nil, &l, &p, u)
 	if err != nil {
 		return nil, errors.Wrap(err, "e.r.OrderHistory")
 	}
@@ -96,7 +96,7 @@ func (e *Exchange) MarketHistory(symbol, limit, page string) ([]*serializers.Ord
 	}
 
 	status := models.Filled
-	orders, err := e.r.OrderHistory(symbol, &status, l, p, nil)
+	orders, err := e.r.OrderHistory(symbol, &status, nil, &l, &p, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "e.r.OrderHistory")
 	}
