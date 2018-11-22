@@ -111,6 +111,8 @@ func (s *Server) PayByID(c *gin.Context) {
 			// TODO call web3 to process collateral
 			//
 			//
+
+
 		}
 		c.JSON(http.StatusOK, serializers.Resp{Result: true})
 	} else {
