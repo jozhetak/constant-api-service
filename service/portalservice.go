@@ -36,7 +36,7 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 	if req.LoanRequest.ReceiveAddress == "" {
 		req.LoanRequest.ReceiveAddress = u.PaymentAddress
 	}
-	endDate := time.Unix(int64(startDate.Second())+int64(req.LoanRequest.Params.Maturity), 0)
+	endDate := startDate.Add(time.Duration(req.LoanRequest.Params.Maturity) * time.Second)
 	borrow, err := p.r.CreateBorrow(&models.Borrow{
 		LoanAmount:       int64(req.LoanRequest.LoanAmount),
 		KeyDigest:        req.LoanRequest.KeyDigest,
