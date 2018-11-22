@@ -14,6 +14,7 @@ import (
 const (
 	dumpPrivKeyMethod       = "dumpprivkey"
 	getAccountAddressMethod = "getaccountaddress"
+	loamparams              = "loanparams"
 
 	// wallet methods
 	listAccountsMethod           = "listaccounts"
@@ -276,4 +277,18 @@ func (b *Blockchain) CreateAndSendLoanRequest(prvKey string, request serializers
 	}
 	txID := resultResp.(string)
 	return &txID, nil
+}
+
+func (b *Blockchain) GetLoanParams() ([]interface{}, error) {
+	param := []interface{}{}
+	resp, err := b.blockchainAPI(loamparams, param)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return nil, errors.New("Fail")
+	}
+	return resultResp.([]interface{}), nil
 }

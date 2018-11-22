@@ -25,9 +25,6 @@ func (s *Server) CreateNewBorrow(c *gin.Context) {
 		return
 	}
 
-	req.PaymentAddress = user.PaymentAddress
-	req.LoanRequest.ReceiveAddress = req.PaymentAddress
-
 	b, err := s.portalSvc.CreateBorrow(user, req)
 	if err != nil {
 		s.logger.Error("s.borrowSvc.Create", zap.Error(err))
@@ -116,7 +113,7 @@ func (s *Server) PayByID(c *gin.Context) {
 	}
 	paymentTx, err := s.portalSvc.PaymentTxForLoanRequestByID(b, c.DefaultQuery("costant_payment_tx_id", ""))
 	if paymentTx != nil {
-		switch b.Collateral {
+		switch b.CollateralType {
 		case "ETH":
 			// TODO call web3 to process collateral
 			//
@@ -127,4 +124,9 @@ func (s *Server) PayByID(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusOK, serializers.Resp{Result: false})
 	}
+}
+
+func (s *Server) GetLoanParams(c *gin.Context) {
+	result, err := s.portalSvc.GetLoanParams()
+	c.JSON(http.StatusOK, serializers.Resp{Error: err, Result: result})
 }

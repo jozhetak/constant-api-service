@@ -22,6 +22,7 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	portal.GET("/all_borrows", s.ListAllBorrows)
 	portal.Use(authMw.MiddlewareFunc())
 	{
+		portal.GET("/loanparams", s.GetLoanParams)
 	}
 
 	// exchange API group
