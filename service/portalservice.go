@@ -28,10 +28,7 @@ func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
 	}
 }
 
-func (p *Portal) CreateBorrow(req serializers.BorrowReq) (*serializers.BorrowResp, error) {
-	// if u.Type != models.Borrower {
-	//         return nil, errors.New("user type must be borrower to create borrow")
-	// }
+func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*serializers.BorrowResp, error) {
 	endDate, err := time.Parse(common.DateTimeLayoutFormat, req.EndDate)
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
@@ -54,6 +51,9 @@ func (p *Portal) CreateBorrow(req serializers.BorrowReq) (*serializers.BorrowRes
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
+
+	p.bc.CreateAndSendLoanRequest(u.PrivKey, req.LoanRequest)
+
 	return AssembleBorrow(borrow), nil
 }
 

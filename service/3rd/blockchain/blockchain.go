@@ -22,9 +22,13 @@ const (
 	getBalanceByPrivateKeyMethod = "getbalancebyprivatekey"
 
 	// tx
-	createandsendtransaction   = "createandsendtransaction"
-	sendcustomtokentransaction = "sendcustomtokentransaction"
-	gettransactionbyhash       = "gettransactionbyhash"
+	createandsendtransaction            = "createandsendtransaction"
+	createandsendcustomtokentransaction = "createandsendcustomtokentransaction"
+	gettransactionbyhash                = "gettransactionbyhash"
+	createandsendloanrequest            = "createandsendloanrequest"
+	createandsendloanresponse           = "createandsendloanresponse"
+	createandsendloanpayment            = "createandsendloanpayment"
+	createandsendloanwithdraw           = "createandsendloanwithdraw"
 
 	// custom token
 	getlistcustomtokenbalance = "getlistcustomtokenbalance"
@@ -224,7 +228,7 @@ func (b *Blockchain) Sendcustomtokentransaction(prvKey string, req serializers.W
 	tokenData["TokenSymbol"] = req.TokenSymbol
 	tokenData["TokenReceivers"] = req.PaymentAddresses
 	param = append(param, tokenData)
-	resp, err := b.blockchainAPI(sendcustomtokentransaction, param)
+	resp, err := b.blockchainAPI(createandsendcustomtokentransaction, param)
 	if err != nil {
 		return err
 	}
@@ -257,4 +261,19 @@ func (b *Blockchain) GetTxByHash(txHash string) (*TransactionDetail, error) {
 		return nil, err
 	}
 	return &result, nil
+}
+
+func (b *Blockchain) CreateAndSendLoanRequest(prvKey string, request serializers.LoanRequest) (*string, error) {
+	param := []interface{}{prvKey, 0, request}
+	resp, err := b.blockchainAPI(createandsendloanrequest, param)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return nil, errors.New("Fail")
+	}
+	txID := resultResp.(string)
+	return &txID, nil
 }

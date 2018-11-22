@@ -18,7 +18,17 @@ func (s *Server) CreateNewBorrow(c *gin.Context) {
 		return
 	}
 
-	b, err := s.portalSvc.CreateBorrow(req)
+	user, err := s.userFromContext(c)
+	if err != nil {
+		s.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
+	req.PaymentAddress = user.PaymentAddress
+	req.LoanRequest.ReceiveAddress = req.PaymentAddress
+
+	b, err := s.portalSvc.CreateBorrow(user, req)
 	if err != nil {
 		s.logger.Error("s.borrowSvc.Create", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
@@ -111,7 +121,6 @@ func (s *Server) PayByID(c *gin.Context) {
 			// TODO call web3 to process collateral
 			//
 			//
-
 
 		}
 		c.JSON(http.StatusOK, serializers.Resp{Result: true})
