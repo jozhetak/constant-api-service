@@ -95,7 +95,7 @@ func (s *Server) UpdateStatusByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
 	}
 
-	result, err := s.portalSvc.UpdateStatusBorrowRequest(b, c.DefaultQuery("action", ""), c.DefaultQuery("costant_loan_tx_id", ""))
+	result, err := s.portalSvc.UpdateStatusBorrowRequest(b, c.DefaultQuery("action", ""), c.DefaultQuery("costant_loan_accept_tx_id", ""))
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrBorrowNotFound:
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})

@@ -59,7 +59,7 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 	if err != nil {
 		return nil, err
 	}
-	borrow.ConstantLoanTxID = *txID
+	borrow.ConstantLoanRequestTxID = *txID
 	_, err = p.r.UpdateBorrow(borrow)
 	if err != nil {
 		return nil, err
@@ -151,22 +151,24 @@ func (p *Portal) transformToResp(bs []*models.Borrow) []*serializers.BorrowResp 
 
 func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 	return &serializers.BorrowResp{
-		ID:                  b.ID,
-		LoanAmount:          b.LoanAmount,
-		LoanID:              b.LoanID,
-		KeyDigest:           b.KeyDigest,
-		State:               b.State.String(),
-		StartDate:           b.StartDate.Format(common.DateTimeLayoutFormat),
-		EndDate:             b.EndDate.Format(common.DateTimeLayoutFormat),
-		InterestRate:        b.InterestRate,
-		CollateralType:      b.CollateralType,
-		CollateralAmount:    b.CollateralAmount,
-		CreatedAt:           b.CreatedAt.Format(common.DateTimeLayoutFormat),
-		PaymentAddress:      b.PaymentAddress,
-		LiquidationStart:    b.LiquidationStart,
-		Maturity:            b.Maturity,
-		ConstantPaymentTxID: b.ConstantPaymentTxID,
-		ConstantLoanTxID:    b.ConstantLoanTxID,
+		ID:                       b.ID,
+		LoanAmount:               b.LoanAmount,
+		LoanID:                   b.LoanID,
+		KeyDigest:                b.KeyDigest,
+		State:                    b.State.String(),
+		StartDate:                b.StartDate.Format(common.DateTimeLayoutFormat),
+		EndDate:                  b.EndDate.Format(common.DateTimeLayoutFormat),
+		InterestRate:             b.InterestRate,
+		CollateralType:           b.CollateralType,
+		CollateralAmount:         b.CollateralAmount,
+		CreatedAt:                b.CreatedAt.Format(common.DateTimeLayoutFormat),
+		PaymentAddress:           b.PaymentAddress,
+		LiquidationStart:         b.LiquidationStart,
+		Maturity:                 b.Maturity,
+		ConstantLoanPaymentTxID:  b.ConstantLoanPaymentTxID,
+		ConstantLoanRequestTxID:  b.ConstantLoanRequestTxID,
+		ConstantLoanAcceptTxID:   b.ConstantLoanAcceptTxID,
+		ConstantLoanWithdrawTxID: b.ConstantLoanWithdrawTxID,
 	}
 }
 
@@ -187,7 +189,7 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 		{
 			// TODO check with blockchain node to get tx
 			b.State = models.Approved
-			b.ConstantLoanTxID = constantLoanTxId
+			b.ConstantLoanAcceptTxID = constantLoanTxId
 			_, err := p.r.UpdateBorrow(b)
 			if err != nil {
 				return false, err
@@ -217,7 +219,7 @@ func (p *Portal) PaymentTxForLoanRequestByID(b *models.Borrow, constantPaymentTx
 	}
 	if txPayment != nil {
 		b.State = models.Payment
-		b.ConstantPaymentTxID = txPayment.Hash
+		b.ConstantLoanPaymentTxID = txPayment.Hash
 		_, err := p.r.UpdateBorrow(b)
 		if err != nil {
 			return txPayment, err
