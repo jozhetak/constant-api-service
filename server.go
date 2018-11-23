@@ -24,6 +24,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/sendgrid"
 	"github.com/ninjadotorg/constant-api-service/templates/email"
+	"github.com/ninjadotorg/constant-api-service/dao/voting"
 )
 
 func main() {
@@ -61,6 +62,9 @@ func main() {
 		portalDAO = portal.NewPortal(db)
 		portalSvc = service.NewPortal(portalDAO, bc)
 
+		votingDao = voting.NewVoting(db)
+		votingSvc = service.NewVotingService(votingDao, bc)
+
 		exchangeDAO = exchange.NewExchange(db)
 		exchangeSvc = service.NewExchange(exchangeDAO)
 
@@ -74,7 +78,7 @@ func main() {
 
 	r := gin.Default()
 	r.Use(cors.Default())
-	svr := api.NewServer(r, psSvc, upgrader, userSvc, portalSvc, exchangeSvc, walletSvc, logger)
+	svr := api.NewServer(r, psSvc, upgrader, userSvc, portalSvc, votingSvc, exchangeSvc, walletSvc, logger)
 	authMw := api.AuthMiddleware(string(conf.TokenSecretKey), svr.Authenticate)
 	svr.Routes(authMw)
 

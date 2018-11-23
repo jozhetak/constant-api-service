@@ -20,7 +20,7 @@ type Server struct {
 	logger      *zap.Logger
 }
 
-func NewServer(g *gin.Engine, ps *pubsub.Pubsub, up *websocket.Upgrader, userSvc *service.User, portalSvc *service.Portal, exchangeSvc *service.Exchange, walletSvc *service.Wallet, logger *zap.Logger) *Server {
+func NewServer(g *gin.Engine, ps *pubsub.Pubsub, up *websocket.Upgrader, userSvc *service.User, portalSvc *service.Portal, votingSvc *service.VotingService, exchangeSvc *service.Exchange, walletSvc *service.Wallet, logger *zap.Logger) *Server {
 	return &Server{
 		g:           g,
 		up:          up,
