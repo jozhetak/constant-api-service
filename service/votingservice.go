@@ -20,9 +20,16 @@ func NewVotingService(r *voting.VotingDao, bc *blockchain.Blockchain) *VotingSer
 }
 
 func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType models.BoardCandidateType, paymentAddress string) (*models.VotingBoardCandidate, error) {
-	candidate := models.VotingBoardCandidate{
-		User:           u,
-		PaymentAddress: paymentAddress,
+	var candidate *models.VotingBoardCandidate
+	candidate, _ = self.votingDao.FindVotingBoardCandidateByUser(*u)
+	exist := false
+	if candidate == nil {
+		candidate = &models.VotingBoardCandidate{
+			User:           u,
+			PaymentAddress: paymentAddress,
+		}
+	} else {
+		exist = true
 	}
 	switch boardType {
 	case models.DCB:
@@ -35,10 +42,18 @@ func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType mode
 		return nil, errors.New("Wrong type of board")
 	}
 
-	candidateCreated, err := self.votingDao.CreateVotingBoardCandidate(&candidate)
-	if err != nil {
-		return nil, err
+	if !exist {
+		candidateCreated, err := self.votingDao.CreateVotingBoardCandidate(candidate)
+		if err != nil {
+			return nil, err
+		}
+		return candidateCreated, nil
+	} else {
+		candidateUpdated, err := self.votingDao.UpdateVotingBoardCandidate(candidate)
+		if err != nil {
+			return nil, err
+		}
+		return candidateUpdated, nil
 	}
 
-	return candidateCreated, nil
 }

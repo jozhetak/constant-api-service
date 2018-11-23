@@ -35,9 +35,20 @@ func (p *VotingDao) DeleteVotingBoardCandidate(b *models.VotingBoardCandidate) (
 	return nil
 }
 
-func (p *VotingDao) FindBorrowByID(id int) (*models.VotingBoardCandidate, error) {
+func (p *VotingDao) FindVotingBoardCandidateByID(id int) (*models.VotingBoardCandidate, error) {
 	var b models.VotingBoardCandidate
 	if err := p.db.First(&b, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "b.db.First")
+	}
+	return &b, nil
+}
+
+func (p *VotingDao) FindVotingBoardCandidateByUser(user models.User) (*models.VotingBoardCandidate, error) {
+	var b models.VotingBoardCandidate
+	if err := p.db.Where("user_id = ?", user.ID).First(&b).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
