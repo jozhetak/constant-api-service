@@ -53,7 +53,7 @@ func (p *PortalDao) ListAllBorrows(state *models.BorrowState, limit, page int) (
 
 	query := p.db.Limit(limit).Offset(offset)
 	if state != nil {
-		query = query.Where("state = ?", *state)
+		query = query.Preload("portal_borrows.BorrowResponse").Where("state = ?", *state)
 	}
 	query = query.Find(&bs)
 
