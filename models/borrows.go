@@ -17,6 +17,8 @@ const (
 
 type Borrow struct {
 	gorm.Model
+	UserID                   int
+	User                     *User
 	PaymentAddress           string
 	LoanAmount               int64
 	KeyDigest                string
