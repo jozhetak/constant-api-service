@@ -88,14 +88,14 @@ func (s *Server) FindByID(c *gin.Context) {
 	}
 }
 
-func (s *Server) UpdateStatusByID(c *gin.Context) {
+func (s *Server) UpdateStateBorrowByID(c *gin.Context) {
 	b, err := s.portalSvc.FindBorrowByID(c.Param("id"))
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrBorrowNotFound:
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
 	}
 
-	result, err := s.portalSvc.UpdateStatusBorrowRequest(b, c.DefaultQuery("action", ""), c.DefaultQuery("costant_loan_accept_tx_id", ""))
+	result, err := s.portalSvc.UpdateStatusBorrowRequest(b, c.DefaultQuery("action", ""), c.DefaultQuery("costant_loan_response_tx_id", ""))
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrBorrowNotFound:
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
@@ -113,6 +113,44 @@ func (s *Server) PayByID(c *gin.Context) {
 	}
 	paymentTx, err := s.portalSvc.PaymentTxForLoanRequestByID(b, c.DefaultQuery("costant_payment_tx_id", ""))
 	if paymentTx != nil {
+		switch b.CollateralType {
+		case "ETH":
+			// TODO call web3 to process collateral
+			//
+			//
+
+		}
+		c.JSON(http.StatusOK, serializers.Resp{Result: true})
+	} else {
+		c.JSON(http.StatusOK, serializers.Resp{Result: false})
+	}
+}
+
+func (s *Server) WithdrawBorrowByID(c *gin.Context) {
+	user, err := s.userFromContext(c)
+	if err != nil {
+		s.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+	// call blockchain to check tx payment
+	b, err := s.portalSvc.FindBorrowByID(c.Param("id"))
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrBorrowNotFound:
+		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
+		return
+	}
+	key := c.DefaultQuery("key", "")
+	if len(key) == 0 {
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
+		return
+	}
+	withdrawTx, err := s.portalSvc.WithdrawTxForLoanRequest(user, b, key)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, serializers.Resp{Error: err})
+		return
+	}
+	if withdrawTx != nil {
 		switch b.CollateralType {
 		case "ETH":
 			// TODO call web3 to process collateral

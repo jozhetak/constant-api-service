@@ -204,32 +204,42 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 	}
 }
 
-func (p *Portal) PaymentTxForLoanRequestByID(b *models.Borrow, constantPaymentTxId string) (*blockchain.TransactionDetail, error) {
-	var txPayment *blockchain.TransactionDetail
-	retry := 10
-	for true {
-		var err error
-		txPayment, err = p.bc.GetTxByHash(constantPaymentTxId)
-		if err != nil {
-			return txPayment, err
-		}
-		// retry 10 times = 30s
-		time.Sleep((3 * time.Millisecond))
-		retry --
-		if retry == 0 {
-			break
-		}
+func (p *Portal) WithdrawTxForLoanRequest(u *models.User, b *models.Borrow, key string) (*blockchain.TransactionDetail, error) {
+	request := serializers.LoanWithdraw{
+		LoanID: b.LoanID,
+		Key:    key,
 	}
-	if txPayment != nil {
+	txId, err := p.bc.CreateAndSendLoanWithdraw(u.PrivKey, request)
+	if err != nil {
+		return nil, err
+	}
+	if txId != nil {
+		tx, err := GetBlockchainTxByHash(*txId, 10, p.bc)
+		if err != nil {
+			return nil, err
+		}
+		return tx, nil
+	} else {
+		return nil, errors.New("Fail")
+	}
+}
+
+func (p *Portal) PaymentTxForLoanRequestByID(b *models.Borrow, constantPaymentTxId string) (*blockchain.TransactionDetail, error) {
+	var tx *blockchain.TransactionDetail
+	tx, err := GetBlockchainTxByHash(constantPaymentTxId, 10, p.bc)
+	if err != nil {
+		return nil, err
+	}
+	if tx != nil {
 		b.State = models.Payment
-		b.ConstantLoanPaymentTxID = txPayment.Hash
+		b.ConstantLoanPaymentTxID = tx.Hash
 		_, err := p.r.UpdateBorrow(b)
 		if err != nil {
-			return txPayment, err
+			return tx, err
 		}
-		return txPayment, nil
+		return tx, nil
 	}
-	return txPayment, errors.New("Not found payment tx")
+	return tx, errors.New("Not found payment tx")
 }
 
 func (p *Portal) GetLoanParams() ([]interface{}, error) {
