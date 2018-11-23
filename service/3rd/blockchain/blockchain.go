@@ -16,13 +16,13 @@ import (
 const (
 	dumpPrivKeyMethod       = "dumpprivkey"
 	getAccountAddressMethod = "getaccountaddress"
-	loamparams              = "loanparams"
+	LoanParams              = "loanparams"
 
 	// wallet methods
 	listAccountsMethod           = "listaccounts"
 	getAccountMethod             = "getaccount"
 	encryptDataMethod            = "encryptdata"
-	getBalanceByPrivateKeyMethod = "getbalancebyprivatekey"
+	GetBalanceByPrivateKeyMethod = "getbalancebyprivatekey"
 
 	// tx
 	createandsendtransaction            = "createandsendtransaction"
@@ -184,7 +184,7 @@ func (b *Blockchain) EncryptData(pubKey string, params interface{}) (string, err
 }
 
 func (b *Blockchain) GetBalanceByPrivateKey(privKey string) (uint64, error) {
-	resp, err := b.blockchainAPI(getBalanceByPrivateKeyMethod, []interface{}{privKey})
+	resp, err := b.blockchainAPI(GetBalanceByPrivateKeyMethod, []interface{}{privKey})
 	if err != nil {
 		return 0, err
 	}
@@ -324,7 +324,7 @@ func (b *Blockchain) CreateAndSendLoanPayment(prvKey string, request serializers
 
 func (b *Blockchain) GetLoanParams() ([]interface{}, error) {
 	param := []interface{}{}
-	resp, err := b.blockchainAPI(loamparams, param)
+	resp, err := b.blockchainAPI(LoanParams, param)
 	if err != nil {
 		return nil, err
 	}
