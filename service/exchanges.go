@@ -22,7 +22,7 @@ func NewExchange(r *exchange.Exchange) *Exchange {
 func (e *Exchange) ListMarkets(base string) ([]*serializers.MarketResp, error) {
 	markets, err := e.r.ListMarkets(base)
 	if err != nil {
-		return nil, errors.Wrap(err, "c.r.ListByBase")
+		return nil, errors.Wrap(err, "c.portalDao.ListByBase")
 	}
 	return toMarketResp(markets), nil
 }
@@ -40,7 +40,7 @@ func (e *Exchange) CreateOrder(u *models.User, symbol string, price uint64, quan
 
 	market, err := e.r.FindMarketBySymbol(symbol)
 	if err != nil {
-		return nil, errors.Wrap(err, "e.r.FindMarketBySymbol")
+		return nil, errors.Wrap(err, "e.portalDao.FindMarketBySymbol")
 	}
 	if market == nil {
 		return nil, ErrInvalidSymbol
@@ -57,7 +57,7 @@ func (e *Exchange) CreateOrder(u *models.User, symbol string, price uint64, quan
 		Time:     time.Now(),
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "e.r.CreateOrder")
+		return nil, errors.Wrap(err, "e.portalDao.CreateOrder")
 	}
 	return assembleOrder(order), nil
 }
@@ -82,7 +82,7 @@ func (e *Exchange) UserOrderHistory(u *models.User, symbol, status, limit, page 
 
 	orders, err := e.r.OrderHistory(symbol, oStatus, nil, &l, &p, u)
 	if err != nil {
-		return nil, errors.Wrap(err, "e.r.OrderHistory")
+		return nil, errors.Wrap(err, "e.portalDao.OrderHistory")
 	}
 	return toOrderResp(orders), nil
 }
@@ -99,7 +99,7 @@ func (e *Exchange) MarketHistory(symbol, limit, page string) ([]*serializers.Ord
 	status := models.Filled
 	orders, err := e.r.OrderHistory(symbol, &status, nil, &l, &p, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "e.r.OrderHistory")
+		return nil, errors.Wrap(err, "e.portalDao.OrderHistory")
 	}
 	return toOrderResp(orders), nil
 }
@@ -119,7 +119,7 @@ func (e *Exchange) SymbolRates(timeRange string) ([]serializers.SymbolRate, erro
 
 	rates, err := e.r.SymbolRates(from, to)
 	if err != nil {
-		return nil, errors.Wrap(err, "e.r.SymbolRates")
+		return nil, errors.Wrap(err, "e.portalDao.SymbolRates")
 	}
 	return toSymbolRatesResp(rates), nil
 }
@@ -127,7 +127,7 @@ func (e *Exchange) SymbolRates(timeRange string) ([]serializers.SymbolRate, erro
 func (e *Exchange) MarketRates() ([]*serializers.MarketRate, error) {
 	rates, err := e.r.MarketRates()
 	if err != nil {
-		return nil, errors.Wrap(err, "e.r.MarketRates")
+		return nil, errors.Wrap(err, "e.portalDao.MarketRates")
 	}
 	return toMarketRatesResp(rates), nil
 }
@@ -139,7 +139,7 @@ func (e *Exchange) FindOrderByID(idS string) (*serializers.OrderResp, error) {
 	}
 	order, err := e.r.FindOrderByID(id)
 	if err != nil {
-		return nil, errors.Wrap(err, "e.r.FindByID")
+		return nil, errors.Wrap(err, "e.portalDao.FindByID")
 	}
 	if order == nil {
 		return nil, ErrInvalidOrder

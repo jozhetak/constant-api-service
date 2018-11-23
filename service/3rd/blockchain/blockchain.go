@@ -16,13 +16,13 @@ import (
 const (
 	dumpPrivKeyMethod       = "dumpprivkey"
 	getAccountAddressMethod = "getaccountaddress"
-	loamparams              = "loanparams"
+	LoanParams              = "loanparams"
 
 	// wallet methods
 	listAccountsMethod           = "listaccounts"
 	getAccountMethod             = "getaccount"
 	encryptDataMethod            = "encryptdata"
-	getBalanceByPrivateKeyMethod = "getbalancebyprivatekey"
+	GetBalanceByPrivateKeyMethod = "getbalancebyprivatekey"
 
 	// tx
 	createandsendtransaction            = "createandsendtransaction"
@@ -184,7 +184,7 @@ func (b *Blockchain) EncryptData(pubKey string, params interface{}) (string, err
 }
 
 func (b *Blockchain) GetBalanceByPrivateKey(privKey string) (uint64, error) {
-	resp, err := b.blockchainAPI(getBalanceByPrivateKeyMethod, []interface{}{privKey})
+	resp, err := b.blockchainAPI(GetBalanceByPrivateKeyMethod, []interface{}{privKey})
 	if err != nil {
 		return 0, err
 	}
@@ -292,9 +292,39 @@ func (b *Blockchain) CreateAndSendLoanRequest(prvKey string, request serializers
 	return &txID, nil
 }
 
+func (b *Blockchain) CreateAndSendLoanWithdraw(prvKey string, request serializers.LoanWithdraw) (*string, error) {
+	param := []interface{}{prvKey, 0, request}
+	resp, err := b.blockchainAPI(createandsendloanwithdraw, param)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return nil, errors.New("Fail")
+	}
+	txID := resultResp.(string)
+	return &txID, nil
+}
+
+func (b *Blockchain) CreateAndSendLoanPayment(prvKey string, request serializers.LoanPayment) (*string, error) {
+	param := []interface{}{prvKey, 0, request}
+	resp, err := b.blockchainAPI(createandsendloanpayment, param)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return nil, errors.New("Fail")
+	}
+	txID := resultResp.(string)
+	return &txID, nil
+}
+
 func (b *Blockchain) GetLoanParams() ([]interface{}, error) {
 	param := []interface{}{}
-	resp, err := b.blockchainAPI(loamparams, param)
+	resp, err := b.blockchainAPI(LoanParams, param)
 	if err != nil {
 		return nil, err
 	}

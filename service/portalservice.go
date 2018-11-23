@@ -15,27 +15,31 @@ import (
 )
 
 type Portal struct {
-	r  *portal.Portal
-	bc *blockchain.Blockchain
+	portalDao         *portal.PortalDao
+	blockchainService *blockchain.Blockchain
 }
 
-func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
+func NewPortal(r *portal.PortalDao, bc *blockchain.Blockchain) *Portal {
 	return &Portal{
-		r:  r,
-		bc: bc,
+		portalDao:         r,
+		blockchainService: bc,
 	}
 }
 
 func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*serializers.BorrowResp, error) {
 	startDate, err := time.Parse(common.DateTimeLayoutFormatIn, req.StartDate)
 	if err != nil {
-		return nil, errors.Wrap(err, "b.r.Create")
+		return nil, errors.Wrap(err, "b.portalDao.Create")
 	}
 	if req.LoanRequest.ReceiveAddress == "" {
 		req.LoanRequest.ReceiveAddress = u.PaymentAddress
 	}
 	endDate := startDate.Add(time.Duration(req.LoanRequest.Params.Maturity) * time.Second)
-	borrow, err := p.r.CreateBorrow(&models.Borrow{
+	if req.LoanRequest.ReceiveAddress == "" {
+		req.LoanRequest.ReceiveAddress = u.PaymentAddress
+	}
+	borrow, err := p.portalDao.CreateBorrow(&models.Borrow{
+		User:             u,
 		LoanAmount:       int64(req.LoanRequest.LoanAmount),
 		KeyDigest:        req.LoanRequest.KeyDigest,
 		LoanID:           req.LoanRequest.LoanID,
@@ -50,12 +54,12 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 		State:            models.Pending,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "b.r.Create")
+		return nil, errors.Wrap(err, "b.portalDao.Create")
 	}
 
-	txID, err := p.bc.CreateAndSendLoanRequest(u.PrivKey, req.LoanRequest)
+	txID, err := p.blockchainService.CreateAndSendLoanRequest(u.PrivKey, req.LoanRequest)
 	if err != nil && false { // TODO
-		err1 := p.r.DeleteBorrow(borrow)
+		err1 := p.portalDao.DeleteBorrow(borrow)
 		if err1 != nil {
 			return nil, err1
 		}
@@ -63,7 +67,7 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 	}
 	if txID != nil {
 		borrow.ConstantLoanRequestTxID = *txID
-		_, err = p.r.UpdateBorrow(borrow)
+		_, err = p.portalDao.UpdateBorrow(borrow)
 		if err != nil {
 			return nil, err
 		}
@@ -87,9 +91,9 @@ func (p *Portal) ListBorrowsByUser(paymentAddress string, state, limit, page str
 		s = &st
 	}
 
-	borrows, err := p.r.ListBorrowByUser(paymentAddress, s, l, pg)
+	borrows, err := p.portalDao.ListBorrowByUser(paymentAddress, s, l, pg)
 	if err != nil {
-		return nil, errors.Wrap(err, "b.r.ListByUser")
+		return nil, errors.Wrap(err, "b.portalDao.ListByUser")
 	}
 
 	return p.transformToResp(borrows), nil
@@ -110,9 +114,9 @@ func (p *Portal) ListAllBorrows(state, limit, page string) ([]*serializers.Borro
 		s = &st
 	}
 
-	borrows, err := p.r.ListAllBorrows(s, l, pg)
+	borrows, err := p.portalDao.ListAllBorrows(s, l, pg)
 	if err != nil {
-		return nil, errors.Wrap(err, "b.r.ListByUser")
+		return nil, errors.Wrap(err, "b.portalDao.ListByUser")
 	}
 
 	return p.transformToResp(borrows), nil
@@ -123,9 +127,9 @@ func (p *Portal) FindBorrowByID(idS string) (*models.Borrow, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "strconv.Atoi %s", idS)
 	}
-	borrow, err := p.r.FindBorrowByID(id)
+	borrow, err := p.portalDao.FindBorrowByID(id)
 	if err != nil {
-		return nil, errors.Wrap(err, "b.r.FindByID")
+		return nil, errors.Wrap(err, "b.portalDao.FindByID")
 	}
 	if borrow == nil {
 		return nil, ErrBorrowNotFound
@@ -154,7 +158,7 @@ func (p *Portal) transformToResp(bs []*models.Borrow) []*serializers.BorrowResp 
 }
 
 func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
-	return &serializers.BorrowResp{
+	result := &serializers.BorrowResp{
 		ID:                       b.ID,
 		LoanAmount:               b.LoanAmount,
 		LoanID:                   b.LoanID,
@@ -171,30 +175,64 @@ func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 		Maturity:                 b.Maturity,
 		ConstantLoanPaymentTxID:  b.ConstantLoanPaymentTxID,
 		ConstantLoanRequestTxID:  b.ConstantLoanRequestTxID,
-		ConstantLoanAcceptTxID:   b.ConstantLoanAcceptTxID,
 		ConstantLoanWithdrawTxID: b.ConstantLoanWithdrawTxID,
+		ConstantLoanAcceptTxID:   []string{},
 	}
+
+	for _, temp := range b.BorrowResponse {
+		result.ConstantLoanAcceptTxID = append(result.ConstantLoanAcceptTxID, temp.ConstantLoanResponseTxID)
+	}
+
+	return result
 }
 
 func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, constantLoanTxId string) (bool, error) {
 	switch action {
-	case "r":
+	case "portalDao": // reject
 		{
 			// TODO call web3 to eth to check
+			//
+			//
 			b.State = models.Rejected
-			_, err := p.r.UpdateBorrow(b)
+			_, err := p.portalDao.UpdateBorrow(b)
 			if err != nil {
 
 				return false, err
 			}
 			return true, nil
 		}
-	case "a":
+	case "a": // accept
 		{
-			// TODO check with blockchain node to get tx
-			b.State = models.Approved
-			b.ConstantLoanAcceptTxID = constantLoanTxId
-			_, err := p.r.UpdateBorrow(b)
+			// call to check tx in constant network
+			tx, err := GetBlockchainTxByHash(constantLoanTxId, 10, p.blockchainService)
+			if err != nil {
+				return false, err
+			}
+			if tx == nil {
+				return false, err
+			}
+
+			enoughAccept := false
+			switch b.CollateralType {
+			case "ETH":
+				{ // TODO call web3 to eth to check
+					//
+					//}
+					enoughAccept = true
+				}
+			}
+			borrowResponse := models.BorrowResponse{
+				ConstantLoanResponseTxID: constantLoanTxId,
+				Borrow:                   b,
+			}
+			_, err = p.portalDao.CreateBorrowResponse(&borrowResponse)
+			if err != nil {
+				return false, err
+			}
+			if enoughAccept {
+				b.State = models.Approved
+			}
+			_, err = p.portalDao.UpdateBorrow(b)
 			if err != nil {
 				return false, err
 			}
@@ -205,34 +243,77 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 	}
 }
 
-func (p *Portal) PaymentTxForLoanRequestByID(b *models.Borrow, constantPaymentTxId string) (*blockchain.TransactionDetail, error) {
-	var txPayment *blockchain.TransactionDetail
-	retry := 10
-	for true {
-		var err error
-		txPayment, err = p.bc.GetTxByHash(constantPaymentTxId)
-		if err != nil {
-			return txPayment, err
-		}
-		// retry 10 times = 30s
-		time.Sleep((3 * time.Millisecond))
-		retry --
-		if retry == 0 {
-			break
-		}
+func (p *Portal) WithdrawTxForLoanRequest(u *models.User, b *models.Borrow, key string) (*blockchain.TransactionDetail, error) {
+	request := serializers.LoanWithdraw{
+		LoanID: b.LoanID,
+		Key:    key,
 	}
-	if txPayment != nil {
-		b.State = models.Payment
-		b.ConstantLoanPaymentTxID = txPayment.Hash
-		_, err := p.r.UpdateBorrow(b)
-		if err != nil {
-			return txPayment, err
-		}
-		return txPayment, nil
+	// call constant network to create loan withdraw
+	txId, err := p.blockchainService.CreateAndSendLoanWithdraw(u.PrivKey, request)
+	if err != nil {
+		return nil, err
 	}
-	return txPayment, errors.New("Not found payment tx")
+	if txId != nil {
+		tx, err := GetBlockchainTxByHash(*txId, 10, p.blockchainService)
+		if err != nil {
+			return nil, err
+		}
+
+		switch b.CollateralType {
+		case "ETH":
+			// TODO call web3 to process collateral
+			//
+			//
+
+		}
+
+		// update db
+		b.ConstantLoanWithdrawTxID = tx.Hash
+		_, err = p.portalDao.UpdateBorrow(b)
+		if err != nil {
+			return nil, err
+		}
+		return tx, nil
+	} else {
+		return nil, errors.New("Fail")
+	}
+}
+
+func (p *Portal) PaymentTxForLoanRequest(u *models.User, b *models.Borrow, constantPaymentTxId string) (*blockchain.TransactionDetail, error) {
+	request := serializers.LoanPayment{
+		LoanID: b.LoanID,
+	}
+	// call constant network to create loan withdraw
+	txId, err := p.blockchainService.CreateAndSendLoanPayment(u.PrivKey, request)
+	if err != nil {
+		return nil, err
+	}
+	if txId != nil {
+		tx, err := GetBlockchainTxByHash(*txId, 10, p.blockchainService)
+		if err != nil {
+			return nil, err
+		}
+
+		switch b.CollateralType {
+		case "ETH":
+			// TODO call web3 to process collateral
+			//
+			//
+
+		}
+
+		// update db
+		b.ConstantLoanPaymentTxID = tx.Hash
+		_, err = p.portalDao.UpdateBorrow(b)
+		if err != nil {
+			return nil, err
+		}
+		return tx, nil
+	} else {
+		return nil, errors.New("Fail")
+	}
 }
 
 func (p *Portal) GetLoanParams() ([]interface{}, error) {
-	return p.bc.GetLoanParams()
+	return p.blockchainService.GetLoanParams()
 }
