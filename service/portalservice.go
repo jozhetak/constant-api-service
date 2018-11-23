@@ -29,7 +29,7 @@ func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
 }
 
 func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*serializers.BorrowResp, error) {
-	startDate, err := time.Parse(common.DateTimeLayoutFormat, req.StartDate)
+	startDate, err := time.Parse(common.DateTimeLayoutFormatIn, req.StartDate)
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
@@ -156,12 +156,12 @@ func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 		LoanID:                   b.LoanID,
 		KeyDigest:                b.KeyDigest,
 		State:                    b.State.String(),
-		StartDate:                b.StartDate.Format(common.DateTimeLayoutFormat),
-		EndDate:                  b.EndDate.Format(common.DateTimeLayoutFormat),
+		StartDate:                b.StartDate.Format(common.DateTimeLayoutFormatOut),
+		EndDate:                  b.EndDate.Format(common.DateTimeLayoutFormatOut),
 		InterestRate:             b.InterestRate,
 		CollateralType:           b.CollateralType,
 		CollateralAmount:         b.CollateralAmount,
-		CreatedAt:                b.CreatedAt.Format(common.DateTimeLayoutFormat),
+		CreatedAt:                b.CreatedAt.Format(common.DateTimeLayoutFormatOut),
 		PaymentAddress:           b.PaymentAddress,
 		LiquidationStart:         b.LiquidationStart,
 		Maturity:                 b.Maturity,
