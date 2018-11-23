@@ -56,7 +56,7 @@ func (u *User) validate(firstName, lastName, email, password, confirmPassword st
 
 func (u *User) createNormalUser(user *models.User) (*serializers.UserRegisterResp, error) {
 	if err := u.r.Create(user); err != nil {
-		return nil, errors.Wrap(err, "u.r.Create")
+		return nil, errors.Wrap(err, "u.portalDao.Create")
 	}
 	return &serializers.UserRegisterResp{Message: "register successfully"}, nil
 }
@@ -68,7 +68,7 @@ func (u *User) Register(firstName, lastName, email, password, confirmPassword st
 
 	user, err := u.r.FindByEmail(email)
 	if err != nil {
-		return nil, errors.Wrap(err, "u.r.FindByEmail")
+		return nil, errors.Wrap(err, "u.portalDao.FindByEmail")
 	}
 	if user != nil {
 		return nil, ErrEmailAlreadyExists
@@ -76,7 +76,7 @@ func (u *User) Register(firstName, lastName, email, password, confirmPassword st
 
 	paymentAddress, readonlyKey, privKey, err := u.bc.GetAccountWallet(email)
 	if err != nil {
-		return nil, errors.Wrap(err, "u.bc.GetAccountWallet")
+		return nil, errors.Wrap(err, "u.blockchainService.GetAccountWallet")
 	}
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -100,7 +100,7 @@ func (u *User) Register(firstName, lastName, email, password, confirmPassword st
 func (u *User) FindByID(id int) (*models.User, error) {
 	user, err := u.r.FindByID(id)
 	if err != nil {
-		return nil, errors.Wrap(err, "u.r.FindByID")
+		return nil, errors.Wrap(err, "u.portalDao.FindByID")
 	}
 	return user, nil
 }
@@ -108,7 +108,7 @@ func (u *User) FindByID(id int) (*models.User, error) {
 func (u *User) Authenticate(email, password string) (*serializers.UserResp, error) {
 	user, err := u.r.FindByEmail(email)
 	if err != nil {
-		return nil, errors.Wrap(err, "u.r.FindByEmail")
+		return nil, errors.Wrap(err, "u.portalDao.FindByEmail")
 	}
 	if user == nil {
 		return nil, ErrEmailNotExists
@@ -126,7 +126,7 @@ func (u *User) Authenticate(email, password string) (*serializers.UserResp, erro
 func (u *User) ForgotPassword(email string) error {
 	user, err := u.r.FindByEmail(email)
 	if err != nil {
-		return errors.Wrap(err, "u.r.FindByEmail")
+		return errors.Wrap(err, "u.portalDao.FindByEmail")
 	}
 	if user == nil {
 		return ErrInvalidEmail
@@ -139,7 +139,7 @@ func (u *User) ForgotPassword(email string) error {
 		IsValid:   true,
 		ExpiredAt: time.Now().Add(verificationTokenExpiredDuration),
 	}); err != nil {
-		return errors.Wrap(err, "u.r.CreateRecovery")
+		return errors.Wrap(err, "u.portalDao.CreateRecovery")
 	}
 
 	if err := u.mailer.SendForgotPasswordEmail(&emailHelper.ForgotPassword{
@@ -170,7 +170,7 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 
 	v, err := u.r.FindVerificationToken(token)
 	if err != nil {
-		return errors.Wrap(err, "u.r.FindRecoveryToken")
+		return errors.Wrap(err, "u.portalDao.FindRecoveryToken")
 	}
 	if v == nil {
 		return ErrInvalidVerificationToken
@@ -190,7 +190,7 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 	v.IsValid = false
 	v.User.Password = string(hashed)
 	if err := u.r.ResetPassword(v); err != nil {
-		return errors.Wrap(err, "u.r.Update")
+		return errors.Wrap(err, "u.portalDao.Update")
 	}
 	return nil
 }
