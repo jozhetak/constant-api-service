@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/pkg/errors"
+
 	"github.com/ninjadotorg/constant-api-service/serializers"
 )
 
@@ -33,6 +35,10 @@ const (
 
 	// custom token
 	getlistcustomtokenbalance = "getlistcustomtokenbalance"
+)
+
+var (
+	errTxHashNotExists = errors.New("tx hash does not exist")
 )
 
 type Blockchain struct {
@@ -206,18 +212,18 @@ func (b *Blockchain) GetListCustomTokenBalance(paymentAddress string) (*ListCust
 	return &result, nil
 }
 
-func (b *Blockchain) Createandsendtransaction(prvKey string, req serializers.WalletSend) error {
+func (b *Blockchain) Createandsendtransaction(prvKey string, req serializers.WalletSend) (string, error) {
 	param := []interface{}{prvKey, req.PaymentAddresses, -1, 8}
 	resp, err := b.blockchainAPI(createandsendtransaction, param)
 	if err != nil {
-		return err
+		return "", errors.Wrap(err, "b.blockchainAPI")
 	}
 	data := resp.(map[string]interface{})
-	resultResp := data["Result"]
-	if resultResp == nil {
-		return errors.New("Fail")
+	txID, ok := data["Result"].(string)
+	if !ok {
+		return "", errors.Errorf("couldn't get txID: param: %+v, resp: %+v", param, data)
 	}
-	return nil
+	return txID, nil
 }
 
 func (b *Blockchain) Sendcustomtokentransaction(prvKey string, req serializers.WalletSend) error {
@@ -231,12 +237,19 @@ func (b *Blockchain) Sendcustomtokentransaction(prvKey string, req serializers.W
 	param = append(param, tokenData)
 	resp, err := b.blockchainAPI(createandsendcustomtokentransaction, param)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "b.blockchainAPI")
 	}
-	data := resp.(map[string]interface{})
-	resultResp := data["Result"]
+
+	var (
+		data       = resp.(map[string]interface{})
+		resultResp = data["Result"]
+		errorResp  = data["Error"]
+	)
+	if errorResp != nil {
+		return errors.Errorf("couldn't get result from response data: %+v", errorResp)
+	}
 	if resultResp == nil {
-		return errors.New("Fail")
+		return errors.Errorf("couldn't get result from response: req: %+v, data: %+v", req, data)
 	}
 	return nil
 }
@@ -250,7 +263,7 @@ func (b *Blockchain) GetTxByHash(txHash string) (*TransactionDetail, error) {
 	data := resp.(map[string]interface{})
 	resultResp := data["Result"].(map[string]interface{})
 	if resultResp["Hash"] == nil {
-		return nil, errors.New("Not exist tx")
+		return nil, errTxHashNotExists
 	}
 	result := TransactionDetail{}
 	resultRespStr, err := json.Marshal(resultResp)
@@ -321,4 +334,18 @@ func (b *Blockchain) GetLoanParams() ([]interface{}, error) {
 		return nil, errors.New("Fail")
 	}
 	return resultResp.([]interface{}), nil
+}
+
+func (b *Blockchain) WaitForTx(txHash string) (*TransactionDetail, error) {
+	for {
+		tx, err := b.GetTxByHash(txHash)
+		if err != nil {
+			if err == errTxHashNotExists {
+				time.Sleep(10 * time.Second)
+				continue
+			}
+			return nil, errors.Wrap(err, "b.GetTxByHash")
+		}
+		return tx, nil
+	}
 }

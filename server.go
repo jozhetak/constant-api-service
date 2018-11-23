@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 
+	gcloud "cloud.google.com/go/pubsub"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -63,13 +65,16 @@ func main() {
 		exchangeSvc = service.NewExchange(exchangeDAO)
 
 		walletSvc = service.NewWallet(bc)
-
-		pubsubSvc = pubsub.NewService()
 	)
+	gcPubsubClient, err := gcloud.NewClient(context.Background(), "cash-prototype")
+	if err != nil {
+		logger.Fatal("gcloud.NewClient", zap.Error(err))
+	}
+	psSvc := pubsub.New(gcPubsubClient, exchangeDAO, bc, logger.With(zap.String("module", "pubsub")))
 
 	r := gin.Default()
 	r.Use(cors.Default())
-	svr := api.NewServer(r, pubsubSvc, upgrader, userSvc, portalSvc, exchangeSvc, walletSvc, logger)
+	svr := api.NewServer(r, psSvc, upgrader, userSvc, portalSvc, exchangeSvc, walletSvc, logger)
 	authMw := api.AuthMiddleware(string(conf.TokenSecretKey), svr.Authenticate)
 	svr.Routes(authMw)
 
