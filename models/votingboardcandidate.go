@@ -5,11 +5,19 @@ import (
 	_ "time"
 )
 
+type BoardCandidateType int
+
+const (
+	DCB BoardCandidateType = iota
+	CMB
+	GOV
+)
+
 type VotingBoardCandidate struct {
 	User   *User
 	UserID int
 	DCB    bool
-	CMD    bool
+	CMB    bool
 	GOV    bool
 
 	PaymentAddress string
