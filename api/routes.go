@@ -21,7 +21,7 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	portal.Use(authMw.MiddlewareFunc())
 	{
 		portal.POST("/borrows", s.CreateNewBorrow)
-		portal.POST("/borrows/:id/pay", s.PayByID)
+		portal.POST("/borrows/:id/pay", s.PayBorrowByID)
 		portal.POST("/borrows/:id/withdraw", s.WithdrawBorrowByID)
 		portal.GET("/loanparams", s.GetLoanParams)
 	}

@@ -104,14 +104,24 @@ func (s *Server) UpdateStateBorrowByID(c *gin.Context) {
 	}
 }
 
-func (s *Server) PayByID(c *gin.Context) {
+func (s *Server) PayBorrowByID(c *gin.Context) {
+	user, err := s.userFromContext(c)
+	if err != nil {
+		s.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
 	// call blockchain to check tx payment
 	b, err := s.portalSvc.FindBorrowByID(c.Param("id"))
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrBorrowNotFound:
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
 	}
-	paymentTx, err := s.portalSvc.PaymentTxForLoanRequestByID(b, c.DefaultQuery("costant_payment_tx_id", ""))
+	paymentTx, err := s.portalSvc.PaymentTxForLoanRequest(user, b, c.DefaultQuery("costant_payment_tx_id", ""))
+	if err != nil {
+		c.JSON(http.StatusBadGateway, serializers.Resp{Error: err})
+		return
+	}
 	if paymentTx != nil {
 		switch b.CollateralType {
 		case "ETH":
@@ -145,6 +155,7 @@ func (s *Server) WithdrawBorrowByID(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
 		return
 	}
+	// process with constant network
 	withdrawTx, err := s.portalSvc.WithdrawTxForLoanRequest(user, b, key)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, serializers.Resp{Error: err})

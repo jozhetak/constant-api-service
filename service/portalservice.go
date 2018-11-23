@@ -209,6 +209,7 @@ func (p *Portal) WithdrawTxForLoanRequest(u *models.User, b *models.Borrow, key 
 		LoanID: b.LoanID,
 		Key:    key,
 	}
+	// call constant network to create loan withdraw
 	txId, err := p.bc.CreateAndSendLoanWithdraw(u.PrivKey, request)
 	if err != nil {
 		return nil, err
@@ -218,28 +219,42 @@ func (p *Portal) WithdrawTxForLoanRequest(u *models.User, b *models.Borrow, key 
 		if err != nil {
 			return nil, err
 		}
+		// update db
+		b.ConstantLoanWithdrawTxID = tx.Hash
+		_, err = p.r.UpdateBorrow(b)
+		if err != nil {
+			return nil, err
+		}
 		return tx, nil
 	} else {
 		return nil, errors.New("Fail")
 	}
 }
 
-func (p *Portal) PaymentTxForLoanRequestByID(b *models.Borrow, constantPaymentTxId string) (*blockchain.TransactionDetail, error) {
-	var tx *blockchain.TransactionDetail
-	tx, err := GetBlockchainTxByHash(constantPaymentTxId, 10, p.bc)
+func (p *Portal) PaymentTxForLoanRequest(u *models.User, b *models.Borrow, constantPaymentTxId string) (*blockchain.TransactionDetail, error) {
+	request := serializers.LoanPayment{
+		LoanID: b.LoanID,
+	}
+	// call constant network to create loan withdraw
+	txId, err := p.bc.CreateAndSendLoanPayment(u.PrivKey, request)
 	if err != nil {
 		return nil, err
 	}
-	if tx != nil {
-		b.State = models.Payment
-		b.ConstantLoanPaymentTxID = tx.Hash
-		_, err := p.r.UpdateBorrow(b)
+	if txId != nil {
+		tx, err := GetBlockchainTxByHash(*txId, 10, p.bc)
 		if err != nil {
-			return tx, err
+			return nil, err
+		}
+		// update db
+		b.ConstantLoanPaymentTxID = tx.Hash
+		_, err = p.r.UpdateBorrow(b)
+		if err != nil {
+			return nil, err
 		}
 		return tx, nil
+	} else {
+		return nil, errors.New("Fail")
 	}
-	return tx, errors.New("Not found payment tx")
 }
 
 func (p *Portal) GetLoanParams() ([]interface{}, error) {
