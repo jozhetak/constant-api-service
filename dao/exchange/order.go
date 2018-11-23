@@ -17,7 +17,7 @@ func (e *Exchange) CreateOrder(o *models.Order) (*models.Order, error) {
 func (e *Exchange) OrderHistory(symbol string, status *models.OrderStatus, side *models.OrderSide, limit, page *int, u *models.User) ([]*models.Order, error) {
 	var orders []*models.Order
 
-	query := e.db.Table("exchange_orders").Joins("JOIN exchange_markets em ON em.id = exchange_orders.market_id").Where("em.symbol_code = ?", symbol)
+	query := e.db.Preload("Market").Table("exchange_orders").Joins("JOIN exchange_markets em ON em.id = exchange_orders.market_id").Where("em.symbol_code = ?", symbol)
 	if u != nil {
 		query = query.Where("user_id = ?", u.ID)
 	}
