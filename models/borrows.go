@@ -36,7 +36,7 @@ type Borrow struct {
 	ConstantLoanPaymentTxID  string
 	State                    BorrowState `gorm:"not null;default:0"`
 
-	BorrowResponse []BorrowResponse
+	BorrowResponses []BorrowResponse
 }
 
 func (*Borrow) TableName() string {

@@ -179,7 +179,7 @@ func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 		ConstantLoanAcceptTxID:   []string{},
 	}
 
-	for _, temp := range b.BorrowResponse {
+	for _, temp := range b.BorrowResponses {
 		result.ConstantLoanAcceptTxID = append(result.ConstantLoanAcceptTxID, temp.ConstantLoanResponseTxID)
 	}
 
@@ -223,7 +223,7 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 			}
 			borrowResponse := models.BorrowResponse{
 				ConstantLoanResponseTxID: constantLoanTxId,
-				Borrow:                   b,
+				Borrow:                   *b,
 			}
 			_, err = p.portalDao.CreateBorrowResponse(&borrowResponse)
 			if err != nil {

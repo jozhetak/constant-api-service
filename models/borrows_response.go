@@ -4,8 +4,8 @@ import "github.com/jinzhu/gorm"
 
 type BorrowResponse struct {
 	gorm.Model
-	Borrow                   *Borrow
-	PortalBorrowID           int
+	Borrow                   Borrow
+	BorrowID                 int
 	ConstantLoanResponseTxID string
 }
 

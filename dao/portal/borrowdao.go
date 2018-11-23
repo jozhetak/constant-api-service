@@ -34,6 +34,7 @@ func (p *PortalDao) ListBorrowByUser(paymentAddress string, state *models.Borrow
 	)
 
 	query := p.db.Where("payment_address = ?", paymentAddress)
+	query = query.Preload("BorrowResponses").Preload("User")
 	if state != nil {
 		query = query.Where("state = ?", *state)
 	}
