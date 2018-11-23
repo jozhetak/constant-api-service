@@ -205,7 +205,19 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 			if tx == nil {
 				return false, err
 			}
-			b.State = models.Approved
+
+			enoughAccept := false
+			switch b.CollateralType {
+			case "ETH":
+				{ // TODO call web3 to eth to check
+					//
+					//}
+					enoughAccept = true
+				}
+			}
+			if enoughAccept {
+				b.State = models.Approved
+			}
 			b.ConstantLoanResponseTxID = constantLoanTxId
 			_, err = p.portalDao.UpdateBorrow(b)
 			if err != nil {
