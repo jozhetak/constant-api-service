@@ -178,9 +178,11 @@ func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 
 func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, constantLoanTxId string) (bool, error) {
 	switch action {
-	case "r":
+	case "r": // reject
 		{
 			// TODO call web3 to eth to check
+			//
+			//
 			b.State = models.Rejected
 			_, err := p.r.UpdateBorrow(b)
 			if err != nil {
@@ -189,7 +191,7 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 			}
 			return true, nil
 		}
-	case "a":
+	case "a": // accept
 		{
 			b.State = models.Approved
 			b.ConstantLoanResponseTxID = constantLoanTxId

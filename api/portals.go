@@ -88,7 +88,7 @@ func (s *Server) FindByID(c *gin.Context) {
 	}
 }
 
-func (s *Server) UpdateStateBorrowByID(c *gin.Context) {
+func (s *Server) ProcessStateBorrowByID(c *gin.Context) {
 	b, err := s.portalSvc.FindBorrowByID(c.Param("id"))
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrBorrowNotFound:
