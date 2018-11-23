@@ -11,7 +11,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/common"
-	_ "github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
+	//_ "github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
 )
 
 type Portal struct {
@@ -54,13 +54,19 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 	}
 
 	txID, err := p.bc.CreateAndSendLoanRequest(u.PrivKey, req.LoanRequest)
-	if err != nil {
+	if err != nil && false { // TODO
+		err1 := p.r.DeleteBorrow(borrow)
+		if err1 != nil {
+			return nil, err1
+		}
 		return nil, err
 	}
-	borrow.ConstantLoanRequestTxID = *txID
-	_, err = p.r.UpdateBorrow(borrow)
-	if err != nil {
-		return nil, err
+	if txID != nil {
+		borrow.ConstantLoanRequestTxID = *txID
+		_, err = p.r.UpdateBorrow(borrow)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return AssembleBorrow(borrow), nil
