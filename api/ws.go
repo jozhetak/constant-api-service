@@ -34,6 +34,12 @@ func newWS(sub *pubsub.Subscriber, conn *websocket.Conn, logger *zap.Logger) *ws
 	}
 }
 
+func (w *ws) read() {
+	for {
+
+	}
+}
+
 func (w *ws) sendMessage() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {

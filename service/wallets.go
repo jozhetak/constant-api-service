@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/serializers"
+	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
 
 type Wallet struct {
@@ -73,15 +73,11 @@ func (w *Wallet) Send(privKey string, req serializers.WalletSend) error {
 	var err error
 	switch req.Type {
 	case 0:
-		{
-			// send coin constant
-			err = w.bc.Createandsendtransaction(privKey, req)
-		}
+		// send coin constant
+		_, err = w.bc.Createandsendtransaction(privKey, req)
 	case 1:
-		{
-			// send coin constant
-			err = w.bc.Sendcustomtokentransaction(privKey, req)
-		}
+		// send coin constant
+		err = w.bc.Sendcustomtokentransaction(privKey, req)
 	}
 	return err
 }

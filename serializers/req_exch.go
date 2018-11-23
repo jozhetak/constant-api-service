@@ -15,9 +15,17 @@ type OrderMsg struct {
 	Side   string `json:"side"`
 	Symbol string `json:"symbol"`
 	Type   string `json:"type"`
+	Time   int64  `json:"time"`
 }
 
 type OrderPubMsg struct {
 	Type  string    `json:"type"`
 	Order *OrderMsg `json:"order"`
+}
+
+type OrderBookMatchMsg struct {
+	MakerOrderID int    `json:"maker_order_id"`
+	TakerOrderID int    `json:"taker_order_id"`
+	Size         uint64 `json:"size"`
+	Price        uint64 `json:"price"`
 }

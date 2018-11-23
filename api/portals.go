@@ -18,7 +18,14 @@ func (s *Server) CreateNewBorrow(c *gin.Context) {
 		return
 	}
 
-	b, err := s.portalSvc.CreateBorrow(req)
+	user, err := s.userFromContext(c)
+	if err != nil {
+		s.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
+	b, err := s.portalSvc.CreateBorrow(user, req)
 	if err != nil {
 		s.logger.Error("s.borrowSvc.Create", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
@@ -88,7 +95,7 @@ func (s *Server) UpdateStatusByID(c *gin.Context) {
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
 	}
 
-	result, err := s.portalSvc.UpdateStatusBorrowRequest(b, c.DefaultQuery("action", ""), c.DefaultQuery("costant_loan_tx_id", ""))
+	result, err := s.portalSvc.UpdateStatusBorrowRequest(b, c.DefaultQuery("action", ""), c.DefaultQuery("costant_loan_accept_tx_id", ""))
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrBorrowNotFound:
 		c.JSON(http.StatusNotFound, serializers.Resp{Error: cErr.(*service.Error)})
@@ -106,14 +113,20 @@ func (s *Server) PayByID(c *gin.Context) {
 	}
 	paymentTx, err := s.portalSvc.PaymentTxForLoanRequestByID(b, c.DefaultQuery("costant_payment_tx_id", ""))
 	if paymentTx != nil {
-		switch b.Collateral {
+		switch b.CollateralType {
 		case "ETH":
 			// TODO call web3 to process collateral
 			//
 			//
+
 		}
 		c.JSON(http.StatusOK, serializers.Resp{Result: true})
 	} else {
 		c.JSON(http.StatusOK, serializers.Resp{Result: false})
 	}
+}
+
+func (s *Server) GetLoanParams(c *gin.Context) {
+	result, err := s.portalSvc.GetLoanParams()
+	c.JSON(http.StatusOK, serializers.Resp{Error: err, Result: result})
 }

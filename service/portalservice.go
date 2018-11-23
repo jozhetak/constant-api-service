@@ -11,6 +11,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/common"
+	_ "github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
 )
 
 type Portal struct {
@@ -25,32 +26,43 @@ func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
 	}
 }
 
-func (p *Portal) CreateBorrow(req serializers.BorrowReq) (*serializers.BorrowResp, error) {
-	// if u.Type != models.Borrower {
-	//         return nil, errors.New("user type must be borrower to create borrow")
-	// }
-	endDate, err := time.Parse(common.DateTimeLayoutFormat, req.EndDate)
+func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*serializers.BorrowResp, error) {
+	startDate, err := time.Parse(common.DateTimeLayoutFormatIn, req.StartDate)
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
-	startDate, err := time.Parse(common.DateTimeLayoutFormat, req.StartDate)
-	if err != nil {
-		return nil, errors.Wrap(err, "b.r.Create")
+	if req.LoanRequest.ReceiveAddress == "" {
+		req.LoanRequest.ReceiveAddress = u.PaymentAddress
 	}
+	endDate := startDate.Add(time.Duration(req.LoanRequest.Params.Maturity) * time.Second)
 	borrow, err := p.r.CreateBorrow(&models.Borrow{
-		Amount:         req.Amount,
-		Hash:           req.HashKey,
-		CollateralTxID: req.CollateralTxID,
-		State:          models.Pending,
-		Collateral:     req.Collateral,
-		StartDate:      startDate,
-		EndDate:        endDate,
-		Rate:           req.Rate,
-		PaymentAddress: req.PaymentAddress,
+		LoanAmount:       int64(req.LoanRequest.LoanAmount),
+		KeyDigest:        req.LoanRequest.KeyDigest,
+		LoanID:           req.LoanRequest.LoanID,
+		CollateralType:   req.LoanRequest.CollateralType,
+		CollateralAmount: req.LoanRequest.CollateralAmount,
+		StartDate:        startDate,
+		EndDate:          endDate,
+		InterestRate:     int64(req.LoanRequest.Params.InterestRate),
+		Maturity:         int64(req.LoanRequest.Params.Maturity),
+		LiquidationStart: int64(req.LoanRequest.Params.LiquidationStart),
+		PaymentAddress:   req.LoanRequest.ReceiveAddress,
+		State:            models.Pending,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "b.r.Create")
 	}
+
+	txID, err := p.bc.CreateAndSendLoanRequest(u.PrivKey, req.LoanRequest)
+	if err != nil {
+		return nil, err
+	}
+	borrow.ConstantLoanRequestTxID = *txID
+	_, err = p.r.UpdateBorrow(borrow)
+	if err != nil {
+		return nil, err
+	}
+
 	return AssembleBorrow(borrow), nil
 }
 
@@ -137,17 +149,24 @@ func (p *Portal) transformToResp(bs []*models.Borrow) []*serializers.BorrowResp 
 
 func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 	return &serializers.BorrowResp{
-		ID:             b.ID,
-		Amount:         b.Amount,
-		Hash:           b.Hash,
-		CollateralTxID: b.CollateralTxID,
-		State:          b.State.String(),
-		StartDate:      b.StartDate.Format(common.DateTimeLayoutFormat),
-		EndDate:        b.EndDate.Format(common.DateTimeLayoutFormat),
-		Rate:           b.Rate,
-		Collateral:     b.Collateral,
-		CreatedAt:      b.CreatedAt.Format(time.RFC3339),
-		PaymentAdrress: b.PaymentAddress,
+		ID:                       b.ID,
+		LoanAmount:               b.LoanAmount,
+		LoanID:                   b.LoanID,
+		KeyDigest:                b.KeyDigest,
+		State:                    b.State.String(),
+		StartDate:                b.StartDate.Format(common.DateTimeLayoutFormatOut),
+		EndDate:                  b.EndDate.Format(common.DateTimeLayoutFormatOut),
+		InterestRate:             b.InterestRate,
+		CollateralType:           b.CollateralType,
+		CollateralAmount:         b.CollateralAmount,
+		CreatedAt:                b.CreatedAt.Format(common.DateTimeLayoutFormatOut),
+		PaymentAddress:           b.PaymentAddress,
+		LiquidationStart:         b.LiquidationStart,
+		Maturity:                 b.Maturity,
+		ConstantLoanPaymentTxID:  b.ConstantLoanPaymentTxID,
+		ConstantLoanRequestTxID:  b.ConstantLoanRequestTxID,
+		ConstantLoanAcceptTxID:   b.ConstantLoanAcceptTxID,
+		ConstantLoanWithdrawTxID: b.ConstantLoanWithdrawTxID,
 	}
 }
 
@@ -168,7 +187,7 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 		{
 			// TODO check with blockchain node to get tx
 			b.State = models.Approved
-			b.ConstantLoanTxID = constantLoanTxId
+			b.ConstantLoanAcceptTxID = constantLoanTxId
 			_, err := p.r.UpdateBorrow(b)
 			if err != nil {
 				return false, err
@@ -198,7 +217,7 @@ func (p *Portal) PaymentTxForLoanRequestByID(b *models.Borrow, constantPaymentTx
 	}
 	if txPayment != nil {
 		b.State = models.Payment
-		b.ConstantPaymentTxID = txPayment.Hash
+		b.ConstantLoanPaymentTxID = txPayment.Hash
 		_, err := p.r.UpdateBorrow(b)
 		if err != nil {
 			return txPayment, err
@@ -206,4 +225,8 @@ func (p *Portal) PaymentTxForLoanRequestByID(b *models.Borrow, constantPaymentTx
 		return txPayment, nil
 	}
 	return txPayment, errors.New("Not found payment tx")
+}
+
+func (p *Portal) GetLoanParams() ([]interface{}, error) {
+	return p.bc.GetLoanParams()
 }

@@ -17,17 +17,22 @@ const (
 
 type Borrow struct {
 	gorm.Model
-	PaymentAddress      string
-	Amount              int64
-	Hash                string
-	CollateralTxID      string
-	Collateral          string
-	StartDate           time.Time
-	EndDate             time.Time
-	Rate                float64
-	ConstantLoanTxID    string
-	ConstantPaymentTxID string
-	State               BorrowState `gorm:"not null;default:0"`
+	PaymentAddress           string
+	LoanAmount               int64
+	KeyDigest                string
+	LoanID                   string
+	CollateralType           string
+	CollateralAmount         string
+	StartDate                time.Time
+	EndDate                  time.Time
+	InterestRate             int64
+	Maturity                 int64
+	LiquidationStart         int64
+	ConstantLoanRequestTxID  string
+	ConstantLoanAcceptTxID   string
+	ConstantLoanWithdrawTxID string
+	ConstantLoanPaymentTxID  string
+	State                    BorrowState `gorm:"not null;default:0"`
 }
 
 func (*Borrow) TableName() string {

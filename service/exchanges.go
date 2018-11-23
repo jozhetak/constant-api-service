@@ -1,6 +1,7 @@
 package service
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -131,6 +132,21 @@ func (e *Exchange) MarketRates() ([]*serializers.MarketRate, error) {
 	return toMarketRatesResp(rates), nil
 }
 
+func (e *Exchange) FindOrderByID(idS string) (*serializers.OrderResp, error) {
+	id, err := strconv.Atoi(idS)
+	if err != nil {
+		return nil, ErrInvalidOrder
+	}
+	order, err := e.r.FindOrderByID(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "e.r.FindByID")
+	}
+	if order == nil {
+		return nil, ErrInvalidOrder
+	}
+	return assembleOrder(order), nil
+}
+
 func toSymbolRatesResp(cs []exchange.SymbolRate) []serializers.SymbolRate {
 	resp := make([]serializers.SymbolRate, 0, len(cs))
 	for _, cr := range cs {
@@ -165,8 +181,8 @@ func toOrderResp(cs []*models.Order) []*serializers.OrderResp {
 
 func assembleMarket(m *models.Market) *serializers.MarketResp {
 	return &serializers.MarketResp{
-		BaseCurrency:         m.BaseCurrency,
-		QuoteCurrency:        m.QuoteCurrency,
+		BaseCurrency:         m.BaseCurrency.Name,
+		QuoteCurrency:        m.QuoteCurrency.Name,
 		DisplayName:          m.DisplayName,
 		State:                m.State.String(),
 		SymbolCode:           m.SymbolCode,

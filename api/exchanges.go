@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -135,6 +136,7 @@ func (s *Server) ExchangeWS(c *gin.Context) {
 }
 
 func toOrderMsg(typ string, o *serializers.OrderResp) *serializers.OrderPubMsg {
+	ts, _ := time.Parse(time.RFC3339, o.Time)
 	return &serializers.OrderPubMsg{
 		Type: typ,
 		Order: &serializers.OrderMsg{
@@ -144,6 +146,7 @@ func toOrderMsg(typ string, o *serializers.OrderResp) *serializers.OrderPubMsg {
 			Side:   strings.ToLower(o.Side),
 			Symbol: o.SymbolCode,
 			Type:   o.Type,
+			Time:   ts.Unix(),
 		},
 	}
 }

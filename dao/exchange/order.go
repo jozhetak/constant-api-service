@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 
 	"github.com/ninjadotorg/constant-api-service/models"
@@ -33,4 +34,37 @@ func (e *Exchange) OrderHistory(symbol string, status *models.OrderStatus, side 
 		return nil, errors.Wrap(err, "e.db.Where")
 	}
 	return orders, nil
+}
+
+func (e *Exchange) FindOrderByID(id int) (*models.Order, error) {
+	var o models.Order
+	if err := e.db.Preload("User").Preload("Market").Preload("Market.BaseCurrency").Preload("Market.QuoteCurrency").First(&o, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "b.db.First")
+	}
+	return &o, nil
+}
+
+func (e *Exchange) SetFilledOrders(orders ...*models.Order) (err error) {
+	tx := e.db.Begin()
+	if tErr := tx.Error; tErr != nil {
+		err = errors.Wrap(tErr, "tx.Error")
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		err = errors.Wrap(tx.Commit().Error, "tx.Commit")
+	}()
+
+	for _, o := range orders {
+		if tErr := tx.Model(o).Update("status", int(models.Filled)).Error; tErr != nil {
+			err = errors.Wrap(tErr, "tx.Model")
+			return
+		}
+	}
+	return
 }

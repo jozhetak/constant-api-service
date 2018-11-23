@@ -70,7 +70,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("gcloud.NewClient", zap.Error(err))
 	}
-	psSvc := pubsub.New(gcPubsubClient, logger.With(zap.String("module", "pubsub")))
+	psSvc := pubsub.New(gcPubsubClient, exchangeDAO, bc, logger.With(zap.String("module", "pubsub")))
 
 	r := gin.Default()
 	r.Use(cors.Default())

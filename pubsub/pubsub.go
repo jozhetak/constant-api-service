@@ -5,30 +5,43 @@ import (
 	"encoding/json"
 
 	gcloud "cloud.google.com/go/pubsub"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
+	"github.com/ninjadotorg/constant-api-service/dao/exchange"
+	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
+	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
 
 const (
-	orderTopic     = "order"
-	orderBookTopic = "orderbook"
+	orderTopic = "order"
+
+	orderBookTopic   = "orderbook"
+	orderBookSubName = "orderbook-rest-api"
 )
 
 type Pubsub struct {
-	c      *gcloud.Client
-	logger *zap.Logger
+	c           *gcloud.Client
+	exchangeDAO *exchange.Exchange
+	bc          *blockchain.Blockchain
+	logger      *zap.Logger
 
+	// used to hold all ws conns in mem
 	subscribers map[*Subscriber]bool
 	register    chan *Subscriber
 	unregister  chan *Subscriber
-	message     chan []byte
+
+	// used to communicate with subscribers
+	message chan []byte
 }
 
-func New(c *gcloud.Client, logger *zap.Logger) *Pubsub {
+func New(c *gcloud.Client, exchangeDAO *exchange.Exchange, bc *blockchain.Blockchain, logger *zap.Logger) *Pubsub {
 	ps := &Pubsub{
-		c:      c,
-		logger: logger,
+		c:           c,
+		exchangeDAO: exchangeDAO,
+		bc:          bc,
+		logger:      logger,
 
 		subscribers: make(map[*Subscriber]bool),
 		register:    make(chan *Subscriber),
@@ -36,7 +49,7 @@ func New(c *gcloud.Client, logger *zap.Logger) *Pubsub {
 		message:     make(chan []byte, 1024),
 	}
 
-	go ps.subscribe()
+	go ps.subscribeToOrderBookTopic()
 	go ps.handleSubscribers()
 
 	return ps
@@ -67,20 +80,17 @@ func (p *Pubsub) Publish(v interface{}) {
 	}
 }
 
-func (p *Pubsub) subscribe() {
-	p.subscribeToTopic(p.c.Topic(orderBookTopic))
-}
+func (p *Pubsub) subscribeToOrderBookTopic() {
+	t := p.c.Topic(orderBookTopic)
+	sub := p.c.Subscription(orderBookSubName)
 
-func (p *Pubsub) subscribeToTopic(t *gcloud.Topic) {
-	sub := p.c.Subscription("restapiorder")
 	exists, err := sub.Exists(context.Background())
 	if err != nil {
 		p.logger.Error("p.c.CreateSubscription", zap.Error(err))
 		return
 	}
 	if !exists {
-		p.logger.Debug("create sub")
-		sub, err = p.c.CreateSubscription(context.Background(), "restapiorder", gcloud.SubscriptionConfig{Topic: t})
+		sub, err = p.c.CreateSubscription(context.Background(), orderBookSubName, gcloud.SubscriptionConfig{Topic: t})
 		if err != nil {
 			p.logger.Error("p.c.CreateSubscription", zap.Error(err))
 			return
@@ -89,12 +99,100 @@ func (p *Pubsub) subscribeToTopic(t *gcloud.Topic) {
 	err = sub.Receive(context.Background(), func(ctx context.Context, m *gcloud.Message) {
 		p.logger.Debug("Receive message", zap.ByteString("data", m.Data))
 
-		p.message <- m.Data
+		if err := p.handleOrderBookMsg(m.Data); err != nil {
+			p.logger.Error("p.handleOrderBookMsg", zap.ByteString("data", m.Data), zap.String("error", err.Error()))
+			// m.Nack()
+			// return
+		}
+
 		m.Ack()
 	})
 	if err != nil {
 		p.logger.Error("sub.Receive", zap.Error(err))
 	}
+}
+
+func (p *Pubsub) handleOrderBookMsg(m []byte) error {
+	var body struct {
+		Data interface{}
+		Type string
+	}
+	if err := json.Unmarshal(m, &body); err != nil {
+		return errors.Wrap(err, "json.Unmarshal")
+	}
+
+	j, _ := json.Marshal(body.Data)
+	switch body.Type {
+	case "change":
+		p.message <- j
+		return nil
+	case "match":
+		var msg serializers.OrderBookMatchMsg
+		if err := json.Unmarshal(j, &msg); err != nil {
+			return errors.Wrap(err, "json.Unmarshal")
+		}
+		return errors.Wrap(p.handleMatchOrderBook(&msg), "p.handleMatchOrderBook")
+	default:
+		return errors.Errorf("unsuppoted type %s", body.Type)
+	}
+}
+
+func (p *Pubsub) handleMatchOrderBook(data *serializers.OrderBookMatchMsg) error {
+	takerOrder, err := p.exchangeDAO.FindOrderByID(data.TakerOrderID)
+	if err != nil {
+		return errors.Wrapf(err, "p.exchangeSvc.FindOrderByID %d", data.TakerOrderID)
+	}
+	makerOrder, err := p.exchangeDAO.FindOrderByID(data.MakerOrderID)
+	if err != nil {
+		return errors.Wrapf(err, "p.exchangeSvc.FindOrderByID %d", data.MakerOrderID)
+	}
+
+	switch takerOrder.Side {
+	case models.Buy:
+		err = p.makeTransaction(takerOrder, makerOrder)
+	case models.Sell:
+		err = p.makeTransaction(makerOrder, takerOrder)
+	}
+	return errors.Wrap(err, "p.makeTransaction")
+}
+
+func (p *Pubsub) makeTransaction(buyer, seller *models.Order) error {
+	switch buyer.Market.BaseCurrency.Name {
+	case "CONSTANT": // send constant token from buyer to seller
+		txID, err := p.bc.Createandsendtransaction(buyer.User.PrivKey, serializers.WalletSend{
+			PaymentAddresses: map[string]uint64{
+				seller.User.PaymentAddress: buyer.Price,
+			},
+		})
+		if err != nil {
+			return errors.Wrap(err, "p.bc.Createandsendtransaction")
+		}
+		tx, err := p.bc.WaitForTx(txID)
+		if err != nil {
+			return errors.Wrap(err, "p.bc.WaitForTx")
+		}
+		p.logger.Debug("tx", zap.Any("tx", tx))
+	default:
+		return errors.Errorf("unsupported currency: %q", buyer.Market.BaseCurrency.Name)
+	}
+
+	// send token from seller to buyer
+	if err := p.bc.Sendcustomtokentransaction(seller.User.PrivKey, serializers.WalletSend{
+		Type:        1,
+		TokenID:     buyer.Market.QuoteCurrency.TokenID,
+		TokenName:   buyer.Market.QuoteCurrency.TokenName,
+		TokenSymbol: buyer.Market.QuoteCurrency.TokenSymbol,
+		PaymentAddresses: map[string]uint64{
+			buyer.User.PaymentAddress: buyer.Quantity,
+		},
+	}); err != nil {
+		return errors.Wrap(err, "p.bc.Sendcustomtokentransaction")
+	}
+
+	if err := p.exchangeDAO.SetFilledOrders(buyer, seller); err != nil {
+		return errors.Wrap(err, "p.exchangeDAO.SetFilledOrders")
+	}
+	return nil
 }
 
 func (p *Pubsub) handleSubscribers() {
@@ -118,22 +216,4 @@ func (p *Pubsub) handleSubscribers() {
 			}
 		}
 	}
-}
-
-type Subscriber struct {
-	ps      *Pubsub
-	message chan []byte
-}
-
-func NewSubscriber(ps *Pubsub) *Subscriber {
-	sub := &Subscriber{
-		ps:      ps,
-		message: make(chan []byte, 1024),
-	}
-	sub.ps.register <- sub
-	return sub
-}
-
-func (s *Subscriber) Read() <-chan []byte {
-	return s.message
 }

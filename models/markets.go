@@ -15,8 +15,15 @@ func (m MarketState) String() string {
 
 type Market struct {
 	gorm.Model
-	BaseCurrency         string
-	QuoteCurrency        string
+
+	// BaseCurrency string
+	BaseCurrencyID int
+	BaseCurrency   *Currency `gorm:"foreignkey:BaseCurrencyID"`
+
+	// QuoteCurrency   string
+	QuoteCurrencyID int
+	QuoteCurrency   *Currency `gorm:"foreignkey:QuoteCurrencyID"`
+
 	DisplayName          string
 	State                MarketState
 	SymbolCode           string
