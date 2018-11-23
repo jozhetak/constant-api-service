@@ -229,6 +229,15 @@ func (p *Portal) WithdrawTxForLoanRequest(u *models.User, b *models.Borrow, key 
 		if err != nil {
 			return nil, err
 		}
+
+		switch b.CollateralType {
+		case "ETH":
+			// TODO call web3 to process collateral
+			//
+			//
+
+		}
+
 		// update db
 		b.ConstantLoanWithdrawTxID = tx.Hash
 		_, err = p.r.UpdateBorrow(b)
@@ -255,6 +264,15 @@ func (p *Portal) PaymentTxForLoanRequest(u *models.User, b *models.Borrow, const
 		if err != nil {
 			return nil, err
 		}
+
+		switch b.CollateralType {
+		case "ETH":
+			// TODO call web3 to process collateral
+			//
+			//
+
+		}
+
 		// update db
 		b.ConstantLoanPaymentTxID = tx.Hash
 		_, err = p.r.UpdateBorrow(b)

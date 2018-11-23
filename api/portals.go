@@ -123,13 +123,6 @@ func (s *Server) PayBorrowByID(c *gin.Context) {
 		return
 	}
 	if paymentTx != nil {
-		switch b.CollateralType {
-		case "ETH":
-			// TODO call web3 to process collateral
-			//
-			//
-
-		}
 		c.JSON(http.StatusOK, serializers.Resp{Result: true})
 	} else {
 		c.JSON(http.StatusOK, serializers.Resp{Result: false})
@@ -162,13 +155,7 @@ func (s *Server) WithdrawBorrowByID(c *gin.Context) {
 		return
 	}
 	if withdrawTx != nil {
-		switch b.CollateralType {
-		case "ETH":
-			// TODO call web3 to process collateral
-			//
-			//
 
-		}
 		c.JSON(http.StatusOK, serializers.Resp{Result: true})
 	} else {
 		c.JSON(http.StatusOK, serializers.Resp{Result: false})
