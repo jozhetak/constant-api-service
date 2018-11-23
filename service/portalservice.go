@@ -15,11 +15,11 @@ import (
 )
 
 type Portal struct {
-	portalDao         *portal.Portal
+	portalDao         *portal.PortalDao
 	blockchainService *blockchain.Blockchain
 }
 
-func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
+func NewPortal(r *portal.PortalDao, bc *blockchain.Blockchain) *Portal {
 	return &Portal{
 		portalDao:         r,
 		blockchainService: bc,
