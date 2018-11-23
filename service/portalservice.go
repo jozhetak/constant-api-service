@@ -193,9 +193,17 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 		}
 	case "a": // accept
 		{
+			// call to check tx in constant network
+			tx, err := GetBlockchainTxByHash(constantLoanTxId, 10, p.bc)
+			if err != nil {
+				return false, err
+			}
+			if tx == nil {
+				return false, err
+			}
 			b.State = models.Approved
 			b.ConstantLoanResponseTxID = constantLoanTxId
-			_, err := p.r.UpdateBorrow(b)
+			_, err = p.r.UpdateBorrow(b)
 			if err != nil {
 				return false, err
 			}
