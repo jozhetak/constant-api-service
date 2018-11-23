@@ -11,20 +11,18 @@ import (
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/common"
-	"github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
+	_ "github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
 )
 
 type Portal struct {
-	r         *portal.Portal
-	bc        *blockchain.Blockchain
-	ethclient *ethereum.EthClient
+	r  *portal.Portal
+	bc *blockchain.Blockchain
 }
 
 func NewPortal(r *portal.Portal, bc *blockchain.Blockchain) *Portal {
 	return &Portal{
-		r:         r,
-		bc:        bc,
-		ethclient: ethereum.CreateEthClient(),
+		r:  r,
+		bc: bc,
 	}
 }
 
