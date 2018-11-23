@@ -20,6 +20,13 @@ func (p *Portal) UpdateBorrow(b *models.Borrow) (*models.Borrow, error) {
 	return b, nil
 }
 
+func (p *Portal) DeleteBorrow(b *models.Borrow) (error) {
+	if err := p.db.Delete(&b).Error; err != nil {
+		return errors.Wrap(err, "b.db.Delete")
+	}
+	return nil
+}
+
 func (p *Portal) ListBorrowByUser(paymentAddress string, state *models.BorrowState, limit, page int) ([]*models.Borrow, error) {
 	var (
 		bs     []*models.Borrow
