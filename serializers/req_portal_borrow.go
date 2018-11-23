@@ -22,3 +22,12 @@ type LoanRequest struct {
 
 	KeyDigest string `json:"KeyDigest"` // 32 bytes, from sha256
 }
+
+type LoanWithdraw struct {
+	LoanID string
+	Key    string
+}
+
+type LoanPayment struct {
+	LoanID string
+}

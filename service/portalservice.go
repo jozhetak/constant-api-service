@@ -191,7 +191,6 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 		}
 	case "a":
 		{
-			// TODO check with blockchain node to get tx
 			b.State = models.Approved
 			b.ConstantLoanAcceptTxID = constantLoanTxId
 			_, err := p.r.UpdateBorrow(b)

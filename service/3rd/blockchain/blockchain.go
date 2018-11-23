@@ -279,6 +279,36 @@ func (b *Blockchain) CreateAndSendLoanRequest(prvKey string, request serializers
 	return &txID, nil
 }
 
+func (b *Blockchain) CreateAndSendLoanWithdraw(prvKey string, request serializers.LoanWithdraw) (*string, error) {
+	param := []interface{}{prvKey, 0, request}
+	resp, err := b.blockchainAPI(createandsendloanwithdraw, param)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return nil, errors.New("Fail")
+	}
+	txID := resultResp.(string)
+	return &txID, nil
+}
+
+func (b *Blockchain) CreateAndSendLoanPayment(prvKey string, request serializers.LoanPayment) (*string, error) {
+	param := []interface{}{prvKey, 0, request}
+	resp, err := b.blockchainAPI(createandsendloanpayment, param)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return nil, errors.New("Fail")
+	}
+	txID := resultResp.(string)
+	return &txID, nil
+}
+
 func (b *Blockchain) GetLoanParams() ([]interface{}, error) {
 	param := []interface{}{}
 	resp, err := b.blockchainAPI(loamparams, param)
