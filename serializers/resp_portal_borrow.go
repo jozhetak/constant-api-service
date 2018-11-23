@@ -15,7 +15,7 @@ type BorrowResp struct {
 	LiquidationStart         int64
 	ConstantLoanRequestTxID  string
 	ConstantLoanPaymentTxID  string
-	ConstantLoanAcceptTxID   string
+	ConstantLoanAcceptTxID   []string
 	ConstantLoanWithdrawTxID string
 	State                    string
 	CreatedAt                string

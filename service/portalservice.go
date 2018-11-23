@@ -158,7 +158,7 @@ func (p *Portal) transformToResp(bs []*models.Borrow) []*serializers.BorrowResp 
 }
 
 func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
-	return &serializers.BorrowResp{
+	result := &serializers.BorrowResp{
 		ID:                       b.ID,
 		LoanAmount:               b.LoanAmount,
 		LoanID:                   b.LoanID,
@@ -175,9 +175,15 @@ func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 		Maturity:                 b.Maturity,
 		ConstantLoanPaymentTxID:  b.ConstantLoanPaymentTxID,
 		ConstantLoanRequestTxID:  b.ConstantLoanRequestTxID,
-		ConstantLoanAcceptTxID:   b.ConstantLoanResponseTxID,
 		ConstantLoanWithdrawTxID: b.ConstantLoanWithdrawTxID,
+		ConstantLoanAcceptTxID:   []string{},
 	}
+
+	for _, temp := range b.BorrowResponse {
+		result.ConstantLoanAcceptTxID = append(result.ConstantLoanAcceptTxID, temp.ConstantLoanResponseTxID)
+	}
+
+	return result
 }
 
 func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, constantLoanTxId string) (bool, error) {
@@ -215,10 +221,17 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 					enoughAccept = true
 				}
 			}
+			borrowResponse := models.BorrowResponse{
+				ConstantLoanResponseTxID: constantLoanTxId,
+				Borrow:                   b,
+			}
+			_, err = p.portalDao.CreateBorrowResponse(&borrowResponse)
+			if err != nil {
+				return false, err
+			}
 			if enoughAccept {
 				b.State = models.Approved
 			}
-			b.ConstantLoanResponseTxID = constantLoanTxId
 			_, err = p.portalDao.UpdateBorrow(b)
 			if err != nil {
 				return false, err
