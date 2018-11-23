@@ -171,7 +171,7 @@ func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 		Maturity:                 b.Maturity,
 		ConstantLoanPaymentTxID:  b.ConstantLoanPaymentTxID,
 		ConstantLoanRequestTxID:  b.ConstantLoanRequestTxID,
-		ConstantLoanAcceptTxID:   b.ConstantLoanAcceptTxID,
+		ConstantLoanAcceptTxID:   b.ConstantLoanResponseTxID,
 		ConstantLoanWithdrawTxID: b.ConstantLoanWithdrawTxID,
 	}
 }
@@ -192,7 +192,7 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 	case "a":
 		{
 			b.State = models.Approved
-			b.ConstantLoanAcceptTxID = constantLoanTxId
+			b.ConstantLoanResponseTxID = constantLoanTxId
 			_, err := p.r.UpdateBorrow(b)
 			if err != nil {
 				return false, err

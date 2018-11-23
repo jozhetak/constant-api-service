@@ -29,7 +29,7 @@ type Borrow struct {
 	Maturity                 int64
 	LiquidationStart         int64
 	ConstantLoanRequestTxID  string
-	ConstantLoanAcceptTxID   string
+	ConstantLoanResponseTxID string
 	ConstantLoanWithdrawTxID string
 	ConstantLoanPaymentTxID  string
 	State                    BorrowState `gorm:"not null;default:0"`
