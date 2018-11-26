@@ -9,6 +9,8 @@ type VotingProposalDCB struct {
 	User   *User
 	UserID int
 	Data   string
+
+	VotingProposalDCBVotes []VotingProposalDCBVote
 }
 
 func (*VotingProposalDCB) TableName() string {

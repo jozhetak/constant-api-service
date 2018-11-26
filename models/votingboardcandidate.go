@@ -23,6 +23,8 @@ type VotingBoardCandidate struct {
 
 	PaymentAddress string
 
+	VotingBoardVotes []VotingBoardVote
+
 	voteNum int
 }
 

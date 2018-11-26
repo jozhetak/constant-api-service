@@ -6,11 +6,13 @@ import (
 )
 
 type VotingBoardVote struct {
-	User      *User
-	UserID    int
-	Voter     *User
-	VoterID   uint
-	BoardType int
+	VotingBoardCandidate   VotingBoardCandidate
+	VotingBoardCandidateID int
+	User                   *User
+	UserID                 int
+	Voter                  *User
+	VoterID                uint
+	BoardType              int
 }
 
 func (*VotingBoardVote) TableName() string {
