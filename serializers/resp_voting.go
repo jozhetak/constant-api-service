@@ -3,10 +3,11 @@ package serializers
 import "github.com/ninjadotorg/constant-api-service/models"
 
 type VotingBoardCandidateResp struct {
-	UserID int  `json:"UserID"`
-	DCB    bool `json:"DCB"`
-	CMB    bool `json:"CMB"`
-	GOV    bool `json:"GOV"`
+	User   UserResp `json:"User"`
+	UserID int      `json:"UserID"`
+	DCB    bool     `json:"DCB"`
+	CMB    bool     `json:"CMB"`
+	GOV    bool     `json:"GOV"`
 
 	PaymentAddress string `json:"PaymentAddress"`
 }
@@ -18,6 +19,9 @@ func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoard
 		CMB:            data.CMB,
 		DCB:            data.DCB,
 	}
+
+	result.UserID = data.UserID
+	result.User = *(NewUserResp(*data.User))
 	return &result
 }
 

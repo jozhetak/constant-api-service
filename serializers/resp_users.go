@@ -1,5 +1,7 @@
 package serializers
 
+import "github.com/ninjadotorg/constant-api-service/models"
+
 type Resp struct {
 	Result interface{} `json:"Result"`
 	Error  interface{} `json:"Error"`
@@ -12,7 +14,20 @@ type UserResp struct {
 	LasstName      string `json:"LasstName"`
 	Email          string `json:"Email"`
 	PaymentAddress string `json:"PaymentAddress"`
-	Type           string `json:"Type"`
+	Bio            string `json:"Bio"`
+}
+
+func NewUserResp(data models.User) *UserResp {
+	result := UserResp{
+		PaymentAddress: data.PaymentAddress,
+		ID:             data.ID,
+		Email:          data.Email,
+		FirstName:      data.FirstName,
+		LasstName:      data.FirstName,
+		UserName:       data.UserName,
+		Bio:            data.Bio,
+	}
+	return &result
 }
 
 type UserRegisterResp struct {

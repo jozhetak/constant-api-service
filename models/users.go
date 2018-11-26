@@ -29,6 +29,7 @@ type User struct {
 	ReadonlyKey    string
 	PrivKey        string
 	IsActive       bool
+	Bio            string
 }
 
 func GetUserType(kind string) UserType {
