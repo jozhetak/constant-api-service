@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	jwt "github.com/appleboy/gin-jwt"
+	"github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 
 	"github.com/ninjadotorg/constant-api-service/serializers"
@@ -28,7 +28,6 @@ func AuthMiddleware(key string, authenticator func(c *gin.Context) (interface{},
 				return jwt.MapClaims{
 					userIDKey:    v.ID,
 					userEmailKey: v.Email,
-					userKindKey:  v.Type,
 				}
 			}
 			return jwt.MapClaims{}
