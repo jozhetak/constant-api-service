@@ -46,7 +46,7 @@ func (server *Server) GetCandidatesList(c *gin.Context) {
 	board, _ := strconv.Atoi(boardQuery)
 	list, err := server.votingSvc.GetCandidatesList(board, c.DefaultQuery("board", "payment_address"))
 	if err != nil {
-		server.logger.Error("s.votingSvc.RegisterBoardCandidate", zap.Error(err))
+		server.logger.Error("s.votingSvc.GetCandidatesList", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
 	}
@@ -62,7 +62,7 @@ func (server *Server) VoteCandidateBoard(c *gin.Context) {
 
 	err := server.votingSvc.VoteCandidateBoard()
 	if err != nil {
-		server.logger.Error("s.votingSvc.RegisterBoardCandidate", zap.Error(err))
+		server.logger.Error("s.votingSvc.VoteCandidateBoard", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
 	}

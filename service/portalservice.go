@@ -14,19 +14,19 @@ import (
 	//_ "github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
 )
 
-type Portal struct {
+type PortalService struct {
 	portalDao         *portal.PortalDao
 	blockchainService *blockchain.Blockchain
 }
 
-func NewPortal(r *portal.PortalDao, bc *blockchain.Blockchain) *Portal {
-	return &Portal{
+func NewPortal(r *portal.PortalDao, bc *blockchain.Blockchain) *PortalService {
+	return &PortalService{
 		portalDao:         r,
 		blockchainService: bc,
 	}
 }
 
-func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*serializers.BorrowResp, error) {
+func (p *PortalService) CreateBorrow(u *models.User, req serializers.BorrowReq) (*serializers.BorrowResp, error) {
 	startDate, err := time.Parse(common.DateTimeLayoutFormatIn, req.StartDate)
 	if err != nil {
 		return nil, errors.Wrap(err, "b.portalDao.Create")
@@ -76,7 +76,7 @@ func (p *Portal) CreateBorrow(u *models.User, req serializers.BorrowReq) (*seria
 	return AssembleBorrow(borrow), nil
 }
 
-func (p *Portal) ListBorrowsByUser(paymentAddress string, state, limit, page string) ([]*serializers.BorrowResp, error) {
+func (p *PortalService) ListBorrowsByUser(paymentAddress string, state, limit, page string) ([]*serializers.BorrowResp, error) {
 	l, pg, err := p.parseQuery(limit, page)
 	if err != nil {
 		return nil, errors.Wrapf(err, "b.parseQuery %s %s", limit, page)
@@ -99,7 +99,7 @@ func (p *Portal) ListBorrowsByUser(paymentAddress string, state, limit, page str
 	return p.transformToResp(borrows), nil
 }
 
-func (p *Portal) ListAllBorrows(state, limit, page string) ([]*serializers.BorrowResp, error) {
+func (p *PortalService) ListAllBorrows(state, limit, page string) ([]*serializers.BorrowResp, error) {
 	l, pg, err := p.parseQuery(limit, page)
 	if err != nil {
 		return nil, errors.Wrapf(err, "b.parseQuery %s %s", limit, page)
@@ -122,7 +122,7 @@ func (p *Portal) ListAllBorrows(state, limit, page string) ([]*serializers.Borro
 	return p.transformToResp(borrows), nil
 }
 
-func (p *Portal) FindBorrowByID(idS string) (*models.Borrow, error) {
+func (p *PortalService) FindBorrowByID(idS string) (*models.Borrow, error) {
 	id, err := strconv.Atoi(idS)
 	if err != nil {
 		return nil, errors.Wrapf(err, "strconv.Atoi %s", idS)
@@ -137,7 +137,7 @@ func (p *Portal) FindBorrowByID(idS string) (*models.Borrow, error) {
 	return borrow, nil
 }
 
-func (p *Portal) parseQuery(limitS, pageS string) (limit, page int, err error) {
+func (p *PortalService) parseQuery(limitS, pageS string) (limit, page int, err error) {
 	page, err = strconv.Atoi(pageS)
 	if err != nil {
 		return 0, 0, ErrInvalidPage
@@ -149,7 +149,7 @@ func (p *Portal) parseQuery(limitS, pageS string) (limit, page int, err error) {
 	return
 }
 
-func (p *Portal) transformToResp(bs []*models.Borrow) []*serializers.BorrowResp {
+func (p *PortalService) transformToResp(bs []*models.Borrow) []*serializers.BorrowResp {
 	resp := make([]*serializers.BorrowResp, 0, len(bs))
 	for _, br := range bs {
 		resp = append(resp, AssembleBorrow(br))
@@ -186,7 +186,7 @@ func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 	return result
 }
 
-func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, constantLoanTxId string) (bool, error) {
+func (p *PortalService) UpdateStatusBorrowRequest(b *models.Borrow, action string, constantLoanTxId string) (bool, error) {
 	switch action {
 	case "portalDao": // reject
 		{
@@ -243,7 +243,7 @@ func (p *Portal) UpdateStatusBorrowRequest(b *models.Borrow, action string, cons
 	}
 }
 
-func (p *Portal) WithdrawTxForLoanRequest(u *models.User, b *models.Borrow, key string) (*blockchain.TransactionDetail, error) {
+func (p *PortalService) WithdrawTxForLoanRequest(u *models.User, b *models.Borrow, key string) (*blockchain.TransactionDetail, error) {
 	request := serializers.LoanWithdraw{
 		LoanID: b.LoanID,
 		Key:    key,
@@ -279,7 +279,7 @@ func (p *Portal) WithdrawTxForLoanRequest(u *models.User, b *models.Borrow, key 
 	}
 }
 
-func (p *Portal) PaymentTxForLoanRequest(u *models.User, b *models.Borrow, constantPaymentTxId string) (*blockchain.TransactionDetail, error) {
+func (p *PortalService) PaymentTxForLoanRequest(u *models.User, b *models.Borrow, constantPaymentTxId string) (*blockchain.TransactionDetail, error) {
 	request := serializers.LoanPayment{
 		LoanID: b.LoanID,
 	}
@@ -314,6 +314,6 @@ func (p *Portal) PaymentTxForLoanRequest(u *models.User, b *models.Borrow, const
 	}
 }
 
-func (p *Portal) GetLoanParams() ([]interface{}, error) {
+func (p *PortalService) GetLoanParams() ([]interface{}, error) {
 	return p.blockchainService.GetLoanParams()
 }
