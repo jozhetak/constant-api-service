@@ -62,7 +62,7 @@ func (server *Server) VoteCandidateBoard(c *gin.Context) {
 
 	err := server.votingSvc.VoteCandidateBoard()
 	if err != nil {
-		server.logger.Error("s.votingSvc.VoteCandidateBoard", zap.Error(err))
+		server.logger.Error("s.voting.VoteCandidateBoard", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
 	}
@@ -110,12 +110,20 @@ func (server *Server) CreateProposal(c *gin.Context) {
 
 func (server *Server) GetProposalsList(c *gin.Context) {
 	// TODO
+	server.votingSvc.GetProposalsList()
 }
 
 func (server *Server) GetProposal(c *gin.Context) {
 	// TODO
+	server.votingSvc.GetProposal()
 }
 
 func (server *Server) VoteProposal(c *gin.Context) {
 	// TODO
+	err := server.votingSvc.VoteProposal()
+	if err != nil {
+		server.logger.Error("s.voting.VoteProposal", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
 }

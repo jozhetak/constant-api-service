@@ -122,3 +122,18 @@ func (self *VotingService) CreateProposal(user *models.User, request *serializer
 	}
 	return nil, nil
 }
+
+func (self *VotingService) GetProposalsList() ([]*models.ProposalInterface) {
+	return nil
+}
+
+func (self *VotingService) GetProposal() (models.ProposalInterface) {
+	return nil
+}
+
+func (self *VotingService) VoteProposal() (error) {
+	// TODO call blockchain network
+	// TODO waiting tx in block
+	// Update DB
+	return nil
+}
