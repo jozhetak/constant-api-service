@@ -5,6 +5,8 @@ import (
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
 
+// Call blockchain to get tx in block by hash
+// if can not get anything, we will retry after sleeping time
 func GetBlockchainTxByHash(txId string, retry int, bc *blockchain.Blockchain) (*blockchain.TransactionDetail, error) {
 	var tx *blockchain.TransactionDetail
 	for true {
