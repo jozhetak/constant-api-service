@@ -336,3 +336,17 @@ func (b *Blockchain) GetLoanParams() ([]interface{}, error) {
 	}
 	return resultResp.([]interface{}), nil
 }
+
+func (b *Blockchain) GetBondTypes() ([]interface{}, error) {
+	param := []interface{}{}
+	resp, err := b.blockchainAPI(getBondTypes, param)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return nil, errors.New("Fail")
+	}
+	return resultResp.([]interface{}), nil
+}
