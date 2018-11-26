@@ -45,6 +45,7 @@ type SellingBonds struct {
 	StartSellingAt uint32 // start selling bonds at block height
 	SellingWithin  uint32 // selling bonds within n blocks
 }
+
 type RefundInfo struct {
 	ThresholdToLargeTx uint64
 	RefundAmount       uint64
