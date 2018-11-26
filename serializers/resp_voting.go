@@ -19,7 +19,7 @@ func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoard
 		GOV:            data.GOV,
 		CMB:            data.CMB,
 		DCB:            data.DCB,
-		VoteNum:        data.VoteNum(),
+		VoteNum:        data.GetVoteNum(),
 	}
 
 	result.UserID = data.UserID
@@ -41,3 +41,34 @@ func NewVotingBoardCandidateListResp(data []*models.VotingBoardCandidate) *Votin
 	}
 	return result
 }
+
+// Proposal
+type ProposalResp struct {
+	User    UserResp `json:"User"`
+	UserID  int
+	VoteNum int      `json:"VoteNum"`
+
+	Data string `json:"Data"`
+}
+
+func NewProposalDCBResp(data models.VotingProposalDCB) *ProposalResp {
+	result := &ProposalResp{
+		Data:    data.Data,
+		VoteNum: data.GetVoteNum(),
+	}
+	result.UserID = data.UserID
+	result.User = *(NewUserResp(*data.User))
+	return result
+}
+
+func NewProposalGOVBResp(data models.VotingProposalGOV) *ProposalResp {
+	result := &ProposalResp{
+		Data:    data.Data,
+		VoteNum: data.GetVoteNum(),
+	}
+	result.UserID = data.UserID
+	result.User = *(NewUserResp(*data.User))
+	return result
+}
+
+// end Proposal

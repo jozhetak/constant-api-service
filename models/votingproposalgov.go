@@ -11,6 +11,15 @@ type VotingProposalGOV struct {
 	Data   string
 
 	VotingProposalGOVVotes []VotingProposalGOVVote
+	voteNum                int
+}
+
+func (self VotingProposalGOV) SetVoteNum(num int) {
+	self.voteNum = num
+}
+
+func (self VotingProposalGOV) GetVoteNum() int {
+	return self.voteNum
 }
 
 func (*VotingProposalGOV) TableName() string {

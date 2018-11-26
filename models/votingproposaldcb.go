@@ -11,6 +11,15 @@ type VotingProposalDCB struct {
 	Data   string
 
 	VotingProposalDCBVotes []VotingProposalDCBVote
+	voteNum                int
+}
+
+func (self VotingProposalDCB) SetVoteNum(num int) {
+	self.voteNum = num
+}
+
+func (self VotingProposalDCB) GetVoteNum() int {
+	return self.voteNum
 }
 
 func (*VotingProposalDCB) TableName() string {

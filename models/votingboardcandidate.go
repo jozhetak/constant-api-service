@@ -28,7 +28,11 @@ type VotingBoardCandidate struct {
 	voteNum int
 }
 
-func (self VotingBoardCandidate) VoteNum() int {
+func (self VotingBoardCandidate) SetVoteNum(num int) {
+	self.voteNum = num
+}
+
+func (self VotingBoardCandidate) GetVoteNum() int {
 	return self.voteNum
 }
 
