@@ -67,3 +67,19 @@ func (server *Server) VoteCandidateBoard(c *gin.Context) {
 		return
 	}
 }
+
+func (server *Server) CreateProposal(c *gin.Context) {
+	// TODO
+}
+
+func (server *Server) GetProposalsList(c *gin.Context) {
+	// TODO
+}
+
+func (server *Server) GetProposal(c *gin.Context) {
+	// TODO
+}
+
+func (server *Server) VoteProposal(c *gin.Context) {
+	// TODO
+}
