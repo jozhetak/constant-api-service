@@ -127,3 +127,8 @@ func (server *Server) VoteProposal(c *gin.Context) {
 		return
 	}
 }
+
+func (server *Server) GetBondTypes(c *gin.Context) {
+	result, err := server.votingSvc.GetBondTypes()
+	c.JSON(http.StatusOK, serializers.Resp{Error: err, Result: result})
+}

@@ -137,3 +137,7 @@ func (self *VotingService) VoteProposal() (error) {
 	// Update DB
 	return nil
 }
+
+func (self *VotingService) GetBondTypes() (interface{}, error) {
+	return self.blockchainService.GetBondTypes()
+}

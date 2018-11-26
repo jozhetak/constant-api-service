@@ -23,7 +23,6 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		portal.POST("/borrows", s.CreateNewBorrow)
 		portal.POST("/borrows/:id/pay", s.PayBorrowByID)
 		portal.POST("/borrows/:id/withdraw", s.WithdrawBorrowByID)
-		portal.GET("/loanparams", s.GetLoanParams)
 	}
 
 	// exchange API group
@@ -63,4 +62,9 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		voting.GET("/proposal", s.GetProposal)
 		voting.POST("/proposal/vote", s.VoteProposal)
 	}
+
+	// common API
+	common := s.g.Group("/common")
+	common.GET("/loanparams", s.GetLoanParams)
+	common.GET("/bondtypes", s.GetBondTypes)
 }
