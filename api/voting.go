@@ -59,4 +59,11 @@ func (server *Server) GetCandidatesList(c *gin.Context) {
 
 func (server *Server) VoteCandidateBoard(c *gin.Context) {
 	// TODO
+
+	err := server.votingSvc.VoteCandidateBoard()
+	if err != nil {
+		server.logger.Error("s.votingSvc.RegisterBoardCandidate", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
 }

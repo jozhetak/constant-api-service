@@ -93,3 +93,10 @@ func (p *VotingDao) Filter(filter *VotingCandidateFilter) ([]*models.VotingBoard
 	}
 	return b, nil
 }
+
+func (p *VotingDao) CreateVotingBoardVote(b *models.VotingBoardVote) (*models.VotingBoardVote, error) {
+	if err := p.db.Create(b).Error; err != nil {
+		return nil, errors.Wrap(err, "b.db.Create")
+	}
+	return b, nil
+}

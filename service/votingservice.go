@@ -68,3 +68,10 @@ func (self *VotingService) GetCandidatesList(boardType int, paymentAddress strin
 
 	return list, err
 }
+
+func (self *VotingService) VoteCandidateBoard() (error) {
+	// TODO call blockchain network
+	// Update DB
+
+	return nil
+}
