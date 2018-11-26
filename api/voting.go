@@ -56,3 +56,7 @@ func (server *Server) GetCandidatesList(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, serializers.Resp{Result: result})
 }
+
+func (server *Server) VoteCandidateBoard(c *gin.Context) {
+	// TODO
+}

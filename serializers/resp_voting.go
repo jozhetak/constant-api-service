@@ -3,11 +3,12 @@ package serializers
 import "github.com/ninjadotorg/constant-api-service/models"
 
 type VotingBoardCandidateResp struct {
-	User   UserResp `json:"User"`
-	UserID int      `json:"UserID"`
-	DCB    bool     `json:"DCB"`
-	CMB    bool     `json:"CMB"`
-	GOV    bool     `json:"GOV"`
+	User    UserResp `json:"User"`
+	UserID  int      `json:"UserID"`
+	DCB     bool     `json:"DCB"`
+	CMB     bool     `json:"CMB"`
+	GOV     bool     `json:"GOV"`
+	VoteNum int      `json:"VoteNum"`
 
 	PaymentAddress string `json:"PaymentAddress"`
 }

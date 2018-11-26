@@ -22,6 +22,8 @@ type VotingBoardCandidate struct {
 	GOV    bool
 
 	PaymentAddress string
+
+	voteNum int
 }
 
 func (*VotingBoardCandidate) TableName() string {
