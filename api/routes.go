@@ -54,5 +54,6 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	voting.Use(authMw.MiddlewareFunc())
 	{
 		voting.POST("/register", s.RegisterBoardCandidate)
+		voting.GET("/candidates", )
 	}
 }

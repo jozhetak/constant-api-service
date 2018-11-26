@@ -7,6 +7,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/service"
 	"net/http"
 	"github.com/ninjadotorg/constant-api-service/models"
+	"strconv"
 )
 
 func (server *Server) RegisterBoardCandidate(c *gin.Context) {
@@ -31,5 +32,27 @@ func (server *Server) RegisterBoardCandidate(c *gin.Context) {
 		return
 	}
 	result := serializers.NewVotingBoardCandidateResp(votingBoardCandidate)
+	c.JSON(http.StatusOK, serializers.Resp{Result: result})
+}
+
+func (server *Server) GetCandidatesList(c *gin.Context) {
+	_, err := server.userFromContext(c)
+	if err != nil {
+		server.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+	boardQuery := c.DefaultQuery("board", "0")
+	board, _ := strconv.Atoi(boardQuery)
+	list, err := server.votingSvc.GetCandidatesList(board, c.DefaultQuery("board", "payment_address"))
+	if err != nil {
+		server.logger.Error("s.votingSvc.RegisterBoardCandidate", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+	result := serializers.VotingBoardCandidateRespList{}
+	if len(list) > 0 {
+		result = *(serializers.NewVotingBoardCandidateListResp(list))
+	}
 	c.JSON(http.StatusOK, serializers.Resp{Result: result})
 }

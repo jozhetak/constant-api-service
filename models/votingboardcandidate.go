@@ -8,7 +8,8 @@ import (
 type BoardCandidateType int
 
 const (
-	DCB BoardCandidateType = iota
+	Invalid BoardCandidateType = iota
+	DCB
 	CMB
 	GOV
 )

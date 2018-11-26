@@ -56,3 +56,40 @@ func (p *VotingDao) FindVotingBoardCandidateByUser(user models.User) (*models.Vo
 	}
 	return &b, nil
 }
+
+type VotingCandidateFilter struct {
+	BoardType      int
+	PaymentAddress string
+}
+
+func (p *VotingDao) Filter(filter *VotingCandidateFilter) ([]*models.VotingBoardCandidate, error) {
+	var b []*models.VotingBoardCandidate
+	query := p.db
+	if models.BoardCandidateType(filter.BoardType) != models.Invalid {
+		switch models.BoardCandidateType(filter.BoardType) {
+		case models.DCB:
+			{
+				query = query.Where("dcb = 1")
+			}
+		case models.GOV:
+			{
+				query = query.Where("gov = 1")
+			}
+		case models.CMB:
+
+			{
+				query = query.Where("cmb = 1")
+			}
+		}
+	}
+	if filter.PaymentAddress != "" {
+		query = query.Where("payment_address = ?", filter.PaymentAddress)
+	}
+	if err := query.Find(&b).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "b.db.First")
+	}
+	return b, nil
+}

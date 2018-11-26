@@ -57,3 +57,11 @@ func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType mode
 	}
 
 }
+
+func (self *VotingService) GetCandidatesList(boardType int, paymentAddress string) ([]*models.VotingBoardCandidate, error) {
+	list, err := self.votingDao.Filter(&voting.VotingCandidateFilter{
+		BoardType:      boardType,
+		PaymentAddress: paymentAddress,
+	})
+	return list, err
+}

@@ -20,3 +20,18 @@ func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoard
 	}
 	return &result
 }
+
+type VotingBoardCandidateRespList struct {
+	ListBoardCandidates []VotingBoardCandidateResp `json:"ListBoardCandidates"`
+}
+
+func NewVotingBoardCandidateListResp(data []*models.VotingBoardCandidate) *VotingBoardCandidateRespList {
+	result := &VotingBoardCandidateRespList{
+		ListBoardCandidates: [] VotingBoardCandidateResp{},
+	}
+	for _, item := range data {
+		temp := NewVotingBoardCandidateResp(item)
+		result.ListBoardCandidates = append(result.ListBoardCandidates, *temp)
+	}
+	return result
+}
