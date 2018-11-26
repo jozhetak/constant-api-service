@@ -70,6 +70,42 @@ func (server *Server) VoteCandidateBoard(c *gin.Context) {
 
 func (server *Server) CreateProposal(c *gin.Context) {
 	// TODO
+	user, err := server.userFromContext(c)
+	if err != nil {
+		server.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+	req := serializers.VotingProposalRequest{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
+		return
+	}
+	proposal, err := server.votingSvc.CreateProposal(user, &req)
+	if err != nil {
+		server.logger.Error("s.votingSvc.CreateProposal", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
+	switch proposal.GetType() {
+	case 1:
+		{
+			result := serializers.NewProposalDCBResp(proposal.(models.VotingProposalDCB))
+			c.JSON(http.StatusOK, serializers.Resp{Result: result})
+		}
+	case 2:
+		{
+			result := serializers.NewProposalGOVResp(proposal.(models.VotingProposalGOV))
+			c.JSON(http.StatusOK, serializers.Resp{Result: result})
+		}
+	default:
+		{
+			server.logger.Error("s.votingSvc.CreateProposal", zap.Error(err))
+			c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+			return
+		}
+	}
 }
 
 func (server *Server) GetProposalsList(c *gin.Context) {

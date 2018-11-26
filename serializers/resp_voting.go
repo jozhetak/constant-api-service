@@ -61,7 +61,7 @@ func NewProposalDCBResp(data models.VotingProposalDCB) *ProposalResp {
 	return result
 }
 
-func NewProposalGOVBResp(data models.VotingProposalGOV) *ProposalResp {
+func NewProposalGOVResp(data models.VotingProposalGOV) *ProposalResp {
 	result := &ProposalResp{
 		Data:    data.Data,
 		VoteNum: data.GetVoteNum(),

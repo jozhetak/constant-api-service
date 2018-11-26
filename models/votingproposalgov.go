@@ -22,6 +22,10 @@ func (self VotingProposalGOV) GetVoteNum() int {
 	return self.voteNum
 }
 
+func (self VotingProposalGOV) GetType() int {
+	return 2
+}
+
 func (*VotingProposalGOV) TableName() string {
 	return "voting_proposal_gov"
 }
