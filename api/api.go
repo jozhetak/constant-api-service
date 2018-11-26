@@ -17,6 +17,7 @@ type Server struct {
 	portalSvc   *service.Portal
 	exchangeSvc *service.Exchange
 	walletSvc   *service.Wallet
+	votingSvc   *service.VotingService
 	logger      *zap.Logger
 }
 
@@ -30,5 +31,6 @@ func NewServer(g *gin.Engine, ps *pubsub.Pubsub, up *websocket.Upgrader, userSvc
 		exchangeSvc: exchangeSvc,
 		walletSvc:   walletSvc,
 		logger:      logger,
+		votingSvc:   votingSvc,
 	}
 }

@@ -48,4 +48,11 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		wallet.GET("/balances", s.GetCoinAndCustomTokenBalance)
 		wallet.POST("/send", s.SendCoin)
 	}
+
+	// voting API group
+	voting := s.g.Group("/voting")
+	voting.Use(authMw.MiddlewareFunc())
+	{
+		voting.POST("/register", s.RegisterBoardCandidate)
+	}
 }
