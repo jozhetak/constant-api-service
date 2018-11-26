@@ -1,10 +1,14 @@
 package serializers
 
+// Candidate
 type VotingBoardCandidateRequest struct {
 	BoardType      int    `json:"BoardType"`
 	PaymentAddress string `json:"PaymentAddress"`
 }
 
+// end Candidate
+
+// Proposal
 type VotingProposalRequest struct {
 	Type int `json:"Type"` // 1: DCB, 2 GOV
 
@@ -45,3 +49,5 @@ type RefundInfo struct {
 	ThresholdToLargeTx uint64
 	RefundAmount       uint64
 }
+
+// end Proposal
