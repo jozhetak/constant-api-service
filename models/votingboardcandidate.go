@@ -26,6 +26,10 @@ type VotingBoardCandidate struct {
 	voteNum int
 }
 
+func (self VotingBoardCandidate) VoteNum() int {
+	return self.voteNum
+}
+
 func (*VotingBoardCandidate) TableName() string {
 	return "voting_board_candidate"
 }

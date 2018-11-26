@@ -19,6 +19,7 @@ func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoard
 		GOV:            data.GOV,
 		CMB:            data.CMB,
 		DCB:            data.DCB,
+		VoteNum:        data.VoteNum(),
 	}
 
 	result.UserID = data.UserID
