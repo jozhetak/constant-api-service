@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"time"
-
 	"github.com/pkg/errors"
 
 	"github.com/ninjadotorg/constant-api-service/serializers"
@@ -35,6 +33,9 @@ const (
 
 	// custom token
 	getlistcustomtokenbalance = "getlistcustomtokenbalance"
+
+	// voting
+	getBondTypes = "getBondTypes"
 )
 
 var (
@@ -334,18 +335,4 @@ func (b *Blockchain) GetLoanParams() ([]interface{}, error) {
 		return nil, errors.New("Fail")
 	}
 	return resultResp.([]interface{}), nil
-}
-
-func (b *Blockchain) WaitForTx(txHash string) (*TransactionDetail, error) {
-	for {
-		tx, err := b.GetTxByHash(txHash)
-		if err != nil {
-			if err == errTxHashNotExists {
-				time.Sleep(10 * time.Second)
-				continue
-			}
-			return nil, errors.Wrap(err, "b.GetTxByHash")
-		}
-		return tx, nil
-	}
 }

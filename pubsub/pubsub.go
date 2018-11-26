@@ -12,6 +12,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
+	"github.com/ninjadotorg/constant-api-service/service"
 )
 
 const (
@@ -167,7 +168,7 @@ func (p *Pubsub) makeTransaction(buyer, seller *models.Order) error {
 		if err != nil {
 			return errors.Wrap(err, "p.bc.Createandsendtransaction")
 		}
-		tx, err := p.bc.WaitForTx(txID)
+		tx, err := service.GetBlockchainTxByHash(txID, 3, p.bc)
 		if err != nil {
 			return errors.Wrap(err, "p.bc.WaitForTx")
 		}
