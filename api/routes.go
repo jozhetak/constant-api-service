@@ -53,9 +53,11 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	voting := s.g.Group("/voting")
 	voting.Use(authMw.MiddlewareFunc())
 	{
+		// candidate board
 		voting.POST("/candidate", s.RegisterBoardCandidate)
 		voting.GET("/candidates", s.GetCandidatesList)
 		voting.POST("/candidate/vote", s.VoteCandidateBoard)
+		// Proposal
 		voting.POST("/proposal", s.CreateProposal)
 		voting.GET("/proposals", s.GetProposalsList)
 		voting.GET("/proposal", s.GetProposal)
