@@ -1,10 +1,13 @@
 package models
 
-import "time"
+import (
+	"time"
+	"github.com/mongodb/mongo-go-driver/bson/decimal"
+)
 
 type ContributionAttributes struct {
 	AccountID           string                  `json:"account-id"`
-	Amount              float64                 `json:"amount"`
+	Amount              decimal.Decimal128      `json:"amount"`
 	ContactEmail        string                  `json:"contact-email"`
 	ContactName         string                  `json:"contact-name"`
 	ContactID           string                  `json:"contact-id"`
@@ -17,13 +20,13 @@ type ContributionAttributes struct {
 	SurplusToParent     bool                    `json:"surplus_to_parent"`
 	ShortageToParent    bool                    `json:"shortage_to_parent"`
 	ID                  string                  `json:"id"`
-	AmountExpected      float64                 `json:"amount-expected"`
+	AmountExpected      decimal.Decimal128      `json:"amount-expected"`
 	ParentID            string                  `json:"parent_id"`
 	PrimaryChild        bool                    `json:"primary_child"`
 	PaymentDetails      *string                 `json:"payment-details"`
 	ReferenceNumber     string                  `json:"reference-number"`
 	SpecialType         *string                 `json:"special-type"`
-	CreatedAt           time.Time               `json:"created-at"`
+	CreatedAt           *time.Time              `json:"created-at"`
 	Status              string                  `json:"status"`
 	TransactionNumber   *string                 `json:"transaction-number"`
 }
