@@ -18,6 +18,14 @@
   version = "v0.33.1"
 
 [[projects]]
+  branch = "master"
+  digest = "1:94dd44be82d1204649fd88f76b4a77ef7b129d1ae1fcf9c79592e0d21d4eca49"
+  name = "github.com/BANKEX/go-primetrust"
+  packages = ["models"]
+  pruneopts = "UT"
+  revision = "8023a7df07d289bcb0a4fe4b57360098de3d66ca"
+
+[[projects]]
   digest = "1:cfa337ceb2aa38c1cf6188f2898ecc4d244e0d85ee6d69b427995fc2e6e49ac7"
   name = "github.com/appleboy/gin-jwt"
   packages = ["."]
@@ -261,6 +269,14 @@
   pruneopts = "UT"
   revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
   version = "1.0.1"
+
+[[projects]]
+  digest = "1:8458d584e214b7eba5aa49993bbd5c45f2dc9a6728ceb3a6efe265a8d56a0ed6"
+  name = "github.com/mongodb/mongo-go-driver"
+  packages = ["bson/decimal"]
+  pruneopts = "UT"
+  revision = "dbffb1c211bf96fbd721b4bd6911331e5c1886ab"
+  version = "v0.0.18"
 
 [[projects]]
   digest = "1:e5d0bd87abc2781d14e274807a470acd180f0499f8bf5bb18606e9ec22ad9de9"
@@ -607,6 +623,7 @@
   analyzer-version = 1
   input-imports = [
     "cloud.google.com/go/pubsub",
+    "github.com/BANKEX/go-primetrust/models",
     "github.com/appleboy/gin-jwt",
     "github.com/ethereum/go-ethereum",
     "github.com/ethereum/go-ethereum/accounts/abi",
@@ -622,6 +639,7 @@
     "github.com/go-sql-driver/mysql",
     "github.com/gorilla/websocket",
     "github.com/jinzhu/gorm",
+    "github.com/mongodb/mongo-go-driver/bson/decimal",
     "github.com/pkg/errors",
     "github.com/sendgrid/sendgrid-go",
     "github.com/sendgrid/sendgrid-go/helpers/mail",
