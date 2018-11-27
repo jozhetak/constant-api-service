@@ -48,9 +48,7 @@ func (s *Server) GetCoinAndCustomTokenBalance(c *gin.Context) {
 		return
 	}
 
-	privKey := user.PrivKey
-	paymentAddress := user.PaymentAddress
-	resp, err := s.walletSvc.GetCoinAndCustomTokenBalance(privKey, paymentAddress)
+	resp, err := s.walletSvc.GetCoinAndCustomTokenBalance(user)
 	if err != nil {
 		s.logger.Error("s.walletSvc.ListAccounts", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
