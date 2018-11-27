@@ -1,9 +1,9 @@
 package service
 
 import (
+	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
-	"github.com/ninjadotorg/constant-api-service/models"
 )
 
 type WalletService struct {
@@ -49,7 +49,7 @@ func (w *WalletService) GetCoinAndCustomTokenBalance(u *models.User, paymentAddr
 	result.PaymentAddress = listCustomTokenBalances.Address
 	// get in order for constant
 	inOrderConstant := uint64(0)
-	orders, _ := w.exchangeService.UserOrderHistory(u, "constantbond", "new", nil, nil)
+	orders, _ := w.exchangeService.UserOrderHistory(u, "constantbond", "new", "", nil, nil)
 	for _, order := range orders {
 		inOrderConstant += order.Price * order.Quantity
 	}
