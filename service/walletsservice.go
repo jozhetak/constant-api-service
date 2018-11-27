@@ -49,7 +49,10 @@ func (w *WalletService) GetCoinAndCustomTokenBalance(u *models.User) (*serialize
 	result.PaymentAddress = listCustomTokenBalances.Address
 	// get in order for constant
 	inOrderConstant := uint64(0)
-	orders, _ := w.exchangeService.UserOrderHistory(u, "constantbond", "new", "buy", nil, nil)
+	orders, err := w.exchangeService.UserOrderHistory(u, "constantbond", "new", "buy", nil, nil)
+	if err != nil {
+		return nil, err
+	}
 	for _, order := range orders {
 		inOrderConstant += order.Price * order.Quantity
 	}
