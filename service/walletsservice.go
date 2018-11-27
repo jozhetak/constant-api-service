@@ -60,8 +60,6 @@ func (w *WalletService) GetCoinAndCustomTokenBalanceForUser(u *models.User) (*se
 	for _, order := range orders {
 		inOrderConstant += order.Price * order.Quantity
 	}
-	// end
-	// get in order for
 	balanceCoin := serializers.WalletBalance{
 		TotalBalance:     coinBalance,
 		SymbolCode:       "CONST",
@@ -74,6 +72,45 @@ func (w *WalletService) GetCoinAndCustomTokenBalanceForUser(u *models.User) (*se
 	if len(listCustomTokenBalances.ListCustomTokenBalance) > 0 {
 		for _, item := range listCustomTokenBalances.ListCustomTokenBalance {
 			// TODO
+			balanceCoin = serializers.WalletBalance{
+				TotalBalance:     item.Amount,
+				SymbolCode:       item.Symbol,
+				SymbolName:       item.Name,
+				AvailableBalance: item.Amount,
+				ConstantValue:    0,
+				InOrder:          0,
+			}
+		}
+	}
+	return result, nil
+}
+
+func (w *WalletService) GetCoinAndCustomTokenBalanceForPaymentAddress(paymentAddress string) (*serializers.WalletBalances, error) {
+	result := &serializers.WalletBalances{
+		ListBalances: []serializers.WalletBalance{},
+	}
+	coinBalance, err := w.bc.GetBalanceByPaymentAddress(paymentAddress)
+	if err != nil {
+		return nil, err
+	}
+	listCustomTokenBalances, err := w.GetListCustomTokenBalance(paymentAddress)
+	if err != nil {
+		return nil, err
+	}
+	result.PaymentAddress = listCustomTokenBalances.PaymentAddress
+	// end
+	// get in order for
+	balanceCoin := serializers.WalletBalance{
+		TotalBalance:     coinBalance,
+		SymbolCode:       "CONST",
+		SymbolName:       "Constant",
+		AvailableBalance: coinBalance,
+		ConstantValue:    0,
+		InOrder:          0,
+	}
+	result.ListBalances = append(result.ListBalances, balanceCoin)
+	if len(listCustomTokenBalances.ListCustomTokenBalance) > 0 {
+		for _, item := range listCustomTokenBalances.ListCustomTokenBalance {
 			balanceCoin = serializers.WalletBalance{
 				TotalBalance:     item.Amount,
 				SymbolCode:       item.Symbol,
