@@ -23,7 +23,6 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		portal.POST("/borrows", s.CreateNewBorrow)
 		portal.POST("/borrows/:id/pay", s.PayBorrowByID)
 		portal.POST("/borrows/:id/withdraw", s.WithdrawBorrowByID)
-		portal.GET("/loanparams", s.GetLoanParams)
 	}
 
 	// exchange API group
@@ -39,7 +38,7 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		exch.GET("/orders", s.UserOrderHistory)
 	}
 
-	// Wallet API Group
+	// WalletService API Group
 	wallet := s.g.Group("/wallet")
 	wallet.GET("/accounts", s.ListAccounts)
 	wallet.Use(authMw.MiddlewareFunc())
@@ -48,4 +47,24 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		wallet.GET("/balances", s.GetCoinAndCustomTokenBalance)
 		wallet.POST("/send", s.SendCoin)
 	}
+
+	// voting API group
+	voting := s.g.Group("/voting")
+	voting.Use(authMw.MiddlewareFunc())
+	{
+		// candidate board
+		voting.POST("/candidate", s.RegisterBoardCandidate)
+		voting.GET("/candidates", s.GetCandidatesList)
+		voting.POST("/candidate/vote", s.VoteCandidateBoard)
+		// Proposal
+		voting.POST("/proposal", s.CreateProposal)
+		voting.GET("/proposals", s.GetProposalsList)
+		voting.GET("/proposal", s.GetProposal)
+		voting.POST("/proposal/vote", s.VoteProposal)
+	}
+
+	// common API
+	common := s.g.Group("/common")
+	common.GET("/loanparams", s.GetLoanParams)
+	common.GET("/bondtypes", s.GetBondTypes)
 }

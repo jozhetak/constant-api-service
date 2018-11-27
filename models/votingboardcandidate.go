@@ -8,7 +8,8 @@ import (
 type BoardCandidateType int
 
 const (
-	DCB BoardCandidateType = iota
+	Invalid BoardCandidateType = iota
+	DCB
 	CMB
 	GOV
 )
@@ -21,6 +22,18 @@ type VotingBoardCandidate struct {
 	GOV    bool
 
 	PaymentAddress string
+
+	VotingBoardVotes []VotingBoardVote
+
+	voteNum int
+}
+
+func (self VotingBoardCandidate) SetVoteNum(num int) {
+	self.voteNum = num
+}
+
+func (self VotingBoardCandidate) GetVoteNum() int {
+	return self.voteNum
 }
 
 func (*VotingBoardCandidate) TableName() string {

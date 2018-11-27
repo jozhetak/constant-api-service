@@ -16,7 +16,7 @@ func (e *Exchange) ListMarkets(base string) ([]*models.Market, error) {
 	if base != "" {
 		query = query.Where("base_currency = ?", base)
 	}
-	if err := query.Find(&markets).Error; err != nil {
+	if err := query.Preload("BaseCurrency").Preload("QuoteCurrency").Find(&markets).Error; err != nil {
 		return nil, errors.Wrap(err, "c.db.Where.Find")
 	}
 	return markets, nil

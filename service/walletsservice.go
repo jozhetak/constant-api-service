@@ -1,39 +1,44 @@
 package service
 
 import (
+	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
 
-type Wallet struct {
-	bc *blockchain.Blockchain
+type WalletService struct {
+	bc              *blockchain.Blockchain
+	exchangeService *ExchangeService
 }
 
-func NewWallet(bc *blockchain.Blockchain) *Wallet {
-	return &Wallet{bc}
+func NewWalletService(bc *blockchain.Blockchain, ex *ExchangeService) *WalletService {
+	return &WalletService{
+		bc:              bc,
+		exchangeService: ex,
+	}
 }
 
-func (w *Wallet) ListAccounts(params string) (interface{}, error) {
+func (w *WalletService) ListAccounts(params string) (interface{}, error) {
 	return w.bc.ListAccounts(params)
 }
 
-func (w *Wallet) GetAccount(params string) (interface{}, error) {
+func (w *WalletService) GetAccount(params string) (interface{}, error) {
 	return w.bc.GetAccount(params)
 }
 
-func (w *Wallet) GetBalanceByPrivateKey(privKey string) (interface{}, error) {
+func (w *WalletService) GetBalanceByPrivateKey(privKey string) (interface{}, error) {
 	return w.bc.GetBalanceByPrivateKey(privKey)
 }
 
-func (w *Wallet) GetListCustomTokenBalance(paymentAddress string) (*blockchain.ListCustomTokenBalance, error) {
+func (w *WalletService) GetListCustomTokenBalance(paymentAddress string) (*blockchain.ListCustomTokenBalance, error) {
 	return w.bc.GetListCustomTokenBalance(paymentAddress)
 }
 
-func (w *Wallet) GetCoinAndCustomTokenBalance(privKey string, paymentAddress string) (*serializers.WalletBalances, error) {
+func (w *WalletService) GetCoinAndCustomTokenBalance(u *models.User, paymentAddress string) (*serializers.WalletBalances, error) {
 	result := &serializers.WalletBalances{
 		ListBalances: []serializers.WalletBalance{},
 	}
-	coinBalance, err := w.bc.GetBalanceByPrivateKey(privKey)
+	coinBalance, err := w.bc.GetBalanceByPrivateKey(u.PrivKey)
 	if err != nil {
 		return nil, err
 	}
@@ -42,20 +47,26 @@ func (w *Wallet) GetCoinAndCustomTokenBalance(privKey string, paymentAddress str
 		return nil, err
 	}
 	result.PaymentAddress = listCustomTokenBalances.Address
-	// TODO check with order table of exchange
-	inOrder := uint64(0)
-	// end TODO
+	// get in order for constant
+	inOrderConstant := uint64(0)
+	orders, _ := w.exchangeService.UserOrderHistory(u, "constantbond", "new", "buy", nil, nil)
+	for _, order := range orders {
+		inOrderConstant += order.Price * order.Quantity
+	}
+	// end
+	// get in order for
 	balanceCoin := serializers.WalletBalance{
 		TotalBalance:     coinBalance,
 		SymbolCode:       "CONST",
 		SymbolName:       "Constant",
-		AvailableBalance: coinBalance - inOrder,
+		AvailableBalance: coinBalance - inOrderConstant,
 		ConstantValue:    0,
-		InOrder:          inOrder,
+		InOrder:          inOrderConstant,
 	}
 	result.ListBalances = append(result.ListBalances, balanceCoin)
 	if len(listCustomTokenBalances.ListCustomTokenBalance) > 0 {
 		for _, item := range listCustomTokenBalances.ListCustomTokenBalance {
+			// TODO
 			balanceCoin = serializers.WalletBalance{
 				TotalBalance:     item.Amount,
 				SymbolCode:       item.Symbol,
@@ -69,7 +80,7 @@ func (w *Wallet) GetCoinAndCustomTokenBalance(privKey string, paymentAddress str
 	return result, nil
 }
 
-func (w *Wallet) Send(privKey string, req serializers.WalletSend) error {
+func (w *WalletService) Send(privKey string, req serializers.WalletSend) error {
 	var err error
 	switch req.Type {
 	case 0:
