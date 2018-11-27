@@ -30,11 +30,15 @@ func (w *WalletService) GetBalanceByPrivateKey(privKey string) (interface{}, err
 	return w.bc.GetBalanceByPrivateKey(privKey)
 }
 
+func (w *WalletService) GetBalanceByPaymentAddress(paymentAddress string) (interface{}, error) {
+	return w.bc.GetBalanceByPaymentAddress(paymentAddress)
+}
+
 func (w *WalletService) GetListCustomTokenBalance(paymentAddress string) (*blockchain.ListCustomTokenBalance, error) {
 	return w.bc.GetListCustomTokenBalance(paymentAddress)
 }
 
-func (w *WalletService) GetCoinAndCustomTokenBalance(u *models.User) (*serializers.WalletBalances, error) {
+func (w *WalletService) GetCoinAndCustomTokenBalanceForUser(u *models.User) (*serializers.WalletBalances, error) {
 	result := &serializers.WalletBalances{
 		ListBalances: []serializers.WalletBalance{},
 	}
