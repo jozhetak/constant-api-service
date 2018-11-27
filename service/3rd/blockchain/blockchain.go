@@ -35,7 +35,9 @@ const (
 	getlistcustomtokenbalance = "getlistcustomtokenbalance"
 
 	// voting
-	getBondTypes = "getBondTypes"
+	GetBondTypes = "getBondTypes"
+	GetGOVParams = "getgovparams"
+	GetDCBParams = "getdcbparams"
 )
 
 var (
@@ -339,7 +341,35 @@ func (b *Blockchain) GetLoanParams() ([]interface{}, error) {
 
 func (b *Blockchain) GetBondTypes() ([]interface{}, error) {
 	param := []interface{}{}
-	resp, err := b.blockchainAPI(getBondTypes, param)
+	resp, err := b.blockchainAPI(GetBondTypes, param)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return nil, errors.New("Fail")
+	}
+	return resultResp.([]interface{}), nil
+}
+
+func (b *Blockchain) GetGOVParams() ([]interface{}, error) {
+	param := []interface{}{}
+	resp, err := b.blockchainAPI(GetGOVParams, param)
+	if err != nil {
+		return nil, err
+	}
+	data := resp.(map[string]interface{})
+	resultResp := data["Result"]
+	if resultResp == nil {
+		return nil, errors.New("Fail")
+	}
+	return resultResp.([]interface{}), nil
+}
+
+func (b *Blockchain) GetDCBParams() ([]interface{}, error) {
+	param := []interface{}{}
+	resp, err := b.blockchainAPI(GetDCBParams, param)
 	if err != nil {
 		return nil, err
 	}
