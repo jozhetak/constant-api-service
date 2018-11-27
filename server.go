@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	gcloud "cloud.google.com/go/pubsub"
 	"github.com/gin-contrib/cors"
@@ -18,13 +19,13 @@ import (
 	"github.com/ninjadotorg/constant-api-service/dao"
 	"github.com/ninjadotorg/constant-api-service/dao/exchange"
 	"github.com/ninjadotorg/constant-api-service/dao/portal"
+	"github.com/ninjadotorg/constant-api-service/dao/voting"
 	"github.com/ninjadotorg/constant-api-service/database"
 	"github.com/ninjadotorg/constant-api-service/pubsub"
 	"github.com/ninjadotorg/constant-api-service/service"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/sendgrid"
 	"github.com/ninjadotorg/constant-api-service/templates/email"
-	"github.com/ninjadotorg/constant-api-service/dao/voting"
 )
 
 func main() {
@@ -77,7 +78,12 @@ func main() {
 	psSvc := pubsub.New(gcPubsubClient, exchangeDAO, bc, logger.With(zap.String("module", "pubsub")))
 
 	r := gin.Default()
-	r.Use(cors.Default())
+	r.Use(cors.New(cors.Config{
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "HEAD", "OPTIONS"},
+		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		MaxAge:          12 * time.Hour,
+	}))
 	svr := api.NewServer(r, psSvc, upgrader, userSvc, portalSvc, votingSvc, exchangeSvc, walletSvc, logger)
 	authMw := api.AuthMiddleware(string(conf.TokenSecretKey), svr.Authenticate)
 	svr.Routes(authMw)
