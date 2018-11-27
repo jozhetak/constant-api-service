@@ -43,3 +43,8 @@ type ContributionData struct {
 type Contribution struct {
 	Data ContributionData `json:"data"`
 }
+
+type ContributionResponse struct {
+	CollectionResponse
+	Data []ContributionData `json:"data"`
+}

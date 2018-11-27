@@ -27,3 +27,8 @@ type DisbursementData struct {
 type Disbursement struct {
 	Data DisbursementData `json:"data"`
 }
+
+type DisbursementResponse struct {
+	CollectionResponse
+	Data []DisbursementData `json:"data"`
+}
