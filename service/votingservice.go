@@ -68,6 +68,8 @@ func (self *VotingService) GetCandidatesList(boardType int, paymentAddress strin
 
 	// TODO get voting number
 
+	// TODO get balance of all token for every candidate
+
 	return list, err
 }
 

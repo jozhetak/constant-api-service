@@ -21,6 +21,7 @@ const (
 	GetAccount                   = "getaccount"
 	EncryptData                  = "encryptdata"
 	GetBalanceByPrivateKeyMethod = "getbalancebyprivatekey"
+	GetBalanceByPaymentAddress   = "getbalancebypaymentaddress"
 
 	// tx
 	CreateAndSendTransaction            = "createandsendtransaction"
@@ -190,6 +191,15 @@ func (b *Blockchain) EncryptData(pubKey string, params interface{}) (string, err
 
 func (b *Blockchain) GetBalanceByPrivateKey(privKey string) (uint64, error) {
 	resp, err := b.blockchainAPI(GetBalanceByPrivateKeyMethod, []interface{}{privKey})
+	if err != nil {
+		return 0, err
+	}
+	data := resp.(map[string]interface{})
+	return uint64(data["Result"].(float64)), nil
+}
+
+func (b *Blockchain) GetBalanceByPaymentAddress(paymentAddress string) (uint64, error) {
+	resp, err := b.blockchainAPI(GetBalanceByPaymentAddress, []interface{}{paymentAddress})
 	if err != nil {
 		return 0, err
 	}
