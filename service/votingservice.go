@@ -141,3 +141,39 @@ func (self *VotingService) VoteProposal() (error) {
 func (self *VotingService) GetBondTypes() (interface{}, error) {
 	return self.blockchainService.GetBondTypes()
 }
+
+func (self *VotingService) GetGOVParams() (*serializers.VotingProposalGOVRequest, error) {
+	result := serializers.VotingProposalGOVRequest{}
+	blockchainData, err := self.blockchainService.GetGOVParams()
+	if err != nil {
+		return nil, err
+	}
+	temp, err := json.MarshalIndent(blockchainData, "", "\t")
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(temp, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (self *VotingService) GetDCBParams() (*serializers.VotingProposalDCBRequest, error) {
+	result := serializers.VotingProposalDCBRequest{}
+	blockchainData, err := self.blockchainService.GetDCBParams()
+	if err != nil {
+		return nil, err
+	}
+	temp, err := json.MarshalIndent(blockchainData, "", "\t")
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(temp, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
