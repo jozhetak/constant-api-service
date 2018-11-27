@@ -25,5 +25,5 @@ type DisbursementData struct {
 }
 
 type Disbursement struct {
-	Data ContributionData `json:"data"`
+	Data DisbursementData `json:"data"`
 }

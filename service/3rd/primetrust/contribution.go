@@ -64,3 +64,22 @@ func GetContribution(contributionId string) (*models.Contribution, error) {
 
 	return &response, nil
 }
+
+func DeleteContribution(contributionId string) (error) {
+	apiUrl := fmt.Sprintf("%s/contributions/%s", _apiPrefix, contributionId)
+	req, err := http.NewRequest("DELETE", apiUrl, nil)
+	req.Header.Add("Authorization", _authHeader)
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return errors.New(res.Status)
+	}
+
+	return nil
+}
