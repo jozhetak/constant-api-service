@@ -15,13 +15,13 @@ type Server struct {
 	ps          *pubsub.Pubsub
 	userSvc     *service.User
 	portalSvc   *service.PortalService
-	exchangeSvc *service.Exchange
+	exchangeSvc *service.ExchangeService
 	walletSvc   *service.WalletService
 	votingSvc   *service.VotingService
 	logger      *zap.Logger
 }
 
-func NewServer(g *gin.Engine, ps *pubsub.Pubsub, up *websocket.Upgrader, userSvc *service.User, portalSvc *service.PortalService, votingSvc *service.VotingService, exchangeSvc *service.Exchange, walletSvc *service.WalletService, logger *zap.Logger) *Server {
+func NewServer(g *gin.Engine, ps *pubsub.Pubsub, up *websocket.Upgrader, userSvc *service.User, portalSvc *service.PortalService, votingSvc *service.VotingService, exchangeSvc *service.ExchangeService, walletSvc *service.WalletService, logger *zap.Logger) *Server {
 	return &Server{
 		g:           g,
 		up:          up,

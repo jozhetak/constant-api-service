@@ -11,15 +11,15 @@ import (
 	"github.com/ninjadotorg/constant-api-service/serializers"
 )
 
-type Exchange struct {
+type ExchangeService struct {
 	r *exchange.Exchange
 }
 
-func NewExchange(r *exchange.Exchange) *Exchange {
-	return &Exchange{r}
+func NewExchange(r *exchange.Exchange) *ExchangeService {
+	return &ExchangeService{r}
 }
 
-func (e *Exchange) ListMarkets(base string) ([]*serializers.MarketResp, error) {
+func (e *ExchangeService) ListMarkets(base string) ([]*serializers.MarketResp, error) {
 	markets, err := e.r.ListMarkets(base)
 	if err != nil {
 		return nil, errors.Wrap(err, "c.portalDao.ListByBase")
@@ -27,7 +27,7 @@ func (e *Exchange) ListMarkets(base string) ([]*serializers.MarketResp, error) {
 	return toMarketResp(markets), nil
 }
 
-func (e *Exchange) CreateOrder(u *models.User, symbol string, price uint64, quantity uint64, typ, side string) (*serializers.OrderResp, error) {
+func (e *ExchangeService) CreateOrder(u *models.User, symbol string, price uint64, quantity uint64, typ, side string) (*serializers.OrderResp, error) {
 	oTyp := models.GetOrderType(typ)
 	if oTyp == models.InvalidOrderType {
 		return nil, ErrInvalidOrderType
@@ -62,7 +62,7 @@ func (e *Exchange) CreateOrder(u *models.User, symbol string, price uint64, quan
 	return assembleOrder(order), nil
 }
 
-func (e *Exchange) UserOrderHistory(u *models.User, symbol, status, limit, page string) ([]*serializers.OrderResp, error) {
+func (e *ExchangeService) UserOrderHistory(u *models.User, symbol, status, limit, page string) ([]*serializers.OrderResp, error) {
 	if symbol == "" {
 		return nil, ErrInvalidSymbol
 	}
@@ -87,7 +87,7 @@ func (e *Exchange) UserOrderHistory(u *models.User, symbol, status, limit, page 
 	return toOrderResp(orders), nil
 }
 
-func (e *Exchange) MarketHistory(symbol, limit, page string) ([]*serializers.OrderResp, error) {
+func (e *ExchangeService) MarketHistory(symbol, limit, page string) ([]*serializers.OrderResp, error) {
 	if symbol == "" {
 		return nil, ErrInvalidSymbol
 	}
@@ -104,7 +104,7 @@ func (e *Exchange) MarketHistory(symbol, limit, page string) ([]*serializers.Ord
 	return toOrderResp(orders), nil
 }
 
-func (e *Exchange) SymbolRates(timeRange string) ([]serializers.SymbolRate, error) {
+func (e *ExchangeService) SymbolRates(timeRange string) ([]serializers.SymbolRate, error) {
 	var from, to time.Time
 	switch timeRange {
 	case "1h":
@@ -124,7 +124,7 @@ func (e *Exchange) SymbolRates(timeRange string) ([]serializers.SymbolRate, erro
 	return toSymbolRatesResp(rates), nil
 }
 
-func (e *Exchange) MarketRates() ([]*serializers.MarketRate, error) {
+func (e *ExchangeService) MarketRates() ([]*serializers.MarketRate, error) {
 	rates, err := e.r.MarketRates()
 	if err != nil {
 		return nil, errors.Wrap(err, "e.portalDao.MarketRates")
@@ -132,7 +132,7 @@ func (e *Exchange) MarketRates() ([]*serializers.MarketRate, error) {
 	return toMarketRatesResp(rates), nil
 }
 
-func (e *Exchange) FindOrderByID(idS string) (*serializers.OrderResp, error) {
+func (e *ExchangeService) FindOrderByID(idS string) (*serializers.OrderResp, error) {
 	id, err := strconv.Atoi(idS)
 	if err != nil {
 		return nil, ErrInvalidOrder
