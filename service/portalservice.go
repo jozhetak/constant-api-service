@@ -190,15 +190,15 @@ func (p *PortalService) UpdateStatusBorrowRequest(b *models.Borrow, action strin
 	switch action {
 	case "portalDao": // reject
 		{
-			// TODO call web3 to eth to check
-			//
-			//
 			b.State = models.Rejected
 			_, err := p.portalDao.UpdateBorrow(b)
 			if err != nil {
 
 				return false, err
 			}
+			// TODO call web3 to eth to check
+			// reject loan
+			//
 			return true, nil
 		}
 	case "a": // accept
@@ -213,14 +213,7 @@ func (p *PortalService) UpdateStatusBorrowRequest(b *models.Borrow, action strin
 			}
 
 			enoughAccept := false
-			switch b.CollateralType {
-			case "ETH":
-				{ // TODO call web3 to eth to check
-					//
-					//}
-					enoughAccept = true
-				}
-			}
+			// TODO 0xsirrush call block chain to check enough accept
 			borrowResponse := models.BorrowResponse{
 				ConstantLoanResponseTxID: constantLoanTxId,
 				Borrow:                   *b,
@@ -236,6 +229,7 @@ func (p *PortalService) UpdateStatusBorrowRequest(b *models.Borrow, action strin
 			if err != nil {
 				return false, err
 			}
+
 			return true, nil
 		}
 	default:
@@ -258,20 +252,20 @@ func (p *PortalService) WithdrawTxForLoanRequest(u *models.User, b *models.Borro
 		if err != nil {
 			return nil, err
 		}
-
-		switch b.CollateralType {
-		case "ETH":
-			// TODO call web3 to process collateral
-			//
-			//
-
-		}
-
 		// update db
 		b.ConstantLoanWithdrawTxID = tx.Hash
 		_, err = p.portalDao.UpdateBorrow(b)
 		if err != nil {
 			return nil, err
+		}
+
+		if b.State == models.Approved {
+			switch b.CollateralType {
+			case "ETH":
+				// TODO call web3 to process collateral
+				// accept loan
+				//
+			}
 		}
 		return tx, nil
 	} else {
@@ -294,20 +288,23 @@ func (p *PortalService) PaymentTxForLoanRequest(u *models.User, b *models.Borrow
 			return nil, err
 		}
 
-		switch b.CollateralType {
-		case "ETH":
-			// TODO call web3 to process collateral
-			//
-			//
-
-		}
-
 		// update db
 		b.ConstantLoanPaymentTxID = tx.Hash
 		_, err = p.portalDao.UpdateBorrow(b)
 		if err != nil {
 			return nil, err
 		}
+
+		if true {
+			switch b.CollateralType {
+			case "ETH":
+				// TODO call web3 to process collateral
+				// call addpayment
+				//
+
+			}
+		}
+
 		return tx, nil
 	} else {
 		return nil, errors.New("Fail")

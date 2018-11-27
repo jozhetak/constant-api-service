@@ -34,7 +34,7 @@ func (w *WalletService) GetListCustomTokenBalance(paymentAddress string) (*block
 	return w.bc.GetListCustomTokenBalance(paymentAddress)
 }
 
-func (w *WalletService) GetCoinAndCustomTokenBalance(u *models.User, paymentAddress string) (*serializers.WalletBalances, error) {
+func (w *WalletService) GetCoinAndCustomTokenBalance(u *models.User) (*serializers.WalletBalances, error) {
 	result := &serializers.WalletBalances{
 		ListBalances: []serializers.WalletBalance{},
 	}
@@ -42,14 +42,17 @@ func (w *WalletService) GetCoinAndCustomTokenBalance(u *models.User, paymentAddr
 	if err != nil {
 		return nil, err
 	}
-	listCustomTokenBalances, err := w.GetListCustomTokenBalance(paymentAddress)
+	listCustomTokenBalances, err := w.GetListCustomTokenBalance(u.PaymentAddress)
 	if err != nil {
 		return nil, err
 	}
-	result.PaymentAddress = listCustomTokenBalances.Address
+	result.PaymentAddress = listCustomTokenBalances.PaymentAddress
 	// get in order for constant
 	inOrderConstant := uint64(0)
-	orders, _ := w.exchangeService.UserOrderHistory(u, "constantbond", "new", "buy", nil, nil)
+	orders, err := w.exchangeService.UserOrderHistory(u, "constantbond", "new", "buy", nil, nil)
+	if err != nil {
+		return nil, err
+	}
 	for _, order := range orders {
 		inOrderConstant += order.Price * order.Quantity
 	}
@@ -85,10 +88,10 @@ func (w *WalletService) Send(privKey string, req serializers.WalletSend) error {
 	switch req.Type {
 	case 0:
 		// send coin constant
-		_, err = w.bc.Createandsendtransaction(privKey, req)
+		_, err = w.bc.CreateAndSendConstantTransaction(privKey, req)
 	case 1:
 		// send coin constant
-		err = w.bc.Sendcustomtokentransaction(privKey, req)
+		err = w.bc.SendCustomTokenTransaction(privKey, req)
 	}
 	return err
 }

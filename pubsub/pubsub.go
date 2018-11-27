@@ -160,7 +160,7 @@ func (p *Pubsub) handleMatchOrderBook(data *serializers.OrderBookMatchMsg) error
 func (p *Pubsub) makeTransaction(buyer, seller *models.Order) error {
 	switch buyer.Market.BaseCurrency.Name {
 	case "CONSTANT": // send constant token from buyer to seller
-		txID, err := p.bc.Createandsendtransaction(buyer.User.PrivKey, serializers.WalletSend{
+		txID, err := p.bc.CreateAndSendConstantTransaction(buyer.User.PrivKey, serializers.WalletSend{
 			PaymentAddresses: map[string]uint64{
 				seller.User.PaymentAddress: buyer.Price,
 			},
@@ -178,7 +178,7 @@ func (p *Pubsub) makeTransaction(buyer, seller *models.Order) error {
 	}
 
 	// send token from seller to buyer
-	if err := p.bc.Sendcustomtokentransaction(seller.User.PrivKey, serializers.WalletSend{
+	if err := p.bc.SendCustomTokenTransaction(seller.User.PrivKey, serializers.WalletSend{
 		Type:        1,
 		TokenID:     buyer.Market.QuoteCurrency.TokenID,
 		TokenName:   buyer.Market.QuoteCurrency.TokenName,
