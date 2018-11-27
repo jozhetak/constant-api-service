@@ -35,9 +35,11 @@ const (
 	GetListCustomTokenBalance = "getlistcustomtokenbalance"
 
 	// voting
-	GetBondTypes = "getbondtypes"
-	GetGOVParams = "getgovparams"
-	GetDCBParams = "getdcbparams"
+	GetBondTypes                         = "getbondtypes"
+	GetGOVParams                         = "getgovparams"
+	GetDCBParams                         = "getdcbparams"
+	CreateAndSendVoteDCBBoardTransaction = "createandsendvotedcbboardtransaction"
+	CreateAndSendVoteGOVBoardTransaction = "createandsendvotegovboardtransaction"
 )
 
 var (
@@ -215,7 +217,7 @@ func (b *Blockchain) GetListCustomTokenBalance(paymentAddress string) (*ListCust
 	return &result, nil
 }
 
-func (b *Blockchain) Createandsendtransaction(prvKey string, req serializers.WalletSend) (string, error) {
+func (b *Blockchain) CreateAndSendConstantTransaction(prvKey string, req serializers.WalletSend) (string, error) {
 	param := []interface{}{prvKey, req.PaymentAddresses, -1, 8}
 	resp, err := b.blockchainAPI(CreateAndSendTransaction, param)
 	if err != nil {
@@ -229,7 +231,7 @@ func (b *Blockchain) Createandsendtransaction(prvKey string, req serializers.Wal
 	return txID, nil
 }
 
-func (b *Blockchain) Sendcustomtokentransaction(prvKey string, req serializers.WalletSend) error {
+func (b *Blockchain) SendCustomTokenTransaction(prvKey string, req serializers.WalletSend) error {
 	param := []interface{}{prvKey, -1, 8}
 	tokenData := map[string]interface{}{}
 	tokenData["TokenID"] = req.TokenID
@@ -252,7 +254,7 @@ func (b *Blockchain) Sendcustomtokentransaction(prvKey string, req serializers.W
 		return errors.Errorf("couldn't get result from response data: %+v", errorResp)
 	}
 	if resultResp == nil {
-		return errors.Errorf("couldn't get result from response: req: %+v, data: %+v", req, data)
+		return errors.Errorf("couldn't get result from response: req: %+v, data: %+v", param, data)
 	}
 	return nil
 }
@@ -379,4 +381,66 @@ func (b *Blockchain) GetDCBParams() ([]interface{}, error) {
 		return nil, errors.New("Fail")
 	}
 	return resultResp.([]interface{}), nil
+}
+
+func (b *Blockchain) CreateAndSendVoteGOVBoardTransaction(privkey string, voteAmount uint64) (error) {
+	param := []interface{}{privkey, -1, 8}
+	tokenData := map[string]interface{}{}
+	tokenData["TokenID"] = [32]byte{5} // DCB voting token
+	tokenData["TokenTxType"] = 1
+	tokenData["TokenName"] = ""   // TODO 0xjackalope get from stability
+	tokenData["TokenSymbol"] = "" // TODO 0xjackalope get from stability
+	govAccount := make(map[string]uint64)
+	govAccount["1Uv1fjA1FjsLTp37i1j5ZVpghx3maaX6YM5WQkbtrJr26FyGwxKznAM7ZRN2AsE4iHwNjiWGLbcUt2JudBBek18cB5YV22EJ38PjcXqza"] = voteAmount
+	tokenData["TokenReceivers"] = govAccount
+	param = append(param, tokenData)
+	param = append(param, )
+	resp, err := b.blockchainAPI(CreateAndSendVoteGOVBoardTransaction, param)
+	if err != nil {
+		return errors.Wrap(err, "b.blockchainAPI")
+	}
+
+	var (
+		data       = resp.(map[string]interface{})
+		resultResp = data["Result"]
+		errorResp  = data["Error"]
+	)
+	if errorResp != nil {
+		return errors.Errorf("couldn't get result from response data: %+v", errorResp)
+	}
+	if resultResp == nil {
+		return errors.Errorf("couldn't get result from response: req: %+v, data: %+v", param, data)
+	}
+	return nil
+}
+
+func (b *Blockchain) CreateAndSendVoteDCBBoardTransaction(privkey string, voteAmount uint64) (error) {
+	param := []interface{}{privkey, -1, 8}
+	tokenData := map[string]interface{}{}
+	tokenData["TokenID"] = [32]byte{6} // DCB voting token
+	tokenData["TokenTxType"] = 1
+	tokenData["TokenName"] = ""   // TODO 0xjackalope get from stability
+	tokenData["TokenSymbol"] = "" // TODO 0xjackalope get from stability
+	govAccount := make(map[string]uint64)
+	govAccount["1Uv1fjA1FjsLTp37i1j5ZVpghx3maaX6YM5WQkbtrJr26FyGwxKznAM7ZRN2AsE4iHwNjiWGLbcUt2JudBBek18cB5YV22EJ38PjcXqza"] = voteAmount
+	tokenData["TokenReceivers"] = govAccount
+	param = append(param, tokenData)
+	param = append(param, )
+	resp, err := b.blockchainAPI(CreateAndSendVoteDCBBoardTransaction, param)
+	if err != nil {
+		return errors.Wrap(err, "b.blockchainAPI")
+	}
+
+	var (
+		data       = resp.(map[string]interface{})
+		resultResp = data["Result"]
+		errorResp  = data["Error"]
+	)
+	if errorResp != nil {
+		return errors.Errorf("couldn't get result from response data: %+v", errorResp)
+	}
+	if resultResp == nil {
+		return errors.Errorf("couldn't get result from response: req: %+v, data: %+v", param, data)
+	}
+	return nil
 }
