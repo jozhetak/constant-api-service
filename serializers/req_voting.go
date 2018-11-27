@@ -13,7 +13,7 @@ type VotingProposalRequest struct {
 	Type int `json:"Type"` // 1: DCB, 2 GOV
 
 	DCB VotingProposalDCBRequest `json:"DCB"`
-	GOV VotingProposalGOVRequest `json:"DCB"`
+	GOV VotingProposalGOVRequest `json:"GOV"`
 }
 
 type VotingProposalDCBRequest struct {
