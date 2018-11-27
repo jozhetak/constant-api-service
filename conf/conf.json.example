@@ -1,5 +1,9 @@
 {
   "port": "",
   "db": "",
-  "token_secret_key": ""
+  "token_secret_key": "",
+  "exchange_ob_endpoint": "",
+  "eth_chain": "",
+  "simpleloan_address": "",
+  "simpleloan_owner": ""
 }
