@@ -15,7 +15,7 @@ import (
 )
 
 func (s *Server) ListMarkets(c *gin.Context) {
-	markets, err := s.exchangeSvc.ListMarkets(c.Query("base"))
+	markets, err := s.exchangeSvc.ListMarkets(nil, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
