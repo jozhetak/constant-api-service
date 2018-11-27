@@ -62,7 +62,7 @@ func (e *ExchangeService) CreateOrder(u *models.User, symbol string, price uint6
 	return assembleOrder(order), nil
 }
 
-func (e *ExchangeService) UserOrderHistory(u *models.User, symbol string, status string, limit *string, page *string) ([]*serializers.OrderResp, error) {
+func (e *ExchangeService) UserOrderHistory(u *models.User, symbol, status, side string, limit *string, page *string) ([]*serializers.OrderResp, error) {
 	if symbol == "" {
 		return nil, ErrInvalidSymbol
 	}
@@ -80,7 +80,16 @@ func (e *ExchangeService) UserOrderHistory(u *models.User, symbol string, status
 		oStatus = &st
 	}
 
-	orders, err := e.r.OrderHistory(symbol, oStatus, nil, &l, &p, u)
+	var oSide *models.OrderSide
+	if side != "" {
+		si := models.GetOrderSide(side)
+		if si == models.InvalidOrderSide {
+			return nil, ErrInvalidOrderSide
+		}
+		oSide = &si
+	}
+
+	orders, err := e.r.OrderHistory(symbol, oStatus, oSide, &l, &p, u)
 	if err != nil {
 		return nil, errors.Wrap(err, "e.portalDao.OrderHistory")
 	}
