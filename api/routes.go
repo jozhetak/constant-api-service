@@ -38,7 +38,7 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		exch.GET("/orders", s.UserOrderHistory)
 	}
 
-	// Wallet API Group
+	// WalletService API Group
 	wallet := s.g.Group("/wallet")
 	wallet.GET("/accounts", s.ListAccounts)
 	wallet.Use(authMw.MiddlewareFunc())

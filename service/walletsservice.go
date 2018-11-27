@@ -5,31 +5,31 @@ import (
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
 
-type Wallet struct {
+type WalletService struct {
 	bc *blockchain.Blockchain
 }
 
-func NewWallet(bc *blockchain.Blockchain) *Wallet {
-	return &Wallet{bc}
+func NewWallet(bc *blockchain.Blockchain) *WalletService {
+	return &WalletService{bc}
 }
 
-func (w *Wallet) ListAccounts(params string) (interface{}, error) {
+func (w *WalletService) ListAccounts(params string) (interface{}, error) {
 	return w.bc.ListAccounts(params)
 }
 
-func (w *Wallet) GetAccount(params string) (interface{}, error) {
+func (w *WalletService) GetAccount(params string) (interface{}, error) {
 	return w.bc.GetAccount(params)
 }
 
-func (w *Wallet) GetBalanceByPrivateKey(privKey string) (interface{}, error) {
+func (w *WalletService) GetBalanceByPrivateKey(privKey string) (interface{}, error) {
 	return w.bc.GetBalanceByPrivateKey(privKey)
 }
 
-func (w *Wallet) GetListCustomTokenBalance(paymentAddress string) (*blockchain.ListCustomTokenBalance, error) {
+func (w *WalletService) GetListCustomTokenBalance(paymentAddress string) (*blockchain.ListCustomTokenBalance, error) {
 	return w.bc.GetListCustomTokenBalance(paymentAddress)
 }
 
-func (w *Wallet) GetCoinAndCustomTokenBalance(privKey string, paymentAddress string) (*serializers.WalletBalances, error) {
+func (w *WalletService) GetCoinAndCustomTokenBalance(privKey string, paymentAddress string) (*serializers.WalletBalances, error) {
 	result := &serializers.WalletBalances{
 		ListBalances: []serializers.WalletBalance{},
 	}
@@ -69,7 +69,7 @@ func (w *Wallet) GetCoinAndCustomTokenBalance(privKey string, paymentAddress str
 	return result, nil
 }
 
-func (w *Wallet) Send(privKey string, req serializers.WalletSend) error {
+func (w *WalletService) Send(privKey string, req serializers.WalletSend) error {
 	var err error
 	switch req.Type {
 	case 0:
