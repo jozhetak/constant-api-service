@@ -66,9 +66,14 @@ func (e *ExchangeService) UserOrderHistory(u *models.User, symbol, status, side 
 	if symbol == "" {
 		return nil, ErrInvalidSymbol
 	}
-	l, p, err := parsePaginationQuery(*limit, *page)
-	if err != nil {
-		return nil, errors.Wrap(err, "parsePaginationQuery")
+
+	var l, p int
+	var err error
+	if limit != nil && page != nil {
+		l, p, err = parsePaginationQuery(*limit, *page)
+		if err != nil {
+			return nil, errors.Wrap(err, "parsePaginationQuery")
+		}
 	}
 
 	var oStatus *models.OrderStatus
