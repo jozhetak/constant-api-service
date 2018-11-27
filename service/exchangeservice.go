@@ -62,11 +62,11 @@ func (e *ExchangeService) CreateOrder(u *models.User, symbol string, price uint6
 	return assembleOrder(order), nil
 }
 
-func (e *ExchangeService) UserOrderHistory(u *models.User, symbol, status, limit, page string) ([]*serializers.OrderResp, error) {
+func (e *ExchangeService) UserOrderHistory(u *models.User, symbol string, status string, limit *string, page *string) ([]*serializers.OrderResp, error) {
 	if symbol == "" {
 		return nil, ErrInvalidSymbol
 	}
-	l, p, err := parsePaginationQuery(limit, page)
+	l, p, err := parsePaginationQuery(*limit, *page)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsePaginationQuery")
 	}

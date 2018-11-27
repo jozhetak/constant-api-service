@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
+	"github.com/ninjadotorg/constant-api-service/models"
 )
 
 type WalletService struct {
@@ -33,11 +34,11 @@ func (w *WalletService) GetListCustomTokenBalance(paymentAddress string) (*block
 	return w.bc.GetListCustomTokenBalance(paymentAddress)
 }
 
-func (w *WalletService) GetCoinAndCustomTokenBalance(privKey string, paymentAddress string) (*serializers.WalletBalances, error) {
+func (w *WalletService) GetCoinAndCustomTokenBalance(u *models.User, paymentAddress string) (*serializers.WalletBalances, error) {
 	result := &serializers.WalletBalances{
 		ListBalances: []serializers.WalletBalance{},
 	}
-	coinBalance, err := w.bc.GetBalanceByPrivateKey(privKey)
+	coinBalance, err := w.bc.GetBalanceByPrivateKey(u.PrivKey)
 	if err != nil {
 		return nil, err
 	}
@@ -46,20 +47,26 @@ func (w *WalletService) GetCoinAndCustomTokenBalance(privKey string, paymentAddr
 		return nil, err
 	}
 	result.PaymentAddress = listCustomTokenBalances.Address
-	// TODO check with order table of exchange
-	inOrder := uint64(0)
-	// end TODO
+	// get in order for constant
+	inOrderConstant := uint64(0)
+	orders, _ := w.exchangeService.UserOrderHistory(u, "constantbond", "new", nil, nil)
+	for _, order := range orders {
+		inOrderConstant += order.Price * order.Quantity
+	}
+	// end
+	// get in order for
 	balanceCoin := serializers.WalletBalance{
 		TotalBalance:     coinBalance,
 		SymbolCode:       "CONST",
 		SymbolName:       "Constant",
-		AvailableBalance: coinBalance - inOrder,
+		AvailableBalance: coinBalance - inOrderConstant,
 		ConstantValue:    0,
-		InOrder:          inOrder,
+		InOrder:          inOrderConstant,
 	}
 	result.ListBalances = append(result.ListBalances, balanceCoin)
 	if len(listCustomTokenBalances.ListCustomTokenBalance) > 0 {
 		for _, item := range listCustomTokenBalances.ListCustomTokenBalance {
+			// TODO
 			balanceCoin = serializers.WalletBalance{
 				TotalBalance:     item.Amount,
 				SymbolCode:       item.Symbol,

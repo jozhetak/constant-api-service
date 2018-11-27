@@ -64,8 +64,7 @@ func (s *Server) UserOrderHistory(c *gin.Context) {
 		page   = c.DefaultQuery("page", "1")
 		limit  = c.DefaultQuery("limit", "10")
 	)
-
-	orders, err := s.exchangeSvc.UserOrderHistory(user, symbol, status, limit, page)
+	orders, err := s.exchangeSvc.UserOrderHistory(user, symbol, status, &limit, &page)
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrInvalidSymbol, service.ErrInvalidOrderStatus, service.ErrInvalidLimit, service.ErrInvalidPage:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
