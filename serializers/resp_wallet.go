@@ -8,6 +8,7 @@ type WalletBalances struct {
 type WalletBalance struct {
 	SymbolName       string
 	SymbolCode       string
+	Token            string
 	TotalBalance     uint64
 	AvailableBalance uint64
 	InOrder          uint64
