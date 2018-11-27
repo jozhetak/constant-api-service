@@ -1,26 +1,27 @@
 package models
 
-import "time"
+import "github.com/mongodb/mongo-go-driver/bson/decimal"
 
 type DisbursementAttributes struct {
-	AccountID         string        `json:"account-id"`
-	Amount            float64       `json:"amount"`
-	ContactEmail      string        `json:"contact-email"`
-	ContactName       string        `json:"contact-name"`
-	CreatedAt         *time.Time    `json:"created-at"`
-	PaymentDetails    *string       `json:"payment-details"`
-	ReferenceNumber   string        `json:"reference-number"`
-	Status            string        `json:"status"`
-	TransactionNumber *string       `json:"transaction-number"`
-	PaymentMethodID   string        `json:"payment-method-id"`
-	Links             Links         `json:"links"`
-	Relationships     Relationships `json:"relationships"`
+	AccountID         string                  `json:"account-id"`
+	Amount            decimal.Decimal128      `json:"amount"`
+	CustomerReference string                  `json:"customer-reference"`
+	Description       string                  `json:"description"`
+	PaymentMethodID   string                  `json:"payment-method-id"`
+	PaymentMethod     PaymentMethodAttributes `json:"payment-method"`
+	ID                string                  `json:"id"`
+	SpecialType       string                  `json:"contact-email"`
+	Status            string                  `json:"status"`
+	ContactEmail      string                  `json:"contact-email"`
+	ContactName       string                  `json:"contact-name"`
 }
 
 type DisbursementData struct {
-	ID         string                 `json:"id,omitempty"`
-	Type       string                 `json:"type,omitempty"`
-	Attributes DisbursementAttributes `json:"attributes"`
+	ID            string                 `json:"id,omitempty"`
+	Type          string                 `json:"type,omitempty"`
+	Attributes    DisbursementAttributes `json:"attributes"`
+	Links         Links                  `json:"links"`
+	Relationships Relationships          `json:"relationships"`
 }
 
 type Disbursement struct {
