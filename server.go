@@ -68,7 +68,7 @@ func main() {
 		exchangeDAO = exchange.NewExchange(db)
 		exchangeSvc = service.NewExchange(exchangeDAO)
 
-		walletSvc = service.NewWallet(bc)
+		walletSvc = service.NewWalletService(bc, exchangeSvc)
 	)
 	gcPubsubClient, err := gcloud.NewClient(context.Background(), "cash-prototype")
 	if err != nil {

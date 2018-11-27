@@ -6,11 +6,15 @@ import (
 )
 
 type WalletService struct {
-	bc *blockchain.Blockchain
+	bc              *blockchain.Blockchain
+	exchangeService *ExchangeService
 }
 
-func NewWallet(bc *blockchain.Blockchain) *WalletService {
-	return &WalletService{bc}
+func NewWalletService(bc *blockchain.Blockchain, ex *ExchangeService) *WalletService {
+	return &WalletService{
+		bc:              bc,
+		exchangeService: ex,
+	}
 }
 
 func (w *WalletService) ListAccounts(params string) (interface{}, error) {
