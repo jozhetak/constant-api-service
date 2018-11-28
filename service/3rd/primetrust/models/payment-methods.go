@@ -20,7 +20,6 @@ type PaymentMethodAttributes struct {
 	AchCheckType              string `json:"ach-check-type"` // (enum): personal or business.
 	BankAccountName           string `json:"bank-account-name"`
 	BankAccountType           string `json:"bank-account-type"`
-	BankAccountNumber         string `json:"bank-account-number"`
 	BankName                  string `json:"bank-name"`
 	CheckPayee                string `json:"check-payee"`
 	ContactEmail              string `json:"contact-email"`
@@ -36,6 +35,10 @@ type PaymentMethodAttributes struct {
 	RoutingNumber             string `json:"routing-number"`
 	SwiftCode                 string `json:"swift-code"`
 	IpAddress                 string `json:"ip-address"`
+	BankAccountNumber         string `json:"bank-account-number"`
+	CreditCardCvv             string `json:"credit-card-cvv"`
+	CreditCardExpirationDate  string `json:"credit-card-expiration-date"`
+	CreditCardNumber          string `json:"credit-card-number"`
 }
 
 type PaymentMethodData struct {
