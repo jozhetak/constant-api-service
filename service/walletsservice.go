@@ -1,20 +1,23 @@
 package service
 
 import (
+	"github.com/pkg/errors"
+
+	"github.com/ninjadotorg/constant-api-service/dao/exchange"
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
 
 type WalletService struct {
-	bc              *blockchain.Blockchain
-	exchangeService *ExchangeService
+	bc          *blockchain.Blockchain
+	exchangeDAO *exchange.Exchange
 }
 
-func NewWalletService(bc *blockchain.Blockchain, ex *ExchangeService) *WalletService {
+func NewWalletService(bc *blockchain.Blockchain, ex *exchange.Exchange) *WalletService {
 	return &WalletService{
-		bc:              bc,
-		exchangeService: ex,
+		bc:          bc,
+		exchangeDAO: ex,
 	}
 }
 
@@ -53,15 +56,15 @@ func (w *WalletService) GetCoinAndCustomTokenBalanceForUser(u *models.User) (*se
 	result.PaymentAddress = listCustomTokenBalances.PaymentAddress
 	// get in order for constant
 	inOrderConstant := uint64(0)
-	orders, err := w.exchangeService.UserOrderHistory(u, "constantbond", "new", "buy", nil, nil)
+	oStatus := models.New
+	oSide := models.Buy
+	orders, err := w.exchangeDAO.OrderHistory("constantbond", &oStatus, &oSide, nil, nil, u)
 	if err != nil {
 		return nil, err
 	}
 	for _, order := range orders {
 		inOrderConstant += order.Price * order.Quantity
 	}
-	// end
-	// get in order for
 	balanceCoin := serializers.WalletBalance{
 		TotalBalance:     coinBalance,
 		SymbolCode:       "CONST",
@@ -69,11 +72,70 @@ func (w *WalletService) GetCoinAndCustomTokenBalanceForUser(u *models.User) (*se
 		AvailableBalance: coinBalance - inOrderConstant,
 		ConstantValue:    0,
 		InOrder:          inOrderConstant,
+		TokenID:          "",
+	}
+	result.ListBalances = append(result.ListBalances, balanceCoin)
+
+	if len(listCustomTokenBalances.ListCustomTokenBalance) > 0 {
+		for _, item := range listCustomTokenBalances.ListCustomTokenBalance {
+			currency, err := w.exchangeDAO.FindCurrencyByToken(item.TokenID)
+			if err != nil {
+				return nil, errors.Wrapf(err, "w.exchangeService.FindCurrencyByToken %s", item.TokenID)
+			}
+			markets, err := w.exchangeDAO.ListMarkets(nil, currency)
+			if err != nil {
+				return nil, errors.Wrap(err, "w.exchangeService.ListMarkets")
+			}
+
+			oStatus := models.New
+			oSide := models.Sell
+			orders, _ := w.exchangeDAO.FindOrdersInMarkets(markets, &oStatus, &oSide)
+			inOrderToken := uint64(0)
+			for _, order := range orders {
+				inOrderToken += order.Quantity
+			}
+
+			balanceCoin := serializers.WalletBalance{
+				TotalBalance:     item.Amount,
+				SymbolCode:       item.Symbol,
+				SymbolName:       item.Name,
+				AvailableBalance: item.Amount - inOrderToken,
+				ConstantValue:    0,
+				InOrder:          inOrderToken,
+				TokenID:          item.TokenID,
+			}
+			result.ListBalances = append(result.ListBalances, balanceCoin)
+		}
+	}
+	return result, nil
+}
+
+func (w *WalletService) GetCoinAndCustomTokenBalanceForPaymentAddress(paymentAddress string) (*serializers.WalletBalances, error) {
+	result := &serializers.WalletBalances{
+		ListBalances: []serializers.WalletBalance{},
+	}
+	coinBalance, err := w.bc.GetBalanceByPaymentAddress(paymentAddress)
+	if err != nil {
+		return nil, err
+	}
+	listCustomTokenBalances, err := w.GetListCustomTokenBalance(paymentAddress)
+	if err != nil {
+		return nil, err
+	}
+	result.PaymentAddress = listCustomTokenBalances.PaymentAddress
+	// end
+	// get in order for
+	balanceCoin := serializers.WalletBalance{
+		TotalBalance:     coinBalance,
+		SymbolCode:       "CONST",
+		SymbolName:       "Constant",
+		AvailableBalance: coinBalance,
+		ConstantValue:    0,
+		InOrder:          0,
 	}
 	result.ListBalances = append(result.ListBalances, balanceCoin)
 	if len(listCustomTokenBalances.ListCustomTokenBalance) > 0 {
 		for _, item := range listCustomTokenBalances.ListCustomTokenBalance {
-			// TODO
 			balanceCoin = serializers.WalletBalance{
 				TotalBalance:     item.Amount,
 				SymbolCode:       item.Symbol,

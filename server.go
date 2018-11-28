@@ -67,9 +67,8 @@ func main() {
 		votingSvc = service.NewVotingService(votingDao, bc)
 
 		exchangeDAO = exchange.NewExchange(db)
-		exchangeSvc = service.NewExchange(exchangeDAO)
-
-		walletSvc = service.NewWalletService(bc, exchangeSvc)
+		walletSvc   = service.NewWalletService(bc, exchangeDAO)
+		exchangeSvc = service.NewExchange(exchangeDAO, walletSvc)
 	)
 	gcPubsubClient, err := gcloud.NewClient(context.Background(), "cash-prototype")
 	if err != nil {

@@ -3,11 +3,23 @@ package ethereum
 import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ninjadotorg/constant-api-service/conf"
+	"github.com/sendgrid/sendgrid-go"
 	"math/big"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/core"
 )
+
+type EthereumClient struct {
+	SimpleLoanOwner		string
+	SimpleLoadAddr		string
+}
+
+func Init(conf *config.Config) *EthereumClient {
+	client := &EthereumClient{conf.SimpleLoanOwner, conf.SimpleLoanAddress}
+	return client
+}
 
 func Demo() {
 	key, _ := crypto.GenerateKey()

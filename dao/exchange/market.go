@@ -9,12 +9,15 @@ import (
 	"github.com/ninjadotorg/constant-api-service/models"
 )
 
-func (e *Exchange) ListMarkets(base string) ([]*models.Market, error) {
+func (e *Exchange) ListMarkets(base, quote *models.Currency) ([]*models.Market, error) {
 	var markets []*models.Market
 
 	query := e.db.Order("id ASC")
-	if base != "" {
-		query = query.Where("base_currency = ?", base)
+	if base != nil {
+		query = query.Where("base_currency_id = ?", base.ID)
+	}
+	if quote != nil {
+		query = query.Where("quote_currency_id = ?", quote.ID)
 	}
 	if err := query.Preload("BaseCurrency").Preload("QuoteCurrency").Find(&markets).Error; err != nil {
 		return nil, errors.Wrap(err, "c.db.Where.Find")
@@ -24,7 +27,7 @@ func (e *Exchange) ListMarkets(base string) ([]*models.Market, error) {
 
 func (e *Exchange) FindMarketBySymbol(s string) (*models.Market, error) {
 	var m models.Market
-	if err := e.db.Where("symbol_code = ?", s).First(&m).Error; err != nil {
+	if err := e.db.Preload("BaseCurrency").Preload("QuoteCurrency").Where("symbol_code = ?", s).First(&m).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
@@ -128,7 +131,7 @@ func (e *Exchange) GetHighLowPrice(symbol string, status *models.OrderStatus, si
 }
 
 func (e *Exchange) MarketRates() ([]*MarketRate, error) {
-	markets, err := e.ListMarkets("")
+	markets, err := e.ListMarkets(nil, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "e.ListMarkets")
 	}
