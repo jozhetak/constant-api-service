@@ -40,31 +40,6 @@ func CreateNewContribution(contact *models.Contribution) (*models.Contribution, 
 	return &response, nil
 }
 
-func GetContribution(contributionId string) (*models.Contribution, error) {
-	apiUrl := fmt.Sprintf("%s/contributions/%s", _apiPrefix, contributionId)
-	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
-
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, errors.New(res.Status)
-	}
-	body, _ := ioutil.ReadAll(res.Body)
-
-	response := models.Contribution{}
-	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, errors.New("Unmarshal error")
-	}
-
-	return &response, nil
-}
-
 func GetContributions() (*models.ContributionsResponse, error) {
 	apiUrl := fmt.Sprintf("%s/contributions", _apiPrefix)
 	req, err := http.NewRequest("GET", apiUrl, nil)
@@ -88,23 +63,4 @@ func GetContributions() (*models.ContributionsResponse, error) {
 	}
 
 	return &response, nil
-}
-
-func DeleteContribution(contributionId string) (error) {
-	apiUrl := fmt.Sprintf("%s/contributions/%s", _apiPrefix, contributionId)
-	req, err := http.NewRequest("DELETE", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
-
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return errors.New(res.Status)
-	}
-
-	return nil
 }
