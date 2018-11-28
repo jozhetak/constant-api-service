@@ -24,7 +24,11 @@ func GetAccountTypes() (*models.AccountTypesResponse, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(res.Status)
 	}
-	body, _ := ioutil.ReadAll(res.Body)
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	response := models.AccountTypesResponse{}
 	if err := json.Unmarshal(body, &response); err != nil {
@@ -49,7 +53,11 @@ func GetAccountType(accountTypeId string) (*models.AccountType, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(res.Status)
 	}
-	body, _ := ioutil.ReadAll(res.Body)
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	response := models.AccountType{}
 	if err := json.Unmarshal(body, &response); err != nil {

@@ -37,7 +37,11 @@ func UploadDocument(document models.Document) (*models.DocumentResponse, error) 
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(res.Status)
 	}
-	body, _ := ioutil.ReadAll(res.Body)
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	response := models.DocumentResponse{}
 	if err := json.Unmarshal(body, &response); err != nil {

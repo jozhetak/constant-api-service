@@ -50,7 +50,11 @@ func GetContact(contactId string) (*models.Contact, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(res.Status)
 	}
-	body, _ := ioutil.ReadAll(res.Body)
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	response := models.Contact{}
 	if err := json.Unmarshal(body, &response); err != nil {
@@ -76,7 +80,10 @@ func CreateNewContact(contact *models.Contact) (*models.Contact, error) {
 	}
 	defer res.Body.Close()
 
-	body, _ := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if res.StatusCode != http.StatusCreated {
 		return nil, errors.New(fmt.Sprintf("%s: %s", res.Status, string(body)))

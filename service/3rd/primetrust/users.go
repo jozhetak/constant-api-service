@@ -26,7 +26,10 @@ func CreateNewUser(user *models.User) (*models.User, error) {
 	}
 	defer res.Body.Close()
 
-	body, _ := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if res.StatusCode != http.StatusCreated {
 		return nil, errors.New(fmt.Sprintf("%s: %s", res.Status, string(body)))
@@ -55,7 +58,11 @@ func GetUser(userId string) (*models.User, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(res.Status)
 	}
-	body, _ := ioutil.ReadAll(res.Body)
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	response := models.User{}
 	if err := json.Unmarshal(body, &response); err != nil {
@@ -80,7 +87,11 @@ func GetUsers() (*models.UsersResponse, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(res.Status)
 	}
-	body, _ := ioutil.ReadAll(res.Body)
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	response := models.UsersResponse{}
 	if err := json.Unmarshal(body, &response); err != nil {
@@ -105,7 +116,11 @@ func GetCurrentUser() (*models.User, error) {
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(res.Status)
 	}
-	body, _ := ioutil.ReadAll(res.Body)
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	response := models.User{}
 	if err := json.Unmarshal(body, &response); err != nil {
@@ -140,7 +155,10 @@ func UpdateUserEmail(userId string, email string) (*models.User, error) {
 	}
 	defer res.Body.Close()
 
-	body, _ := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if res.StatusCode != http.StatusCreated {
 		return nil, errors.New(fmt.Sprintf("%s: %s", res.Status, string(body)))
@@ -180,7 +198,10 @@ func UpdateUserPassword(userId string, currentPassword string, password string) 
 	}
 	defer res.Body.Close()
 
-	body, _ := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
 
 	if res.StatusCode != http.StatusCreated {
 		return nil, errors.New(fmt.Sprintf("%s: %s", res.Status, string(body)))
