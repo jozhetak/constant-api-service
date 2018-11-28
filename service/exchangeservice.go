@@ -60,7 +60,7 @@ func (e *ExchangeService) CreateOrder(u *models.User, req *serializers.OrderReq)
 		return nil, ErrInvalidSymbol
 	}
 
-	if err := e.validateBalance(u, market, oSide, price, req.Quantity); err != nil {
+	if err := e.validateBalance(u, market, side, price, req.Quantity); err != nil {
 		return nil, errors.Wrap(err, "e.validateBalance")
 	}
 	order, err := e.r.CreateOrder(&models.Order{
