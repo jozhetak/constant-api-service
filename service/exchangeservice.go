@@ -70,7 +70,7 @@ func (e *ExchangeService) CreateOrder(u *models.User, symbol string, price uint6
 }
 
 func (e *ExchangeService) validateBalance(u *models.User, market *models.Market, side models.OrderSide, price, quantity uint64) error {
-	balances, err := e.w.GetCoinAndCustomTokenBalance(u)
+	balances, err := e.w.GetCoinAndCustomTokenBalanceForUser(u)
 	if err != nil {
 		return errors.Wrap(err, "e.w.GetCoinAndCustomTokenBalance")
 	}
