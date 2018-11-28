@@ -27,6 +27,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/sendgrid"
 	"github.com/ninjadotorg/constant-api-service/templates/email"
+	"github.com/ninjadotorg/constant-api-service/dao/reserve"
 )
 
 func main() {
@@ -55,9 +56,9 @@ func main() {
 		client = &http.Client{}
 		bc     = blockchain.New(client, conf.ConstantChainEndpoint)
 
-		mailClient		= sendgrid.Init(conf)
+		mailClient      = sendgrid.Init(conf)
 		ethereumService = ethereum.Init(conf)
-		emailHelper		= email.New(mailClient)
+		emailHelper     = email.New(mailClient)
 
 		userDAO = dao.NewUser(db)
 		userSvc = service.NewUserService(userDAO, bc, emailHelper)
@@ -71,6 +72,9 @@ func main() {
 		exchangeDAO = exchange.NewExchange(db)
 		walletSvc   = service.NewWalletService(bc, exchangeDAO)
 		exchangeSvc = service.NewExchange(exchangeDAO, walletSvc)
+
+		reserveDAO = reserve.NewReserveDao(db)
+		reserveSvc = service.NewReserveService(reserveDAO, bc)
 	)
 	gcPubsubClient, err := gcloud.NewClient(context.Background(), "cash-prototype")
 	if err != nil {
@@ -85,7 +89,7 @@ func main() {
 		AllowHeaders:    []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 		MaxAge:          12 * time.Hour,
 	}))
-	svr := api.NewServer(r, psSvc, upgrader, userSvc, portalSvc, votingSvc, exchangeSvc, walletSvc, logger)
+	svr := api.NewServer(r, psSvc, upgrader, userSvc, portalSvc, votingSvc, exchangeSvc, walletSvc, reserveSvc, logger)
 	authMw := api.AuthMiddleware(string(conf.TokenSecretKey), svr.Authenticate)
 	svr.Routes(authMw)
 
