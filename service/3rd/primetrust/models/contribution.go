@@ -50,7 +50,7 @@ type Contribution struct {
 	Data ContributionData `json:"data"`
 }
 
-type ContributionResponse struct {
+type ContributionsResponse struct {
 	CollectionResponse
 	Data []ContributionData `json:"data"`
 }

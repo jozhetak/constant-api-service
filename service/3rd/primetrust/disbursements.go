@@ -65,7 +65,7 @@ func GetDisbursement(disbursementId string) (*models.Disbursement, error) {
 	return &response, nil
 }
 
-func GetDisbursements() (*models.DisbursementResponse, error) {
+func GetDisbursements() (*models.DisbursementsResponse, error) {
 	apiUrl := fmt.Sprintf("%s/disbursements", _apiPrefix)
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	req.Header.Add("Authorization", _authHeader)
@@ -82,7 +82,7 @@ func GetDisbursements() (*models.DisbursementResponse, error) {
 	}
 	body, _ := ioutil.ReadAll(res.Body)
 
-	response := models.DisbursementResponse{}
+	response := models.DisbursementsResponse{}
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, errors.New("Unmarshal error")
 	}
