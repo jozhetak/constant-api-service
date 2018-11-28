@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
 	"log"
 	"net/http"
 	"time"
@@ -54,14 +55,15 @@ func main() {
 		client = &http.Client{}
 		bc     = blockchain.New(client, "http://127.0.0.1:9334")
 
-		mailClient  = sendgrid.Init(conf)
-		emailHelper = email.New(mailClient)
+		mailClient		= sendgrid.Init(conf)
+		ethereumService = ethereum.Init(conf)
+		emailHelper		= email.New(mailClient)
 
 		userDAO = dao.NewUser(db)
 		userSvc = service.NewUserService(userDAO, bc, emailHelper)
 
 		portalDAO = portal.NewPortal(db)
-		portalSvc = service.NewPortal(portalDAO, bc)
+		portalSvc = service.NewPortal(portalDAO, bc, ethereumService)
 
 		votingDao = voting.NewVoting(db)
 		votingSvc = service.NewVotingService(votingDao, bc)
