@@ -1,28 +1,34 @@
 package service
 
 import (
+	"fmt"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
+	"github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
+	"math/big"
 	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
 
+	"github.com/ninjadotorg/constant-api-service/common"
 	"github.com/ninjadotorg/constant-api-service/dao/portal"
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
-	"github.com/ninjadotorg/constant-api-service/common"
 	//_ "github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
 )
 
 type PortalService struct {
-	portalDao         *portal.PortalDao
-	blockchainService *blockchain.Blockchain
+	portalDao			*portal.PortalDao
+	blockchainService	*blockchain.Blockchain
+	ethereumService		*ethereum.EthereumService
 }
 
-func NewPortal(r *portal.PortalDao, bc *blockchain.Blockchain) *PortalService {
+func NewPortal(r *portal.PortalDao, bc *blockchain.Blockchain, es *ethereum.EthereumService) *PortalService {
 	return &PortalService{
-		portalDao:         r,
-		blockchainService: bc,
+		portalDao:			r,
+		blockchainService:	bc,
+		ethereumService:	es,
 	}
 }
 
@@ -196,9 +202,15 @@ func (p *PortalService) UpdateStatusBorrowRequest(b *models.Borrow, action strin
 
 				return false, err
 			}
-			// TODO call web3 to eth to check
-			// reject loan
-			//
+
+			switch b.CollateralType {
+			case "ETH":
+				// call web3 to process collateral
+				// call reject loan
+				//
+				p.ethereumService.SimpleLoanRejectLoan(b.LoanID, fmt.Sprintf("borrow_%d", b.ID))
+			}
+
 			return true, nil
 		}
 	case "a": // accept
@@ -252,6 +264,7 @@ func (p *PortalService) WithdrawTxForLoanRequest(u *models.User, b *models.Borro
 		if err != nil {
 			return nil, err
 		}
+
 		// update db
 		b.ConstantLoanWithdrawTxID = tx.Hash
 		_, err = p.portalDao.UpdateBorrow(b)
@@ -262,11 +275,17 @@ func (p *PortalService) WithdrawTxForLoanRequest(u *models.User, b *models.Borro
 		if b.State == models.Approved {
 			switch b.CollateralType {
 			case "ETH":
-				// TODO call web3 to process collateral
+				// call web3 to process collateral
 				// accept loan
 				//
+				h := sha3.NewKeccak256()
+				h.Write([]byte(b.KeyDigest))
+				keyBytes := h.Sum(nil)
+				// call accept loan
+				p.ethereumService.SimpleLoanAcceptLoan(b.LoanID, string(keyBytes), fmt.Sprintf("borrow_%d", b.ID))
 			}
 		}
+
 		return tx, nil
 	} else {
 		return nil, errors.New("Fail")
@@ -298,10 +317,12 @@ func (p *PortalService) PaymentTxForLoanRequest(u *models.User, b *models.Borrow
 		if true {
 			switch b.CollateralType {
 			case "ETH":
-				// TODO call web3 to process collateral
+				// call web3 to process collateral
 				// call addpayment
 				//
-
+				amount := new(big.Int)
+				amount.SetString(b.CollateralAmount, 10)
+				p.ethereumService.SimpleLoanAddPayment(b.LoanID, amount, fmt.Sprintf("borrow_%d", b.ID))
 			}
 		}
 
