@@ -10,11 +10,11 @@ import (
 	"errors"
 )
 
-func CreateNewContribution(contact *models.Contribution) (*models.Contribution, error) {
+func CreateNewUser(contact *models.User) (*models.User, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(contact)
 
-	apiUrl := fmt.Sprintf("%s/contributions", _apiPrefix)
+	apiUrl := fmt.Sprintf("%s/users", _apiPrefix)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", _authHeader)
@@ -32,7 +32,7 @@ func CreateNewContribution(contact *models.Contribution) (*models.Contribution, 
 		return nil, errors.New(fmt.Sprintf("%s: %s", res.Status, string(body)))
 	}
 
-	response := models.Contribution{}
+	response := models.User{}
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, errors.New("Unmarshal error")
 	}
@@ -40,8 +40,8 @@ func CreateNewContribution(contact *models.Contribution) (*models.Contribution, 
 	return &response, nil
 }
 
-func GetContribution(contributionId string) (*models.Contribution, error) {
-	apiUrl := fmt.Sprintf("%s/contributions/%s", _apiPrefix, contributionId)
+func GetUser(userId string) (*models.User, error) {
+	apiUrl := fmt.Sprintf("%s/users/%s", _apiPrefix, userId)
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	req.Header.Add("Authorization", _authHeader)
 
@@ -57,7 +57,7 @@ func GetContribution(contributionId string) (*models.Contribution, error) {
 	}
 	body, _ := ioutil.ReadAll(res.Body)
 
-	response := models.Contribution{}
+	response := models.User{}
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, errors.New("Unmarshal error")
 	}
@@ -65,21 +65,27 @@ func GetContribution(contributionId string) (*models.Contribution, error) {
 	return &response, nil
 }
 
-func DeleteContribution(contributionId string) (error) {
-	apiUrl := fmt.Sprintf("%s/contributions/%s", _apiPrefix, contributionId)
-	req, err := http.NewRequest("DELETE", apiUrl, nil)
+func GetUsers() (*models.UsersResponse, error) {
+	apiUrl := fmt.Sprintf("%s/users", _apiPrefix)
+	req, err := http.NewRequest("GET", apiUrl, nil)
 	req.Header.Add("Authorization", _authHeader)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return errors.New(res.Status)
+		return nil, errors.New(res.Status)
+	}
+	body, _ := ioutil.ReadAll(res.Body)
+
+	response := models.UsersResponse{}
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, errors.New("Unmarshal error")
 	}
 
-	return nil
+	return &response, nil
 }

@@ -36,10 +36,11 @@ type OrderType int
 const (
 	InvalidOrderType OrderType = iota
 	Limit
+	MarketType
 )
 
 func (o OrderType) String() string {
-	return [...]string{"INVALID", "LIMIT"}[o]
+	return [...]string{"INVALID", "LIMIT", "MARKET"}[o]
 }
 
 type Order struct {
@@ -67,6 +68,8 @@ func GetOrderType(t string) OrderType {
 	switch strings.ToLower(t) {
 	case "limit":
 		return Limit
+	case "market":
+		return MarketType
 	default:
 		return InvalidOrderType
 	}

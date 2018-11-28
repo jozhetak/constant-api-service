@@ -1,10 +1,5 @@
 package models
 
-import (
-	_ "github.com/jinzhu/gorm"
-	_ "time"
-)
-
 type VotingProposalDCBVote struct {
 	VotingProposalDCB   *VotingProposalDCB
 	VotingProposalDCBID int

@@ -9,12 +9,15 @@ import (
 	"github.com/ninjadotorg/constant-api-service/models"
 )
 
-func (e *Exchange) ListMarkets(base string) ([]*models.Market, error) {
+func (e *Exchange) ListMarkets(base, quote *models.Currency) ([]*models.Market, error) {
 	var markets []*models.Market
 
 	query := e.db.Order("id ASC")
-	if base != "" {
-		query = query.Where("base_currency = ?", base)
+	if base != nil {
+		query = query.Where("base_currency_id = ?", base.ID)
+	}
+	if quote != nil {
+		query = query.Where("quote_currency_id = ?", quote.ID)
 	}
 	if err := query.Preload("BaseCurrency").Preload("QuoteCurrency").Find(&markets).Error; err != nil {
 		return nil, errors.Wrap(err, "c.db.Where.Find")
@@ -24,7 +27,7 @@ func (e *Exchange) ListMarkets(base string) ([]*models.Market, error) {
 
 func (e *Exchange) FindMarketBySymbol(s string) (*models.Market, error) {
 	var m models.Market
-	if err := e.db.Where("symbol_code = ?", s).First(&m).Error; err != nil {
+	if err := e.db.Preload("BaseCurrency").Preload("QuoteCurrency").Where("symbol_code = ?", s).First(&m).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
@@ -36,7 +39,7 @@ func (e *Exchange) FindMarketBySymbol(s string) (*models.Market, error) {
 func (e *Exchange) SymbolRates(from, to time.Time) ([]SymbolRate, error) {
 	var results []SymbolRate
 
-	if err := e.db.Table("exchange_orders").Joins("JOIN exchange_markets em ON em.id = exchange_orders.market_id").Where("time >= ? AND time <= ?", from, to).Select("symbol_code, sum(quantity) as volume, max(price) as high, min(price) as low").Group("symbol_code").Scan(&results).Error; err != nil {
+	if err := e.db.Table("exchange_orders").Joins("JOIN exchange_markets em ON em.id = exchange_orders.market_id").Where("exchange_orders.updated_at >= ? AND exchange_orders.updated_at <= ?", from, to).Select("symbol_code, sum(quantity) as volume, max(price) as high, min(price) as low").Group("symbol_code").Scan(&results).Error; err != nil {
 		return nil, errors.Wrap(err, "e.db.Table")
 	}
 
@@ -128,7 +131,7 @@ func (e *Exchange) GetHighLowPrice(symbol string, status *models.OrderStatus, si
 }
 
 func (e *Exchange) MarketRates() ([]*MarketRate, error) {
-	markets, err := e.ListMarkets("")
+	markets, err := e.ListMarkets(nil, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "e.ListMarkets")
 	}

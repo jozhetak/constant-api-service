@@ -68,3 +68,26 @@ func (e *Exchange) SetFilledOrders(orders ...*models.Order) (err error) {
 	}
 	return
 }
+
+func (e *Exchange) FindOrdersInMarkets(markets []*models.Market, status *models.OrderStatus, side *models.OrderSide) ([]*models.Order, error) {
+	var orders []*models.Order
+
+	marketIDs := make([]uint, 0, len(markets))
+	for _, m := range markets {
+		marketIDs = append(marketIDs, m.ID)
+	}
+	query := e.db.Preload("Market").Table("exchange_orders").Where("market_id IN (?)", marketIDs)
+
+	if status != nil {
+		query = query.Where("status = ?", int(*status))
+	}
+	if side != nil {
+		query = query.Where("side = ?", int(*side))
+	}
+	query = query.Order("created_at DESC")
+
+	if err := query.Find(&orders).Error; err != nil {
+		return nil, errors.Wrap(err, "e.db.Where")
+	}
+	return orders, nil
+}

@@ -13,32 +13,46 @@ import (
 
 type ExchangeService struct {
 	r *exchange.Exchange
+	w *WalletService
 }
 
-func NewExchange(r *exchange.Exchange) *ExchangeService {
-	return &ExchangeService{r}
+func NewExchange(r *exchange.Exchange, w *WalletService) *ExchangeService {
+	return &ExchangeService{
+		r: r,
+		w: w,
+	}
 }
 
-func (e *ExchangeService) ListMarkets(base string) ([]*serializers.MarketResp, error) {
-	markets, err := e.r.ListMarkets(base)
+func (e *ExchangeService) ListMarkets(base, quote *models.Currency) ([]*serializers.MarketResp, error) {
+	markets, err := e.r.ListMarkets(base, quote)
 	if err != nil {
 		return nil, errors.Wrap(err, "c.portalDao.ListByBase")
 	}
 	return toMarketResp(markets), nil
 }
 
-func (e *ExchangeService) CreateOrder(u *models.User, symbol string, price uint64, quantity uint64, typ, side string) (*serializers.OrderResp, error) {
-	oTyp := models.GetOrderType(typ)
-	if oTyp == models.InvalidOrderType {
+func (e *ExchangeService) CreateOrder(u *models.User, req *serializers.OrderReq) (*serializers.OrderResp, error) {
+	typ := models.GetOrderType(req.Type)
+	if typ == models.InvalidOrderType {
 		return nil, ErrInvalidOrderType
 	}
 
-	oSide := models.GetOrderSide(side)
-	if oSide == models.InvalidOrderSide {
+	side := models.GetOrderSide(req.Side)
+	if side == models.InvalidOrderSide {
 		return nil, ErrInvalidOrderSide
 	}
 
-	market, err := e.r.FindMarketBySymbol(symbol)
+	price := req.Price
+	if typ == models.MarketType {
+		status := models.Filled
+		last, err := e.r.GetLastPrice(req.SymbolCode, &status, &side)
+		if err != nil {
+			return nil, errors.Wrap(err, "e.r.GetLastPrice")
+		}
+		price = last
+	}
+
+	market, err := e.r.FindMarketBySymbol(req.SymbolCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "e.portalDao.FindMarketBySymbol")
 	}
@@ -46,20 +60,49 @@ func (e *ExchangeService) CreateOrder(u *models.User, symbol string, price uint6
 		return nil, ErrInvalidSymbol
 	}
 
+	if err := e.validateBalance(u, market, side, price, req.Quantity); err != nil {
+		return nil, errors.Wrap(err, "e.validateBalance")
+	}
 	order, err := e.r.CreateOrder(&models.Order{
 		User:     u,
 		Market:   market,
 		Price:    price,
-		Quantity: quantity,
-		Type:     oTyp,
+		Quantity: req.Quantity,
+		Type:     typ,
 		Status:   models.New,
-		Side:     oSide,
-		Time:     time.Now(),
+		Side:     side,
+		Time:     time.Now().UTC(),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "e.portalDao.CreateOrder")
 	}
 	return assembleOrder(order), nil
+}
+
+func (e *ExchangeService) validateBalance(u *models.User, market *models.Market, side models.OrderSide, price, quantity uint64) error {
+	balances, err := e.w.GetCoinAndCustomTokenBalanceForUser(u)
+	if err != nil {
+		return errors.Wrap(err, "e.w.GetCoinAndCustomTokenBalance")
+	}
+	if side == models.Buy {
+		for _, b := range balances.ListBalances {
+			if b.TokenID == market.BaseCurrency.TokenID {
+				if total := price * quantity; total >= b.AvailableBalance {
+					return ErrInsufficientBalance
+				}
+
+			}
+		}
+	} else {
+		for _, b := range balances.ListBalances {
+			if b.TokenID == market.QuoteCurrency.TokenID {
+				if quantity > b.AvailableBalance {
+					return ErrInsufficientBalance
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func (e *ExchangeService) UserOrderHistory(u *models.User, symbol, status, side string, limit *string, page *string) ([]*serializers.OrderResp, error) {
@@ -243,5 +286,15 @@ func assembleOrder(o *models.Order) *serializers.OrderResp {
 		Status:     o.Status.String(),
 		Side:       o.Side.String(),
 		Time:       o.Time.Format(time.RFC3339),
+	}
+}
+
+func assembleCurrency(c *models.Currency) *serializers.Currency {
+	return &serializers.Currency{
+		ID:          c.ID,
+		Name:        c.Name,
+		TokenID:     c.TokenID,
+		TokenName:   c.TokenName,
+		TokenSymbol: c.TokenSymbol,
 	}
 }

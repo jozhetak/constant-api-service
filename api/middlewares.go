@@ -14,7 +14,6 @@ import (
 const (
 	userIDKey    = "id"
 	userEmailKey = "email"
-	userKindKey  = "kind"
 )
 
 func AuthMiddleware(key string, authenticator func(c *gin.Context) (interface{}, error)) *jwt.GinJWTMiddleware {

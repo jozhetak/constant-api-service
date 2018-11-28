@@ -19,11 +19,7 @@ func basicAuth(username string, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
-func Init(sandbox bool, login string, password string) {
-	if sandbox {
-		_apiPrefix = SandboxAPIPrefix
-	} else {
-		_apiPrefix = ProductionAPIPrefix
-	}
+func Init(apiPrefix string, login string, password string) {
+	_apiPrefix = apiPrefix
 	_authHeader = fmt.Sprintf("Basic %s", basicAuth(login, password))
 }

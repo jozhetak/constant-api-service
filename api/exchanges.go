@@ -15,7 +15,7 @@ import (
 )
 
 func (s *Server) ListMarkets(c *gin.Context) {
-	markets, err := s.exchangeSvc.ListMarkets(c.Query("base"))
+	markets, err := s.exchangeSvc.ListMarkets(nil, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
@@ -37,7 +37,7 @@ func (s *Server) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	order, err := s.exchangeSvc.CreateOrder(user, req.Symbol, req.Price, req.Quantity, req.Type, req.Side)
+	order, err := s.exchangeSvc.CreateOrder(user, &req)
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrInvalidOrderSide, service.ErrInvalidOrderType, service.ErrInvalidSymbol:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
