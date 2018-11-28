@@ -39,7 +39,7 @@ func (e *Exchange) FindMarketBySymbol(s string) (*models.Market, error) {
 func (e *Exchange) SymbolRates(from, to time.Time) ([]SymbolRate, error) {
 	var results []SymbolRate
 
-	if err := e.db.Table("exchange_orders").Joins("JOIN exchange_markets em ON em.id = exchange_orders.market_id").Where("time >= ? AND time <= ?", from, to).Select("symbol_code, sum(quantity) as volume, max(price) as high, min(price) as low").Group("symbol_code").Scan(&results).Error; err != nil {
+	if err := e.db.Table("exchange_orders").Joins("JOIN exchange_markets em ON em.id = exchange_orders.market_id").Where("exchange_orders.updated_at >= ? AND exchange_orders.updated_at <= ?", from, to).Select("symbol_code, sum(quantity) as volume, max(price) as high, min(price) as low").Group("symbol_code").Scan(&results).Error; err != nil {
 		return nil, errors.Wrap(err, "e.db.Table")
 	}
 
