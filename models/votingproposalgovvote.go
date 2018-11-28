@@ -1,10 +1,5 @@
 package models
 
-import (
-	_ "github.com/jinzhu/gorm"
-	_ "time"
-)
-
 type VotingProposalGOVVote struct {
 	VotingProposalGOV   *VotingProposalGOV
 	VotingProposalGOVID int

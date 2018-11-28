@@ -31,37 +31,47 @@ func (e *ExchangeService) ListMarkets(base, quote *models.Currency) ([]*serializ
 	return toMarketResp(markets), nil
 }
 
-func (e *ExchangeService) CreateOrder(u *models.User, symbol string, price uint64, quantity uint64, typ, side string) (*serializers.OrderResp, error) {
-	oTyp := models.GetOrderType(typ)
-	if oTyp == models.InvalidOrderType {
+func (e *ExchangeService) CreateOrder(u *models.User, req *serializers.OrderReq) (*serializers.OrderResp, error) {
+	typ := models.GetOrderType(req.Type)
+	if typ == models.InvalidOrderType {
 		return nil, ErrInvalidOrderType
 	}
 
-	oSide := models.GetOrderSide(side)
-	if oSide == models.InvalidOrderSide {
+	side := models.GetOrderSide(req.Side)
+	if side == models.InvalidOrderSide {
 		return nil, ErrInvalidOrderSide
 	}
 
-	market, err := e.r.FindMarketBySymbol(symbol)
+	price := req.Price
+	if typ == models.MarketType {
+		status := models.Filled
+		last, err := e.r.GetLastPrice(req.SymbolCode, &status, &side)
+		if err != nil {
+			return nil, errors.Wrap(err, "e.r.GetLastPrice")
+		}
+		price = last
+	}
+
+	market, err := e.r.FindMarketBySymbol(req.SymbolCode)
 	if err != nil {
 		return nil, errors.Wrap(err, "e.portalDao.FindMarketBySymbol")
 	}
 	if market == nil {
 		return nil, ErrInvalidSymbol
 	}
-	if err := e.validateBalance(u, market, oSide, price, quantity); err != nil {
+
+	if err := e.validateBalance(u, market, side, price, req.Quantity); err != nil {
 		return nil, errors.Wrap(err, "e.validateBalance")
 	}
-
 	order, err := e.r.CreateOrder(&models.Order{
 		User:     u,
 		Market:   market,
 		Price:    price,
-		Quantity: quantity,
-		Type:     oTyp,
+		Quantity: req.Quantity,
+		Type:     typ,
 		Status:   models.New,
-		Side:     oSide,
-		Time:     time.Now(),
+		Side:     side,
+		Time:     time.Now().UTC(),
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "e.portalDao.CreateOrder")

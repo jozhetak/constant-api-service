@@ -42,11 +42,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c0decf632843204d2b8781de7b26e7038584e2dcccc7e2f401e88ae85b1df2b7"
+  digest = "1:093bf93a65962e8191e3e8cd8fc6c363f83d43caca9739c906531ba7210a9904"
   name = "github.com/btcsuite/btcd"
   packages = ["btcec"]
   pruneopts = "UT"
-  revision = "67e573d211ace594f1366b4ce9d39726c4b19bd0"
+  revision = "3dcf298fed2d5fd65918dc560b3942b2aa0629e8"
 
 [[projects]]
   digest = "1:e47d51dab652d26c3fba6f8cba403f922d02757a82abdc77e90df7948daf296e"
@@ -65,45 +65,24 @@
   version = "v3.2.0"
 
 [[projects]]
-  branch = "master"
-  digest = "1:67d0b50be0549e610017cb91e0b0b745ec0cad7c613bc8e18ff2d1c1fc8825a7"
-  name = "github.com/edsrzf/mmap-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "0bce6a6887123b67a60366d2c9fe2dfb74289d2e"
-
-[[projects]]
-  digest = "1:894ad9ce8fc5291a604ba117ffbd7922a833e6d4762775bc63e524b38e59b0a5"
+  digest = "1:f08158538fb9b5acf86edbf06d0eafd13aafa3277abe534a01f0e99d394e4637"
   name = "github.com/ethereum/go-ethereum"
   packages = [
     ".",
     "accounts",
     "accounts/abi",
     "accounts/abi/bind",
-    "accounts/abi/bind/backends",
     "accounts/keystore",
     "common",
-    "common/bitutil",
     "common/hexutil",
     "common/math",
     "common/mclock",
     "common/prque",
-    "consensus",
-    "consensus/ethash",
-    "consensus/misc",
-    "core",
-    "core/bloombits",
-    "core/rawdb",
-    "core/state",
     "core/types",
-    "core/vm",
     "crypto",
-    "crypto/bn256",
-    "crypto/bn256/cloudflare",
-    "crypto/bn256/google",
     "crypto/secp256k1",
     "crypto/sha3",
-    "eth/filters",
+    "ethclient",
     "ethdb",
     "event",
     "log",
@@ -114,7 +93,7 @@
     "rpc",
     "trie",
   ]
-  pruneopts = "UT"
+  pruneopts = "T"
   revision = "58632d44021bf095b43a1bb2443e6e3690a94739"
   version = "v1.8.18"
 
@@ -212,23 +191,12 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:8ec8d88c248041a6df5f6574b87bc00e7e0b493881dad2e7ef47b11dc69093b5"
-  name = "github.com/hashicorp/golang-lru"
-  packages = [
-    ".",
-    "simplelru",
-  ]
-  pruneopts = "UT"
-  revision = "20f1fb78b0740ba8c3cb143a61e86ba5c8669768"
-  version = "v0.5.0"
-
-[[projects]]
-  digest = "1:235ae01f32fb5f12c5f6d2e0e05ab48e651ab31c126e45a4efc4f510810941ac"
+  digest = "1:d4e6e8584d0a94ce567d237e19192dae44d57d2767ac7e1d7fbf5626d176381a"
   name = "github.com/jinzhu/gorm"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6ed508ec6a4ecb3531899a69cbc746ccf65a4166"
-  version = "v1.9.1"
+  revision = "472c70caa40267cb89fd8facb07fe6454b578626"
+  version = "v1.9.2"
 
 [[projects]]
   branch = "master"
@@ -331,7 +299,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9ff9e1808adfc43f788f1c1e9fd2660c285b522243da985a4c043ec6f2a2d736"
+  digest = "1:786c36d675e2f6f2462e9f853aba754ae8f84fed6c103732aac697a666a70ae3"
   name = "github.com/syndtr/goleveldb"
   packages = [
     "leveldb",
@@ -348,7 +316,7 @@
     "leveldb/util",
   ]
   pruneopts = "UT"
-  revision = "f9080354173f192dfc8821931eacf9cfd6819253"
+  revision = "353a9fca669c44dedb58d5a074f6d052fb0f58e0"
 
 [[projects]]
   digest = "1:03aa6e485e528acb119fb32901cf99582c380225fc7d5a02758e08b180cb56c3"
@@ -415,17 +383,16 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6c1e7702b6eaae39dc328df9980bb17de8e1af46c2538ee8ea575c2f405eef4a"
+  digest = "1:6ddf5d79575df6ba84a18d92039fd65db3e20e45a53ea34825389fa1826a5af4"
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
     "blowfish",
     "pbkdf2",
-    "ripemd160",
     "scrypt",
   ]
   pruneopts = "UT"
-  revision = "3d3f9f413869b949e48070b5bc593aa22cc2b8f2"
+  revision = "eb0de9b17e854e9b1ccd9963efafc79862359959"
 
 [[projects]]
   branch = "master"
@@ -472,12 +439,9 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:67b548d245ed82bee002b97f32eade2c443b06d1140004f0120f402e554eeeb9"
+  digest = "1:225564f71149334315118db714e1ea87513e4a11cf4acb27e26bc7577cebfa0b"
   name = "golang.org/x/sys"
-  packages = [
-    "cpu",
-    "unix",
-  ]
+  packages = ["unix"]
   pruneopts = "UT"
   revision = "62eef0e2fa9b2c385f7b2778e763486da6880d37"
 
@@ -506,7 +470,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d84a8228e69fccd89c649456a41d6ba942d4952a20add12b3e50d515aff22c68"
+  digest = "1:2e81813e8e072aa700e101369890e55539729d817d32dbc3fab228d6b40c4d83"
   name = "google.golang.org/api"
   packages = [
     "googleapi/transport",
@@ -520,7 +484,7 @@
     "transport/http/internal/propagation",
   ]
   pruneopts = "UT"
-  revision = "faade3cbb06a30202f2da53a8a5e3c4afe60b0c2"
+  revision = "0a71a4356c3f4bcbdd16294c78ca2a31fda36cca"
 
 [[projects]]
   digest = "1:e0244364c406b721b0dbd37142a58deae8ee445751a9ebb760d23b7d748433a1"
@@ -556,7 +520,7 @@
     "protobuf/field_mask",
   ]
   pruneopts = "UT"
-  revision = "b5d43981345bdb2c233eb4bf3277847b48c6fdc6"
+  revision = "31ac5d88444a9e7ad18077db9a165d793ad06a2e"
 
 [[projects]]
   digest = "1:1ac2802a1ffa70fe39243e22aab53dd3386396fc98de2417ff744d87b079e78c"
@@ -628,12 +592,12 @@
     "github.com/ethereum/go-ethereum",
     "github.com/ethereum/go-ethereum/accounts/abi",
     "github.com/ethereum/go-ethereum/accounts/abi/bind",
-    "github.com/ethereum/go-ethereum/accounts/abi/bind/backends",
     "github.com/ethereum/go-ethereum/common",
-    "github.com/ethereum/go-ethereum/core",
     "github.com/ethereum/go-ethereum/core/types",
     "github.com/ethereum/go-ethereum/crypto",
+    "github.com/ethereum/go-ethereum/ethclient",
     "github.com/ethereum/go-ethereum/event",
+    "github.com/ethereum/go-ethereum/rlp",
     "github.com/gin-contrib/cors",
     "github.com/gin-gonic/gin",
     "github.com/go-sql-driver/mysql",
