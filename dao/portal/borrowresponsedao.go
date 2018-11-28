@@ -12,13 +12,13 @@ func (p *PortalDao) CreateBorrowResponse(b *models.BorrowResponse) (*models.Borr
 	return b, nil
 }
 
-func (p *PortalDao) ListAllBorrowsResponse(portal_borrow_id int) ([]*models.BorrowResponse, error) {
+func (p *PortalDao) ListAllBorrowsResponse(portalBorrowID int) ([]*models.BorrowResponse, error) {
 	var (
 		bs []*models.BorrowResponse
 	)
 
 	query := p.db
-	query = query.Where("portal_borrow_id = ?", portal_borrow_id)
+	query = query.Where("portal_borrow_id = ?", portalBorrowID)
 	query = query.Find(&bs)
 
 	if err := query.Find(&bs).Error; err != nil {
