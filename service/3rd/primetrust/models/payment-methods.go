@@ -39,11 +39,18 @@ type PaymentMethodAttributes struct {
 }
 
 type PaymentMethodData struct {
-	ID         string                  `json:"id,omitempty"`
-	Type       string                  `json:"type,omitempty"`
-	Attributes PaymentMethodAttributes `json:"attributes"`
+	ID            string                  `json:"id,omitempty"`
+	Type          string                  `json:"type,omitempty"`
+	Attributes    PaymentMethodAttributes `json:"attributes"`
+	Links         Links                   `json:"links"`
+	Relationships Relationships           `json:"relationships"`
 }
 
 type PaymentMethod struct {
 	Data PaymentMethodData `json:"data"`
+}
+
+type PaymentMethodsResponse struct {
+	CollectionResponse
+	Data []PaymentMethodData `json:"data"`
 }

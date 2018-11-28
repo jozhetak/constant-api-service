@@ -10,11 +10,11 @@ import (
 	"errors"
 )
 
-func CreateNewContribution(contact *models.Contribution) (*models.Contribution, error) {
+func CreateNewPaymentMethod(contact *models.PaymentMethod) (*models.PaymentMethod, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(contact)
 
-	apiUrl := fmt.Sprintf("%s/contributions", _apiPrefix)
+	apiUrl := fmt.Sprintf("%s/payment-methods", _apiPrefix)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", _authHeader)
@@ -32,7 +32,7 @@ func CreateNewContribution(contact *models.Contribution) (*models.Contribution, 
 		return nil, errors.New(fmt.Sprintf("%s: %s", res.Status, string(body)))
 	}
 
-	response := models.Contribution{}
+	response := models.PaymentMethod{}
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, errors.New("Unmarshal error")
 	}
@@ -40,8 +40,8 @@ func CreateNewContribution(contact *models.Contribution) (*models.Contribution, 
 	return &response, nil
 }
 
-func GetContribution(contributionId string) (*models.Contribution, error) {
-	apiUrl := fmt.Sprintf("%s/contributions/%s", _apiPrefix, contributionId)
+func GetPaymentMethods() (*models.PaymentMethodsResponse, error) {
+	apiUrl := fmt.Sprintf("%s/payment-methods", _apiPrefix)
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	req.Header.Add("Authorization", _authHeader)
 
@@ -57,7 +57,7 @@ func GetContribution(contributionId string) (*models.Contribution, error) {
 	}
 	body, _ := ioutil.ReadAll(res.Body)
 
-	response := models.Contribution{}
+	response := models.PaymentMethodsResponse{}
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, errors.New("Unmarshal error")
 	}
@@ -65,8 +65,8 @@ func GetContribution(contributionId string) (*models.Contribution, error) {
 	return &response, nil
 }
 
-func GetContributions() (*models.ContributionResponse, error) {
-	apiUrl := fmt.Sprintf("%s/contributions", _apiPrefix)
+func GetPaymentMethod(paymentMethodId string) (*models.PaymentMethod, error) {
+	apiUrl := fmt.Sprintf("%s/payment-methods/%s", _apiPrefix, paymentMethodId)
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	req.Header.Add("Authorization", _authHeader)
 
@@ -82,7 +82,7 @@ func GetContributions() (*models.ContributionResponse, error) {
 	}
 	body, _ := ioutil.ReadAll(res.Body)
 
-	response := models.ContributionResponse{}
+	response := models.PaymentMethod{}
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, errors.New("Unmarshal error")
 	}
@@ -90,8 +90,8 @@ func GetContributions() (*models.ContributionResponse, error) {
 	return &response, nil
 }
 
-func DeleteContribution(contributionId string) (error) {
-	apiUrl := fmt.Sprintf("%s/contributions/%s", _apiPrefix, contributionId)
+func DeletePaymentMethod(paymentMethodId string) (error) {
+	apiUrl := fmt.Sprintf("%s/payment-methods/%s", _apiPrefix, paymentMethodId)
 	req, err := http.NewRequest("DELETE", apiUrl, nil)
 	req.Header.Add("Authorization", _authHeader)
 

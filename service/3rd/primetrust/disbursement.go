@@ -65,6 +65,31 @@ func GetDisbursement(disbursementId string) (*models.Disbursement, error) {
 	return &response, nil
 }
 
+func GetDisbursements() (*models.DisbursementResponse, error) {
+	apiUrl := fmt.Sprintf("%s/disbursements", _apiPrefix)
+	req, err := http.NewRequest("GET", apiUrl, nil)
+	req.Header.Add("Authorization", _authHeader)
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, errors.New(res.Status)
+	}
+	body, _ := ioutil.ReadAll(res.Body)
+
+	response := models.DisbursementResponse{}
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, errors.New("Unmarshal error")
+	}
+
+	return &response, nil
+}
+
 func DeleteDisbursement(disbursementId string) (error) {
 	apiUrl := fmt.Sprintf("%s/disbursements/%s", _apiPrefix, disbursementId)
 	req, err := http.NewRequest("DELETE", apiUrl, nil)
