@@ -70,29 +70,30 @@ func (e *ExchangeService) CreateOrder(u *models.User, symbol string, price uint6
 }
 
 func (e *ExchangeService) validateBalance(u *models.User, market *models.Market, side models.OrderSide, price, quantity uint64) error {
-	balances, err := e.w.GetCoinAndCustomTokenBalance(u)
-	if err != nil {
-		return errors.Wrap(err, "e.w.GetCoinAndCustomTokenBalance")
-	}
-	if side == models.Buy {
-		for _, b := range balances.ListBalances {
-			if b.TokenID == market.BaseCurrency.TokenID {
-				if total := price * quantity; total >= b.AvailableBalance {
-					return ErrInsufficientBalance
-				}
-
-			}
-		}
-	} else {
-		for _, b := range balances.ListBalances {
-			if b.TokenID == market.QuoteCurrency.TokenID {
-				if quantity > b.AvailableBalance {
-					return ErrInsufficientBalance
-				}
-			}
-		}
-	}
 	return nil
+	// balances, err := e.w.GetCoinAndCustomTokenBalance(u)
+	// if err != nil {
+	//         return errors.Wrap(err, "e.w.GetCoinAndCustomTokenBalance")
+	// }
+	// if side == models.Buy {
+	//         for _, b := range balances.ListBalances {
+	//                 if b.TokenID == market.BaseCurrency.TokenID {
+	//                         if total := price * quantity; total >= b.AvailableBalance {
+	//                                 return ErrInsufficientBalance
+	//                         }
+	//
+	//                 }
+	//         }
+	// } else {
+	//         for _, b := range balances.ListBalances {
+	//                 if b.TokenID == market.QuoteCurrency.TokenID {
+	//                         if quantity > b.AvailableBalance {
+	//                                 return ErrInsufficientBalance
+	//                         }
+	//                 }
+	//         }
+	// }
+	// return nil
 }
 
 func (e *ExchangeService) UserOrderHistory(u *models.User, symbol, status, side string, limit *string, page *string) ([]*serializers.OrderResp, error) {
