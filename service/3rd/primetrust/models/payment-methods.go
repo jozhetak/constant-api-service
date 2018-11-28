@@ -1,5 +1,20 @@
 package models
 
+const (
+	PaymentMethodType                         = "payment-methods"
+	PaymentMethodAchCheckTypePersonal         = "personal"
+	PaymentMethodAchCheckTypeBusiness         = "business"
+	PaymentMethodBankAccountTypeChecking      = "checking"
+	PaymentMethodBankAccountTypeSavings       = "savings"
+	PaymentMethodPaymentTypeAch               = "ach"
+	PaymentMethodPaymentTypeCheck             = "check"
+	PaymentMethodPaymentTypeCreditCard        = "credit_card"
+	PaymentMethodPaymentTypeWire              = "wire"
+	PaymentMethodPaymentTypeWireInternational = "wire_international"
+	PaymentMethodCreditCardTypeMC             = "MC"
+	PaymentMethodCreditCardTypeVI             = "VI"
+)
+
 type PaymentMethodAttributes struct {
 	ContactID                 string  `json:"contact-id"`
 	AchCheckType              string  `json:"ach-check-type"` // (enum): personal or business.

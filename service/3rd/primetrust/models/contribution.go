@@ -5,6 +5,12 @@ import (
 	"github.com/mongodb/mongo-go-driver/bson/decimal"
 )
 
+const (
+	ContributionType             = "contributions"
+	ContributionPaymentTypeCheck = "check"
+	ContributionPaymentTypeWire  = "wire"
+)
+
 type ContributionAttributes struct {
 	AccountID           string                  `json:"account-id"`
 	Amount              decimal.Decimal128      `json:"amount"`
