@@ -1,10 +1,5 @@
 package models
 
-import (
-	_ "github.com/jinzhu/gorm"
-	_ "time"
-)
-
 type BoardCandidateType int
 
 const (
@@ -23,7 +18,7 @@ type VotingBoardCandidate struct {
 
 	PaymentAddress string
 
-	VotingBoardVotes []VotingBoardVote
+	VotingBoardVotes []*VotingBoardVote
 
 	voteNum int
 }
