@@ -1,5 +1,9 @@
 package models
 
+const (
+	UserType = "users"
+)
+
 type UserAttributes struct {
 	Disabled        bool   `json:"disabled"`
 	Email           string `json:"email"`
