@@ -63,6 +63,20 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		voting.POST("/proposal/vote", s.VoteProposal)
 	}
 
+	// reserve API group
+	reserve := s.g.Group("/reserve")
+	voting.Use(authMw.MiddlewareFunc())
+	{
+		reserve.GET("/getreserveparty", s.GetReserveParty)
+		reserve.POST("/request/:party", s.RequestReserve)
+		reserve.GET("/request/:party", s.RequestReserveHistory)
+		reserve.GET("/request/:party/:requestId", s.GetRequestReserve)
+		reserve.POST("/request-return/:party", s.ReturnRequestReserve)
+		reserve.GET("/request-return/:party", s.ReturnRequestReserveHistory)
+		reserve.GET("/request-return/:party/:requestId", s.GetReturnRequestReserve)
+
+	}
+
 	// common API
 	common := s.g.Group("/common")
 	common.GET("/loanparams", s.GetLoanParams)
