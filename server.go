@@ -53,7 +53,7 @@ func main() {
 
 	var (
 		client = &http.Client{}
-		bc     = blockchain.New(client, "http://127.0.0.1:9334")
+		bc     = blockchain.New(client, conf.ConstantChainEndpoint)
 
 		mailClient		= sendgrid.Init(conf)
 		ethereumService = ethereum.Init(conf)
