@@ -16,7 +16,7 @@ const (
 )
 
 func (o OrderSide) String() string {
-	return [...]string{"INVALID", "BUY", "SELL"}[o]
+	return [...]string{"invalid", "buy", "sell"}[o]
 }
 
 type OrderStatus int
@@ -28,7 +28,7 @@ const (
 )
 
 func (o OrderStatus) String() string {
-	return [...]string{"INVALID", "NEW", "FILLED"}[o]
+	return [...]string{"invalid", "new", "filled"}[o]
 }
 
 type OrderType int
@@ -40,7 +40,7 @@ const (
 )
 
 func (o OrderType) String() string {
-	return [...]string{"INVALID", "LIMIT", "MARKET"}[o]
+	return [...]string{"invalid", "limit", "market"}[o]
 }
 
 type Order struct {
