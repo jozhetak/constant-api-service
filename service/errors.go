@@ -28,6 +28,10 @@ var (
 	ErrInvalidOrder        = &Error{Code: -3004, Message: "invalid order"}
 	ErrInsufficientBalance = &Error{Code: -3005, Message: "insufficient balance"}
 
+	// voting api errors
+
+	ErrBoardCandidateExists = &Error{Code: -4000, Message: "board candidate exists"}
+
 	// general api errors
 
 	ErrInvalidArgument     = &Error{Code: -9000, Message: "invalid argument"}

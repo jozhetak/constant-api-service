@@ -17,10 +17,9 @@ type VotingBoardCandidate struct {
 	User   *User
 	UserID int
 
-	DCB            string
-	CMB            string
-	GOV            string
-	PaymentAddress string
+	DCB string
+	CMB string
+	GOV string
 
 	VotingBoardVotes []*VotingBoardVote
 

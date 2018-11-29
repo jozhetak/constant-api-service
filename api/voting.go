@@ -43,9 +43,10 @@ func (server *Server) GetCandidatesList(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
 	}
-	boardQuery := c.DefaultQuery("board", "0")
+
+	boardQuery := c.DefaultQuery("board", "1")
 	board, _ := strconv.Atoi(boardQuery)
-	list, err := server.votingSvc.GetCandidatesList(board, c.DefaultQuery("board", "payment_address"))
+	list, err := server.votingSvc.GetCandidatesList(board, c.Query("payment_address"))
 	if err != nil {
 		server.logger.Error("s.votingSvc.GetCandidatesList", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})

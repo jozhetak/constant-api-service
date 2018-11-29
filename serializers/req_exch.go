@@ -2,7 +2,7 @@ package serializers
 
 type OrderReq struct {
 	SymbolCode string `json:"SymbolCode" binding:"required"`
-	Price      uint64 `json:"Price" binding:"required"`
+	Price      uint64 `json:"Price"`
 	Quantity   uint64 `json:"Quantity" binding:"required"`
 	Type       string `json:"Type" binding:"required"`
 	Side       string `json:"Side" binding:"required"`
