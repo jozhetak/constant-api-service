@@ -1,9 +1,14 @@
 package serializers
 
-type PaymentRequest struct {
+type ReserveContributionRequest struct {
 	PartyID        int         `json:"PartyID"`
 	PaymentAddress string      `json:"PaymentAddress"`
 	PaymentForm    PaymentForm `json:"PaymentForm"`
+}
+
+type ReserveDisbursementRequest struct {
+	PartyID     int         `json:"PartyID"`
+	PaymentForm PaymentForm `json:"PaymentForm"`
 }
 
 type PaymentForm struct {
