@@ -1,11 +1,17 @@
 package models
 
+import "github.com/jinzhu/gorm"
+
 type VotingProposalGOVVote struct {
+	gorm.Model
+
 	VotingProposalGOV   *VotingProposalGOV
 	VotingProposalGOVID int
-	Voter               *User
-	VoterID             uint
-	BoardType           int
+
+	Voter   *User `gorm:"foreignkey:VoterID"`
+	VoterID uint
+
+	TxID string
 }
 
 func (*VotingProposalGOVVote) TableName() string {

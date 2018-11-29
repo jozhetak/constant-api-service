@@ -1,23 +1,29 @@
 package models
 
+import "github.com/jinzhu/gorm"
+
 type VotingProposalDCB struct {
+	gorm.Model
+
 	User   *User
 	UserID int
-	Data   string
 
 	VotingProposalDCBVotes []*VotingProposalDCBVote
 	voteNum                int
+
+	TxID string
+	Data string
 }
 
-func (self VotingProposalDCB) SetVoteNum(num int) {
-	self.voteNum = num
+func (v *VotingProposalDCB) SetVoteNum(num int) {
+	v.voteNum = num
 }
 
-func (self VotingProposalDCB) GetVoteNum() int {
-	return self.voteNum
+func (v *VotingProposalDCB) GetVoteNum() int {
+	return v.voteNum
 }
 
-func (self VotingProposalDCB) GetType() int {
+func (v *VotingProposalDCB) GetType() int {
 	return 1
 }
 

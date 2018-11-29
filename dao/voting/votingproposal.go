@@ -32,3 +32,19 @@ func (p *VotingDao) CreateVotingProposalDCBVote(b *models.VotingProposalDCBVote)
 	}
 	return b, nil
 }
+
+func (p *VotingDao) GetDCBProposals(limit, page *int) ([]*models.VotingProposalDCB, error) {
+	var vs []*models.VotingProposalDCB
+
+	query := p.db.Preload("User").Preload("VotingProposalDCBVotes").Preload("VotingProposalDCBVotes.Voter")
+	if limit != nil && page != nil {
+		offset := (*page)*(*limit) - *limit
+		query = query.Limit(*limit).Offset(offset)
+	}
+	query = query.Order("created_at DESC")
+
+	if err := query.Find(&vs).Error; err != nil {
+		return nil, errors.Wrap(err, "e.db.Where")
+	}
+	return vs, nil
+}

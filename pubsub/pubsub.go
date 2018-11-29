@@ -11,15 +11,8 @@ import (
 	"github.com/ninjadotorg/constant-api-service/dao/exchange"
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
-	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/service"
-)
-
-const (
-	orderTopic = "order"
-
-	orderBookTopic   = "orderbook"
-	orderBookSubName = "orderbook-rest-api"
+	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 )
 
 type Pubsub struct {
@@ -27,6 +20,8 @@ type Pubsub struct {
 	exchangeDAO *exchange.Exchange
 	bc          *blockchain.Blockchain
 	logger      *zap.Logger
+
+	orderTopic, orderBookTopic, orderBookSubName string
 
 	// used to hold all ws conns in mem
 	subscribers map[*Subscriber]bool
@@ -37,12 +32,16 @@ type Pubsub struct {
 	message chan []byte
 }
 
-func New(c *gcloud.Client, exchangeDAO *exchange.Exchange, bc *blockchain.Blockchain, logger *zap.Logger) *Pubsub {
+func New(c *gcloud.Client, exchangeDAO *exchange.Exchange, bc *blockchain.Blockchain, logger *zap.Logger, orderTopic, orderBookTopic, orderBookSubName string) *Pubsub {
 	ps := &Pubsub{
 		c:           c,
 		exchangeDAO: exchangeDAO,
 		bc:          bc,
 		logger:      logger,
+
+		orderTopic:       orderTopic,
+		orderBookTopic:   orderBookTopic,
+		orderBookSubName: orderBookSubName,
 
 		subscribers: make(map[*Subscriber]bool),
 		register:    make(chan *Subscriber),
@@ -62,12 +61,12 @@ func (p *Pubsub) pubOrder(v interface{}) {
 		p.logger.Error("json.Marshal", zap.Error(err))
 		return
 	}
-	_, err = p.c.Topic(orderTopic).Publish(context.Background(), &gcloud.Message{
+	_, err = p.c.Topic(p.orderTopic).Publish(context.Background(), &gcloud.Message{
 		Data: b,
 	}).Get(context.Background())
 
 	if err != nil {
-		p.logger.Error("p.c.Topic.Publish", zap.String("topic", orderTopic), zap.Error(err))
+		p.logger.Error("p.c.Topic.Publish", zap.String("topic", p.orderTopic), zap.Error(err))
 	}
 }
 
@@ -82,8 +81,8 @@ func (p *Pubsub) Publish(v interface{}) {
 }
 
 func (p *Pubsub) subscribeToOrderBookTopic() {
-	t := p.c.Topic(orderBookTopic)
-	sub := p.c.Subscription(orderBookSubName)
+	t := p.c.Topic(p.orderBookTopic)
+	sub := p.c.Subscription(p.orderBookSubName)
 
 	exists, err := sub.Exists(context.Background())
 	if err != nil {
@@ -91,7 +90,7 @@ func (p *Pubsub) subscribeToOrderBookTopic() {
 		return
 	}
 	if !exists {
-		sub, err = p.c.CreateSubscription(context.Background(), orderBookSubName, gcloud.SubscriptionConfig{Topic: t})
+		sub, err = p.c.CreateSubscription(context.Background(), p.orderBookSubName, gcloud.SubscriptionConfig{Topic: t})
 		if err != nil {
 			p.logger.Error("p.c.CreateSubscription", zap.Error(err))
 			return
@@ -128,11 +127,12 @@ func (p *Pubsub) handleOrderBookMsg(m []byte) error {
 		p.message <- j
 		return nil
 	case "match":
-		var msg serializers.OrderBookMatchMsg
-		if err := json.Unmarshal(j, &msg); err != nil {
-			return errors.Wrap(err, "json.Unmarshal")
-		}
-		return errors.Wrap(p.handleMatchOrderBook(&msg), "p.handleMatchOrderBook")
+		// var msg serializers.OrderBookMatchMsg
+		// if err := json.Unmarshal(j, &msg); err != nil {
+		//         return errors.Wrap(err, "json.Unmarshal")
+		// }
+		// return errors.Wrap(p.handleMatchOrderBook(&msg), "p.handleMatchOrderBook")
+		return nil
 	default:
 		return errors.Errorf("unsuppoted type %s", body.Type)
 	}

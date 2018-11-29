@@ -7,5 +7,8 @@
   "constant_chain_endpoint": "",
   "eth_chain_endpoint": "",
   "simpleloan_address": "",
-  "simpleloan_owner": ""
+  "simpleloan_owner": "",
+  "order_topic": "",
+  "order_book_topic": "",
+  "order_book_sub_name": ""
 }
