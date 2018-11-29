@@ -10,9 +10,9 @@ import (
 	"errors"
 )
 
-func CreateContribution(contact *models.Contribution) (*models.Contribution, error) {
+func CreateContribution(contribution *models.Contribution) (*models.Contribution, error) {
 	jsonData := new(bytes.Buffer)
-	json.NewEncoder(jsonData).Encode(contact)
+	json.NewEncoder(jsonData).Encode(contribution)
 
 	apiUrl := fmt.Sprintf("%s/contributions", _apiPrefix)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)
@@ -69,4 +69,23 @@ func GetContributions() (*models.ContributionsResponse, error) {
 	}
 
 	return &response, nil
+}
+
+func AuthorizeContribution(contributionId string) (error) {
+	apiUrl := fmt.Sprintf("%s/contributions/%s/sandbox/authorize", _apiPrefix, contributionId)
+	req, err := http.NewRequest("POST", apiUrl, nil)
+	req.Header.Add("Authorization", _authHeader)
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return errors.New(res.Status)
+	}
+
+	return nil
 }
