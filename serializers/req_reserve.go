@@ -1,7 +1,7 @@
 package serializers
 
 type ReserveContributionRequest struct {
-	PartyID        int         `json:"PartyID"`
+	PartyID int `json:"PartyID"`
 	PaymentAddress string      `json:"PaymentAddress"`
 	PaymentForm    PaymentForm `json:"PaymentForm"`
 }

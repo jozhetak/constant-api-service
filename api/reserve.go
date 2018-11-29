@@ -15,11 +15,11 @@ func (server *Server) GetReserveParty(c *gin.Context) {
 		Name:     "Prime Trust",
 		IsActive: true,
 	})
-	list = append(list, models.ReserseParty{
+	/*list = append(list, models.ReserseParty{
 		ID:       models.ReservePartyEth,
 		Name:     "Ethereum",
 		IsActive: true,
-	})
+	})*/
 	c.JSON(http.StatusOK, serializers.Resp{Result: list})
 }
 
