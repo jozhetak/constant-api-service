@@ -7,6 +7,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
+	"strings"
 )
 
 type WalletService struct {
@@ -67,7 +68,7 @@ func (w *WalletService) GetCoinAndCustomTokenBalanceForUser(u *models.User) (*se
 	}
 	balanceCoin := serializers.WalletBalance{
 		TotalBalance:     coinBalance,
-		SymbolCode:       "CONST",
+		SymbolCode:       strings.ToLower("CONST"),
 		SymbolName:       "Constant",
 		AvailableBalance: coinBalance - inOrderConstant,
 		ConstantValue:    0,
@@ -97,7 +98,7 @@ func (w *WalletService) GetCoinAndCustomTokenBalanceForUser(u *models.User) (*se
 
 			balanceCoin := serializers.WalletBalance{
 				TotalBalance:     item.Amount,
-				SymbolCode:       item.Symbol,
+				SymbolCode:       strings.ToLower(item.Symbol),
 				SymbolName:       item.Name,
 				AvailableBalance: item.Amount - inOrderToken,
 				ConstantValue:    0,
@@ -127,7 +128,7 @@ func (w *WalletService) GetCoinAndCustomTokenBalanceForPaymentAddress(paymentAdd
 	// get in order for
 	balanceCoin := serializers.WalletBalance{
 		TotalBalance:     coinBalance,
-		SymbolCode:       "CONST",
+		SymbolCode:       strings.ToLower("CONST"),
 		SymbolName:       "Constant",
 		AvailableBalance: coinBalance,
 		ConstantValue:    0,
@@ -138,7 +139,7 @@ func (w *WalletService) GetCoinAndCustomTokenBalanceForPaymentAddress(paymentAdd
 		for _, item := range listCustomTokenBalances.ListCustomTokenBalance {
 			balanceCoin = serializers.WalletBalance{
 				TotalBalance:     item.Amount,
-				SymbolCode:       item.Symbol,
+				SymbolCode:       strings.ToLower(item.Symbol),
 				SymbolName:       item.Name,
 				AvailableBalance: item.Amount,
 				ConstantValue:    0,
