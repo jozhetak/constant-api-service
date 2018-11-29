@@ -38,4 +38,5 @@ type Config struct {
 	SimpleLoanOwner			string `json:"simpleloan_owner"`
 	TokenSecretKey			string `json:"token_secret_key"`
 	SendgridAPIKey			string `json:"sendgrid_api_key"`
+	ENV						string `json:"env"`
 }
