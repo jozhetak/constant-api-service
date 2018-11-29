@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-type BorrowState int
+type BorrowStatus int
 
 const (
-	InvalidState BorrowState = iota
-	Pending
-	Approved
-	Rejected
-	Payment
+	BorrowInvalidState BorrowStatus = iota
+	BorrowPending
+	BorrowApproved
+	BorrowRejected
+	BorrowPayment
 )
 
 type Borrow struct {
@@ -34,7 +34,7 @@ type Borrow struct {
 	//ConstantLoanResponseTxID string
 	ConstantLoanWithdrawTxID string
 	ConstantLoanPaymentTxID  string
-	State                    BorrowState `gorm:"not null;default:0"`
+	Status                   BorrowStatus `gorm:"not null;default:0"`
 
 	BorrowResponses []BorrowResponse
 }
@@ -43,19 +43,19 @@ func (*Borrow) TableName() string {
 	return "portal_borrows"
 }
 
-func (b BorrowState) String() string {
+func (b BorrowStatus) String() string {
 	return [...]string{"invalid", "pending", "approved", "rejected"}[b]
 }
 
-func GetBorrowState(s string) BorrowState {
+func GetBorrowState(s string) BorrowStatus {
 	switch s {
 	case "pending":
-		return Pending
+		return BorrowPending
 	case "approved":
-		return Approved
+		return BorrowApproved
 	case "rejected":
-		return Rejected
+		return BorrowRejected
 	default:
-		return InvalidState
+		return BorrowInvalidState
 	}
 }

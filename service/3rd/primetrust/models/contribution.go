@@ -2,7 +2,6 @@ package models
 
 import (
 	"time"
-	"github.com/mongodb/mongo-go-driver/bson/decimal"
 )
 
 const (
@@ -14,7 +13,7 @@ const (
 type ContributionAttributes struct {
 	ID                  string                  `json:"id,omitempty"`
 	AccountID           string                  `json:"account-id"`
-	Amount              decimal.Decimal128      `json:"amount"`
+	Amount              float64                 `json:"amount"`
 	ContactEmail        string                  `json:"contact-email"`
 	ContactName         string                  `json:"contact-name"`
 	ContactID           string                  `json:"contact-id"`
@@ -26,7 +25,7 @@ type ContributionAttributes struct {
 	SpecialInstructions string                  `json:"special-instructions"`
 	SurplusToParent     bool                    `json:"surplus_to_parent"`
 	ShortageToParent    bool                    `json:"shortage_to_parent"`
-	AmountExpected      decimal.Decimal128      `json:"amount-expected"`
+	AmountExpected      float64                 `json:"amount-expected"`
 	ParentID            string                  `json:"parent_id"`
 	PrimaryChild        bool                    `json:"primary_child"`
 	PaymentDetails      string                  `json:"payment-details"`

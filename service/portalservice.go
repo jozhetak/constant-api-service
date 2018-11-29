@@ -19,16 +19,16 @@ import (
 )
 
 type PortalService struct {
-	portalDao			*portal.PortalDao
-	blockchainService	*blockchain.Blockchain
-	ethereumService		*ethereum.EthereumService
+	portalDao         *portal.PortalDao
+	blockchainService *blockchain.Blockchain
+	ethereumService   *ethereum.EthereumService
 }
 
 func NewPortal(r *portal.PortalDao, bc *blockchain.Blockchain, es *ethereum.EthereumService) *PortalService {
 	return &PortalService{
-		portalDao:			r,
-		blockchainService:	bc,
-		ethereumService:	es,
+		portalDao:         r,
+		blockchainService: bc,
+		ethereumService:   es,
 	}
 }
 
@@ -57,7 +57,7 @@ func (p *PortalService) CreateBorrow(u *models.User, req serializers.BorrowReq) 
 		Maturity:         int64(req.LoanRequest.Params.Maturity),
 		LiquidationStart: int64(req.LoanRequest.Params.LiquidationStart),
 		PaymentAddress:   req.LoanRequest.ReceiveAddress,
-		State:            models.Pending,
+		Status:           models.BorrowPending,
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "b.portalDao.Create")
@@ -88,10 +88,10 @@ func (p *PortalService) ListBorrowsByUser(paymentAddress string, state, limit, p
 		return nil, errors.Wrapf(err, "b.parseQuery %s %s", limit, page)
 	}
 
-	var s *models.BorrowState
+	var s *models.BorrowStatus
 	if state != "" {
 		st := models.GetBorrowState(state)
-		if st == models.InvalidState {
+		if st == models.BorrowInvalidState {
 			return nil, ErrInvalidBorrowState
 		}
 		s = &st
@@ -111,10 +111,10 @@ func (p *PortalService) ListAllBorrows(state, limit, page string) ([]*serializer
 		return nil, errors.Wrapf(err, "b.parseQuery %s %s", limit, page)
 	}
 
-	var s *models.BorrowState
+	var s *models.BorrowStatus
 	if state != "" {
 		st := models.GetBorrowState(state)
-		if st == models.InvalidState {
+		if st == models.BorrowInvalidState {
 			return nil, ErrInvalidBorrowState
 		}
 		s = &st
@@ -169,7 +169,7 @@ func AssembleBorrow(b *models.Borrow) *serializers.BorrowResp {
 		LoanAmount:               b.LoanAmount,
 		LoanID:                   b.LoanID,
 		KeyDigest:                b.KeyDigest,
-		State:                    b.State.String(),
+		State:                    b.Status.String(),
 		StartDate:                b.StartDate.Format(common.DateTimeLayoutFormatOut),
 		EndDate:                  b.EndDate.Format(common.DateTimeLayoutFormatOut),
 		InterestRate:             b.InterestRate,
@@ -196,7 +196,7 @@ func (p *PortalService) UpdateStatusBorrowRequest(b *models.Borrow, action strin
 	switch action {
 	case "portalDao": // reject
 		{
-			b.State = models.Rejected
+			b.Status = models.BorrowRejected
 			_, err := p.portalDao.UpdateBorrow(b)
 			if err != nil {
 
@@ -235,7 +235,7 @@ func (p *PortalService) UpdateStatusBorrowRequest(b *models.Borrow, action strin
 				return false, err
 			}
 			if enoughAccept {
-				b.State = models.Approved
+				b.Status = models.BorrowApproved
 			}
 			_, err = p.portalDao.UpdateBorrow(b)
 			if err != nil {
@@ -272,7 +272,7 @@ func (p *PortalService) WithdrawTxForLoanRequest(u *models.User, b *models.Borro
 			return nil, err
 		}
 
-		if b.State == models.Approved {
+		if b.Status == models.BorrowApproved {
 			switch b.CollateralType {
 			case "ETH":
 				// call web3 to process collateral
@@ -309,6 +309,7 @@ func (p *PortalService) PaymentTxForLoanRequest(u *models.User, b *models.Borrow
 
 		// update db
 		b.ConstantLoanPaymentTxID = tx.Hash
+		b.Status = models.BorrowPayment
 		_, err = p.portalDao.UpdateBorrow(b)
 		if err != nil {
 			return nil, err
