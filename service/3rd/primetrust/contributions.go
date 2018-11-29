@@ -10,9 +10,9 @@ import (
 	"errors"
 )
 
-func CreateContribution(contact *models.Contribution) (*models.Contribution, error) {
+func CreateContribution(contribution *models.Contribution) (*models.Contribution, error) {
 	jsonData := new(bytes.Buffer)
-	json.NewEncoder(jsonData).Encode(contact)
+	json.NewEncoder(jsonData).Encode(contribution)
 
 	apiUrl := fmt.Sprintf("%s/contributions", _apiPrefix)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)

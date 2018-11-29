@@ -64,7 +64,7 @@ func GetContact(contactId string) (*models.Contact, error) {
 	return &response, nil
 }
 
-func CreateNewContact(contact *models.Contact) (*models.Contact, error) {
+func CreateContact(contact *models.Contact) (*models.Contact, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(contact)
 

@@ -10,9 +10,9 @@ import (
 	"errors"
 )
 
-func CreateDisbursement(contact *models.Disbursement) (*models.Disbursement, error) {
+func CreateDisbursement(disbursement *models.Disbursement) (*models.Disbursement, error) {
 	jsonData := new(bytes.Buffer)
-	json.NewEncoder(jsonData).Encode(contact)
+	json.NewEncoder(jsonData).Encode(disbursement)
 
 	apiUrl := fmt.Sprintf("%s/disbursements", _apiPrefix)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)
