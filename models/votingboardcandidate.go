@@ -1,5 +1,7 @@
 package models
 
+import "github.com/jinzhu/gorm"
+
 type BoardCandidateType int
 
 const (
@@ -10,12 +12,14 @@ const (
 )
 
 type VotingBoardCandidate struct {
+	gorm.Model
+
 	User   *User
 	UserID int
-	DCB    bool
-	CMB    bool
-	GOV    bool
 
+	DCB            string
+	CMB            string
+	GOV            string
 	PaymentAddress string
 
 	VotingBoardVotes []*VotingBoardVote
@@ -23,12 +27,12 @@ type VotingBoardCandidate struct {
 	voteNum int
 }
 
-func (self VotingBoardCandidate) SetVoteNum(num int) {
-	self.voteNum = num
+func (v *VotingBoardCandidate) SetVoteNum(num int) {
+	v.voteNum = num
 }
 
-func (self VotingBoardCandidate) GetVoteNum() int {
-	return self.voteNum
+func (v *VotingBoardCandidate) GetVoteNum() int {
+	return v.voteNum
 }
 
 func (*VotingBoardCandidate) TableName() string {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
 	"github.com/pkg/errors"
 
 	"github.com/ninjadotorg/constant-api-service/serializers"
@@ -136,7 +137,7 @@ func (b *Blockchain) post(args map[string]interface{}) ([]byte, error) {
 
 	resp, err := b.c.Do(req)
 	if err != nil {
-		return nil, errors.Wrap(err, "b.c.Do")
+		return nil, errors.Wrapf(err, "b.c.Do: %q", req.URL.String())
 	}
 	defer resp.Body.Close()
 
@@ -393,7 +394,7 @@ func (b *Blockchain) GetDCBParams() ([]interface{}, error) {
 	return resultResp.([]interface{}), nil
 }
 
-func (b *Blockchain) CreateAndSendVoteGOVBoardTransaction(privkey string, voteAmount uint64) (error) {
+func (b *Blockchain) CreateAndSendVoteGOVBoardTransaction(privkey string, voteAmount uint64) error {
 	param := []interface{}{privkey, -1, 8}
 	tokenData := map[string]interface{}{}
 	tokenData["TokenID"] = [32]byte{5} // DCB voting token
@@ -404,7 +405,7 @@ func (b *Blockchain) CreateAndSendVoteGOVBoardTransaction(privkey string, voteAm
 	govAccount["1Uv1fjA1FjsLTp37i1j5ZVpghx3maaX6YM5WQkbtrJr26FyGwxKznAM7ZRN2AsE4iHwNjiWGLbcUt2JudBBek18cB5YV22EJ38PjcXqza"] = voteAmount
 	tokenData["TokenReceivers"] = govAccount
 	param = append(param, tokenData)
-	param = append(param, )
+	param = append(param)
 	resp, err := b.blockchainAPI(CreateAndSendVoteGOVBoardTransaction, param)
 	if err != nil {
 		return errors.Wrap(err, "b.blockchainAPI")
@@ -424,7 +425,7 @@ func (b *Blockchain) CreateAndSendVoteGOVBoardTransaction(privkey string, voteAm
 	return nil
 }
 
-func (b *Blockchain) CreateAndSendVoteDCBBoardTransaction(privkey string, voteAmount uint64) (error) {
+func (b *Blockchain) CreateAndSendVoteDCBBoardTransaction(privkey string, voteAmount uint64) error {
 	param := []interface{}{privkey, -1, 8}
 	tokenData := map[string]interface{}{}
 	tokenData["TokenID"] = [32]byte{6} // DCB voting token
@@ -435,7 +436,7 @@ func (b *Blockchain) CreateAndSendVoteDCBBoardTransaction(privkey string, voteAm
 	govAccount["1Uv1fjA1FjsLTp37i1j5ZVpghx3maaX6YM5WQkbtrJr26FyGwxKznAM7ZRN2AsE4iHwNjiWGLbcUt2JudBBek18cB5YV22EJ38PjcXqza"] = voteAmount
 	tokenData["TokenReceivers"] = govAccount
 	param = append(param, tokenData)
-	param = append(param, )
+	param = append(param)
 	resp, err := b.blockchainAPI(CreateAndSendVoteDCBBoardTransaction, param)
 	if err != nil {
 		return errors.Wrap(err, "b.blockchainAPI")

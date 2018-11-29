@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
 
 	gcloud "cloud.google.com/go/pubsub"
 	"github.com/gin-contrib/cors"
@@ -20,6 +21,7 @@ import (
 	"github.com/ninjadotorg/constant-api-service/dao"
 	"github.com/ninjadotorg/constant-api-service/dao/exchange"
 	"github.com/ninjadotorg/constant-api-service/dao/portal"
+	"github.com/ninjadotorg/constant-api-service/dao/reserve"
 	"github.com/ninjadotorg/constant-api-service/dao/voting"
 	"github.com/ninjadotorg/constant-api-service/database"
 	"github.com/ninjadotorg/constant-api-service/pubsub"
@@ -27,7 +29,6 @@ import (
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/sendgrid"
 	"github.com/ninjadotorg/constant-api-service/templates/email"
-	"github.com/ninjadotorg/constant-api-service/dao/reserve"
 )
 
 func main() {
@@ -80,7 +81,7 @@ func main() {
 	if err != nil {
 		logger.Fatal("gcloud.NewClient", zap.Error(err))
 	}
-	psSvc := pubsub.New(gcPubsubClient, exchangeDAO, bc, logger.With(zap.String("module", "pubsub")))
+	psSvc := pubsub.New(gcPubsubClient, exchangeDAO, bc, logger.With(zap.String("module", "pubsub")), conf.OrderTopic, conf.OrderBookTopic, conf.OrderBookSubName)
 
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{

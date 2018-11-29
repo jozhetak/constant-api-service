@@ -1,12 +1,13 @@
 package service
 
 import (
-	"github.com/ninjadotorg/constant-api-service/dao/voting"
-	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
-	"github.com/ninjadotorg/constant-api-service/models"
-	"github.com/pkg/errors"
-	"github.com/ninjadotorg/constant-api-service/serializers"
 	"encoding/json"
+
+	"github.com/ninjadotorg/constant-api-service/dao/voting"
+	"github.com/ninjadotorg/constant-api-service/models"
+	"github.com/ninjadotorg/constant-api-service/serializers"
+	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
+	"github.com/pkg/errors"
 )
 
 type VotingService struct {
@@ -35,11 +36,11 @@ func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType mode
 	}
 	switch boardType {
 	case models.DCB:
-		candidate.DCB = true
+		candidate.DCB = ""
 	case models.CMB:
-		candidate.CMB = true
+		candidate.CMB = ""
 	case models.GOV:
-		candidate.GOV = true
+		candidate.GOV = ""
 	default:
 		return nil, errors.New("Wrong type of board")
 	}
@@ -73,7 +74,7 @@ func (self *VotingService) GetCandidatesList(boardType int, paymentAddress strin
 	return list, err
 }
 
-func (self *VotingService) VoteCandidateBoard() (error) {
+func (self *VotingService) VoteCandidateBoard() error {
 	// TODO call blockchain network
 	// Update DB
 
@@ -84,56 +85,57 @@ func (self *VotingService) CreateProposal(user *models.User, request *serializer
 	// TODO
 	switch request.Type {
 	case 1: // DCB
-		{
-			dcbParams := request.DCB
-			// TODO call blockchain network rpc function
-			// TODO waiting and check tx with blockchain network
-			// TODO, call mysql
-			dcbParamsStrByte, _ := json.MarshalIndent(dcbParams, "", "\t")
-			proposal := &models.VotingProposalDCB{
-				User: user,
-				Data: string(dcbParamsStrByte),
-			}
-			proposalCreated, err := self.votingDao.CreateVotingProposalDCB(proposal)
-			if err != nil {
-				return proposalCreated, err
-			}
-			return proposalCreated, nil
+		dcbParams := request.DCB
+		// TODO call blockchain network rpc function
+		// TODO waiting and check tx with blockchain network
+		dcbParamsStrByte, _ := json.MarshalIndent(dcbParams, "", "\t")
+		proposal := &models.VotingProposalDCB{
+			User: user,
+			Data: string(dcbParamsStrByte),
+			TxID: "", // get tx above
 		}
+		proposalCreated, err := self.votingDao.CreateVotingProposalDCB(proposal)
+		if err != nil {
+			return proposalCreated, err
+		}
+		return proposalCreated, nil
 	case 2: // GOV
-		{
-			govParams := request.GOV
-			// TODO call blockchain network rpc function
-			// TODO waiting and check tx with blockchain network
-			// TODO, call mysql
-			govParamsStrByte, _ := json.MarshalIndent(govParams, "", "\t")
-			proposal := &models.VotingProposalGOV{
-				User: user,
-				Data: string(govParamsStrByte),
-			}
-			proposalCreated, err := self.votingDao.CreateVotingProposalGOV(proposal)
-			if err != nil {
-				return proposalCreated, err
-			}
-			return proposalCreated, nil
+		govParams := request.GOV
+		// TODO call blockchain network rpc function
+		// TODO waiting and check tx with blockchain network
+		govParamsStrByte, _ := json.MarshalIndent(govParams, "", "\t")
+		proposal := &models.VotingProposalGOV{
+			User: user,
+			Data: string(govParamsStrByte),
+			TxID: "", // get tx above
 		}
+		proposalCreated, err := self.votingDao.CreateVotingProposalGOV(proposal)
+		if err != nil {
+			return proposalCreated, err
+		}
+		return proposalCreated, nil
 	default:
-		{
-			return nil, errors.New("Proposal type is wrong")
-		}
+		return nil, errors.Errorf("unsupported proposal type: %v", request.Type)
 	}
-	return nil, nil
 }
 
-func (self *VotingService) GetProposalsList() ([]*models.ProposalInterface) {
+func (self *VotingService) GetProposalsList() ([]models.ProposalInterface, error) {
+	vs, err := self.votingDao.GetDCBProposals(nil, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetDCBProposals")
+	}
+	ret := make([]models.ProposalInterface, 0, len(vs))
+	for _, v := range vs {
+		ret = append(ret, v)
+	}
+	return ret, nil
+}
+
+func (self *VotingService) GetProposal() models.ProposalInterface {
 	return nil
 }
 
-func (self *VotingService) GetProposal() (models.ProposalInterface) {
-	return nil
-}
-
-func (self *VotingService) VoteProposal() (error) {
+func (self *VotingService) VoteProposal() error {
 	// TODO call blockchain network
 	// TODO waiting tx in block
 	// Update DB
