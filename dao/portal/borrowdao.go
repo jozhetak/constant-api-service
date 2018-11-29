@@ -27,7 +27,7 @@ func (p *PortalDao) DeleteBorrow(b *models.Borrow) (error) {
 	return nil
 }
 
-func (p *PortalDao) ListBorrowByUser(paymentAddress string, state *models.BorrowState, limit, page int) ([]*models.Borrow, error) {
+func (p *PortalDao) ListBorrowByUser(paymentAddress string, state *models.BorrowStatus, limit, page int) ([]*models.Borrow, error) {
 	var (
 		bs     []*models.Borrow
 		offset = page*limit - limit
@@ -46,7 +46,7 @@ func (p *PortalDao) ListBorrowByUser(paymentAddress string, state *models.Borrow
 	return bs, nil
 }
 
-func (p *PortalDao) ListAllBorrows(state *models.BorrowState, limit, page int) ([]*models.Borrow, error) {
+func (p *PortalDao) ListAllBorrows(state *models.BorrowStatus, limit, page int) ([]*models.Borrow, error) {
 	var (
 		bs     []*models.Borrow
 		offset = page*limit - limit

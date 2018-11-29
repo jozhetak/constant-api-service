@@ -5,7 +5,7 @@ type MarketResp struct {
 	BaseCurrency         string `json:"BaseCurrency"`
 	QuoteCurrency        string `json:"QuoteCurrency"`
 	DisplayName          string `json:"DisplayName"`
-	State                string `json:"State"`
+	State                string `json:"Status"`
 	SymbolCode           string `json:"SymbolCode"`
 	Icon                 string `json:"Icon"`
 	TradeEnabled         bool   `json:"TradeEnabled"`
