@@ -57,6 +57,19 @@ func (self *ReserveService) ReturnRequestReserveHistory(u *models.User) ([]*mode
 	return nil, nil
 }
 
-func (self *ReserveService) PrimetrustWebHook() {
-
+func (self *ReserveService) PrimetrustWebHook(params interface{}) {
+	/*
+{
+      "id": "151f0371-d16d-49b4-bc4c-c13788432a58",
+      "account_id": "1ae0e833-b07b-4d95-a32f-16c86bed539d",
+      "action": "update",
+      "data": {
+        "attributes": {
+          "status": "settled"
+        }
+      },
+      "resource_id": "fbd8bf30-552c-4d2d-b21c-c78dbc6b05d9",
+      "resource_type": "contributions"
+}
+ */
 }

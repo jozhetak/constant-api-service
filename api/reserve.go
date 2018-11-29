@@ -66,4 +66,5 @@ func (server *Server) PrimetrustWebHook(c *gin.Context) {
 	// TODO
 	// get request and update data for payment party
 	// call blockchain network to for contribution case
+	server.reserveSvc.PrimetrustWebHook(nil)
 }
