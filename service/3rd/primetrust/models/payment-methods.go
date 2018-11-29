@@ -16,6 +16,7 @@ const (
 )
 
 type PaymentMethodAttributes struct {
+	ID                        string `json:"id,omitempty"`
 	ContactID                 string `json:"contact-id"`
 	AchCheckType              string `json:"ach-check-type"` // (enum): personal or business.
 	BankAccountName           string `json:"bank-account-name"`

@@ -5,6 +5,7 @@ const (
 )
 
 type UserAttributes struct {
+	ID              string `json:"id,omitempty"`
 	Disabled        bool   `json:"disabled"`
 	Email           string `json:"email"`
 	Name            string `json:"name"`

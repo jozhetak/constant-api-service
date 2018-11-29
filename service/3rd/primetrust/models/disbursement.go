@@ -3,13 +3,13 @@ package models
 import "github.com/mongodb/mongo-go-driver/bson/decimal"
 
 type DisbursementAttributes struct {
+	ID                string                  `json:"id,omitempty"`
 	AccountID         string                  `json:"account-id"`
 	Amount            decimal.Decimal128      `json:"amount"`
 	CustomerReference string                  `json:"customer-reference"`
 	Description       string                  `json:"description"`
 	PaymentMethodID   string                  `json:"payment-method-id"`
 	PaymentMethod     PaymentMethodAttributes `json:"payment-method"`
-	ID                string                  `json:"id"`
 	SpecialType       string                  `json:"contact-email"`
 	Status            string                  `json:"status"`
 	ContactEmail      string                  `json:"contact-email"`

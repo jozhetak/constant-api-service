@@ -12,6 +12,7 @@ const (
 )
 
 type ContributionAttributes struct {
+	ID                  string                  `json:"id,omitempty"`
 	AccountID           string                  `json:"account-id"`
 	Amount              decimal.Decimal128      `json:"amount"`
 	ContactEmail        string                  `json:"contact-email"`
@@ -25,7 +26,6 @@ type ContributionAttributes struct {
 	SpecialInstructions string                  `json:"special-instructions"`
 	SurplusToParent     bool                    `json:"surplus_to_parent"`
 	ShortageToParent    bool                    `json:"shortage_to_parent"`
-	ID                  string                  `json:"id"`
 	AmountExpected      decimal.Decimal128      `json:"amount-expected"`
 	ParentID            string                  `json:"parent_id"`
 	PrimaryChild        bool                    `json:"primary_child"`
