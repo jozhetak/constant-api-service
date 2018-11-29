@@ -8,11 +8,11 @@ import (
 type BorrowState int
 
 const (
-	InvalidState BorrowState = iota
-	Pending
-	Approved
-	Rejected
-	Payment
+	BorrowInvalidState BorrowState = iota
+	BorrowPending
+	BorrowApproved
+	BorrowRejected
+	BorrowPayment
 )
 
 type Borrow struct {
@@ -50,12 +50,12 @@ func (b BorrowState) String() string {
 func GetBorrowState(s string) BorrowState {
 	switch s {
 	case "pending":
-		return Pending
+		return BorrowPending
 	case "approved":
-		return Approved
+		return BorrowApproved
 	case "rejected":
-		return Rejected
+		return BorrowRejected
 	default:
-		return InvalidState
+		return BorrowInvalidState
 	}
 }
