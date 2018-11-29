@@ -69,12 +69,12 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	voting.Use(authMw.MiddlewareFunc())
 	{
 		reserve.GET("/getreserveparty", s.GetReserveParty)
-		reserve.POST("/request/:party", s.RequestReserve)
-		reserve.GET("/request/:party", s.RequestReserveHistory)
-		reserve.GET("/request/:party/:requestId", s.GetRequestReserve)
-		reserve.POST("/request-return/:party", s.ReturnRequestReserve)
-		reserve.GET("/request-return/:party", s.ReturnRequestReserveHistory)
-		reserve.GET("/request-return/:party/:requestId", s.GetReturnRequestReserve)
+		reserve.POST("/request/:party", s.CreateContribution)
+		reserve.GET("/request/:party", s.ContributionHistory)
+		reserve.GET("/request/:party/:requestId", s.GetContribution)
+		reserve.POST("/request-return/:party", s.CreateDisbursement)
+		reserve.GET("/request-return/:party", s.DisbursementHistory)
+		reserve.GET("/request-return/:party/:requestId", s.GetDisbursement)
 
 	}
 

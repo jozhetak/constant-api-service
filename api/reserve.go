@@ -24,42 +24,42 @@ func (server *Server) GetReserveParty(c *gin.Context) {
 }
 
 // Create a request reserve with related party
-func (server *Server) RequestReserve(c *gin.Context) {
+func (server *Server) CreateContribution(c *gin.Context) {
 
 	// TODO
 	// Validate request
-	server.reserveSvc.RequestReserve(&serializers.ReserveContributionRequest{})
+	server.reserveSvc.CreateContribution(&serializers.ReserveContributionRequest{})
 	// TODO
 }
 
 // Get detail data of request reserve
-func (server *Server) GetRequestReserve(c *gin.Context) {
+func (server *Server) GetContribution(c *gin.Context) {
 	// TODO
-	server.reserveSvc.GetRequestReserve(nil)
+	server.reserveSvc.GetContribution(nil)
 }
 
 // Get history data of request reserve
-func (server *Server) RequestReserveHistory(c *gin.Context) {
+func (server *Server) ContributionHistory(c *gin.Context) {
 	// TODO
-	server.reserveSvc.RequestReserveHistory(nil)
+	server.reserveSvc.ContributionHistory(nil)
 }
 
 // Create a return reserve request with related party
-func (server *Server) ReturnRequestReserve(c *gin.Context) {
+func (server *Server) CreateDisbursement(c *gin.Context) {
 	// TODO
-	server.reserveSvc.ReturnRequestReserve(&serializers.ReserveDisbursementRequest{})
+	server.reserveSvc.CreateDisbursement(&serializers.ReserveDisbursementRequest{})
 }
 
 // Get detail data of return request reserve
-func (server *Server) GetReturnRequestReserve(c *gin.Context) {
+func (server *Server) GetDisbursement(c *gin.Context) {
 	// TODO
-	server.reserveSvc.GetReturnRequestReserve(nil)
+	server.reserveSvc.GetDisbursement(nil)
 }
 
 // Get history data of return request reserve
-func (server *Server) ReturnRequestReserveHistory(c *gin.Context) {
+func (server *Server) DisbursementHistory(c *gin.Context) {
 	// TODO
-	server.reserveSvc.ReturnRequestReserveHistory(nil)
+	server.reserveSvc.DisbursementHistory(nil)
 }
 
 func (server *Server) PrimetrustWebHook(c *gin.Context) {

@@ -19,7 +19,7 @@ func NewReserveService(reserveDao *reserve.ReserveDao, blockchainService *blockc
 	}
 }
 
-func (self *ReserveService) RequestReserve(req *serializers.ReserveContributionRequest) {
+func (self *ReserveService) CreateContribution(req *serializers.ReserveContributionRequest) {
 	// 1. Validate ReserveContributionRequest in request
 	// 2. insert db ReserveContributionRequest
 	// 3. insert db ReserveContributionRequestPaymentParty
@@ -28,17 +28,17 @@ func (self *ReserveService) RequestReserve(req *serializers.ReserveContributionR
 	// 6. ... waitting webhook
 }
 
-func (self *ReserveService) GetRequestReserve(u *models.User) (*models.ReserveContributionRequest, error) {
+func (self *ReserveService) GetContribution(u *models.User) (*models.ReserveContributionRequest, error) {
 	// TODO
 	return nil, nil
 }
 
-func (self *ReserveService) RequestReserveHistory(u *models.User) ([]*models.ReserveContributionRequest, error) {
+func (self *ReserveService) ContributionHistory(u *models.User) ([]*models.ReserveContributionRequest, error) {
 	// TODO
 	return nil, nil
 }
 
-func (self *ReserveService) ReturnRequestReserve(req *serializers.ReserveDisbursementRequest) {
+func (self *ReserveService) CreateDisbursement(req *serializers.ReserveDisbursementRequest) {
 	// 1. Validate ReserveDisbursementRequest in request
 	// 2. insert db ReserveDisbursementRequest
 	// 3. insert db ReserveDisbursementRequestPaymentParty
@@ -47,12 +47,12 @@ func (self *ReserveService) ReturnRequestReserve(req *serializers.ReserveDisburs
 	// 5. update data ReserveContributionRequestPaymentParty
 }
 
-func (self *ReserveService) GetReturnRequestReserve(u *models.User) (*models.ReserveDisbursementRequest, error) {
+func (self *ReserveService) GetDisbursement(u *models.User) (*models.ReserveDisbursementRequest, error) {
 	// TODO
 	return nil, nil
 }
 
-func (self *ReserveService) ReturnRequestReserveHistory(u *models.User) ([]*models.ReserveDisbursementRequest, error) {
+func (self *ReserveService) DisbursementHistory(u *models.User) ([]*models.ReserveDisbursementRequest, error) {
 	// TODO
 	return nil, nil
 }
