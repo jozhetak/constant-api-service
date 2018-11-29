@@ -5,9 +5,8 @@ import "github.com/jinzhu/gorm"
 type DisbursementRequestStatus int
 
 const (
-	DisbursementRequestStatusPending        DisbursementRequestStatus = iota
-	DisbursementRequestStatusAuthorinzation
-	DisbursementRequestStatusSettlement
+	DisbursementRequestStatusPending DisbursementRequestStatus = iota
+	DisbursementRequestStatusFilled
 )
 
 type ReserveDisbursementRequest struct {

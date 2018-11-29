@@ -5,9 +5,8 @@ import "github.com/jinzhu/gorm"
 type ContributionRequestStatus int
 
 const (
-	ContributionRequestStatusPending        ContributionRequestStatus = iota
-	ContributionRequestStatusAuthorinzation
-	ContributionRequestStatusSettlement
+	ContributionRequestStatusPending ContributionRequestStatus = iota
+	ContributionRequestStatusFilled
 )
 
 type ReserveContributionRequest struct {
