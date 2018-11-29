@@ -10,7 +10,7 @@ import (
 	"errors"
 )
 
-func CreateNewDisbursement(contact *models.Disbursement) (*models.Disbursement, error) {
+func CreateDisbursement(contact *models.Disbursement) (*models.Disbursement, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(contact)
 

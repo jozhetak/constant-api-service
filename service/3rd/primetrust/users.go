@@ -10,7 +10,7 @@ import (
 	"errors"
 )
 
-func CreateNewUser(user *models.User) (*models.User, error) {
+func CreateUser(user *models.User) (*models.User, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(user)
 

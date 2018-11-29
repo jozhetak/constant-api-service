@@ -10,7 +10,7 @@ import (
 	"errors"
 )
 
-func CreateNewPaymentMethod(contact *models.PaymentMethod) (*models.PaymentMethod, error) {
+func CreatePaymentMethod(contact *models.PaymentMethod) (*models.PaymentMethod, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(contact)
 
