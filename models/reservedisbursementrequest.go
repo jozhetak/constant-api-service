@@ -2,13 +2,23 @@ package models
 
 import "github.com/jinzhu/gorm"
 
+type DisbursementRequestStatus int
+
+const (
+	DisbursementRequestStatusPending        DisbursementRequestStatus = iota
+	DisbursementRequestStatusAuthorinzation
+	DisbursementRequestStatusSettlement
+)
+
 type ReserveDisbursementRequest struct {
 	gorm.Model
 
 	User   *User
 	UserID int
 
-	// TODO
+	PartyID int
+	Status  DisbursementRequestStatus
+	TxID    string
 }
 
 func (*ReserveDisbursementRequest) TableName() string {
