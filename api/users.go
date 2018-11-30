@@ -95,3 +95,25 @@ func (s *Server) userFromContext(c *gin.Context) (*models.User, error) {
 	}
 	return user, nil
 }
+
+func (s *Server) UpdateUser(c *gin.Context) {
+	user, err := s.userFromContext(c)
+	if err != nil {
+		s.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
+	var req serializers.UserReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
+		return
+	}
+
+	if err := s.userSvc.Update(user, &req); err != nil {
+		s.logger.Error("s.userSvc.Update", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+	c.JSON(http.StatusOK, serializers.Resp{Result: "update user successfully"})
+}

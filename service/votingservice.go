@@ -50,7 +50,7 @@ func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType mode
 		}
 		candidate.GOV = paymentAddress
 	default:
-		return nil, errors.Errorf("Wrong type of board: %v", boardType)
+		return nil, ErrInvalidArgument
 	}
 
 	if exist {

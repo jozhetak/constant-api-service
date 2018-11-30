@@ -5,10 +5,12 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
+
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service"
-	"go.uber.org/zap"
 )
 
 func (server *Server) RegisterBoardCandidate(c *gin.Context) {
@@ -27,13 +29,16 @@ func (server *Server) RegisterBoardCandidate(c *gin.Context) {
 		req.PaymentAddress = user.PaymentAddress
 	}
 	votingBoardCandidate, err := server.votingSvc.RegisterBoardCandidate(user, models.BoardCandidateType(req.BoardType), req.PaymentAddress)
-	if err != nil {
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrInvalidArgument, service.ErrBoardCandidateExists:
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
+	case nil:
+		result := serializers.NewVotingBoardCandidateResp(votingBoardCandidate)
+		c.JSON(http.StatusOK, serializers.Resp{Result: result})
+	default:
 		server.logger.Error("s.votingSvc.RegisterBoardCandidate", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
-		return
 	}
-	result := serializers.NewVotingBoardCandidateResp(votingBoardCandidate)
-	c.JSON(http.StatusOK, serializers.Resp{Result: result})
 }
 
 func (server *Server) GetCandidatesList(c *gin.Context) {

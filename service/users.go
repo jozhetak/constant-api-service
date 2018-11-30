@@ -195,6 +195,17 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 	return nil
 }
 
+func (u *User) Update(user *models.User, req *serializers.UserReq) error {
+	user.UserName = req.UserName
+	user.Bio = req.Bio
+	user.FirstName = req.FirstName
+	user.LastName = req.LastName
+	if err := u.r.Update(user); err != nil {
+		return errors.Wrap(err, "u.r.Update")
+	}
+	return nil
+}
+
 func assembleUser(u *models.User) *serializers.UserResp {
 	return &serializers.UserResp{
 		ID:             u.ID,

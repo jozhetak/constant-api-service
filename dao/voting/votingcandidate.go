@@ -56,26 +56,27 @@ type VotingCandidateFilter struct {
 
 func (p *VotingDao) Filter(filter *VotingCandidateFilter) ([]*models.VotingBoardCandidate, error) {
 	var b []*models.VotingBoardCandidate
-	query := p.db
-	if models.BoardCandidateType(filter.BoardType) != models.Invalid {
-		switch models.BoardCandidateType(filter.BoardType) {
-		case models.DCB:
-			{
-				query = query.Where("dcb = 1")
-			}
-		case models.GOV:
-			{
-				query = query.Where("gov = 1")
-			}
-		case models.CMB:
+	query := p.db.Preload("User")
 
-			{
-				query = query.Where("cmb = 1")
-			}
+	switch models.BoardCandidateType(filter.BoardType) {
+	case models.DCB:
+		if filter.PaymentAddress == "" {
+			query = query.Where("dcb IS NOT NULL")
+		} else {
+			query = query.Where("dcb = ?", filter.PaymentAddress)
 		}
-	}
-	if filter.PaymentAddress != "" {
-		query = query.Where("payment_address = ?", filter.PaymentAddress)
+	case models.GOV:
+		if filter.PaymentAddress == "" {
+			query = query.Where("gov IS NOT NULL")
+		} else {
+			query = query.Where("gov = ?", filter.PaymentAddress)
+		}
+	case models.CMB:
+		if filter.PaymentAddress == "" {
+			query = query.Where("cmb IS NOT NULL")
+		} else {
+			query = query.Where("cmb = ?", filter.PaymentAddress)
+		}
 	}
 	if err := query.Find(&b).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {

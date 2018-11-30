@@ -3,9 +3,11 @@ package serializers
 type UserReq struct {
 	FirstName       string `json:"FirstName"`
 	LastName        string `json:"LastName"`
-	Email           string `json:"Email" binding:"required"`
+	Email           string `json:"Email"`
 	Password        string `json:"Password"`
 	ConfirmPassword string `json:"ConfirmPassword"`
+	UserName        string `json:"UserName"`
+	Bio             string `json:"bio"`
 }
 
 type UserResetPasswordReq struct {
