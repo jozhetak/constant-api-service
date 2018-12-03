@@ -1,9 +1,15 @@
 package serializers
 
 // Candidate
-type VotingBoardCandidateRequest struct {
+type RegisterBoardCandidateRequest struct {
 	BoardType      int    `json:"BoardType"`
 	PaymentAddress string `json:"PaymentAddress"`
+}
+
+type VotingBoardCandidateRequest struct {
+	BoardType   int    `json:"BoardType"`
+	CandidateId int    `json:"CandidateId"`
+	VoteAmount  uint64 `json:"VoteAmount"`
 }
 
 // end Candidate

@@ -20,7 +20,7 @@ func (server *Server) RegisterBoardCandidate(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
 	}
-	req := serializers.VotingBoardCandidateRequest{}
+	req := serializers.RegisterBoardCandidateRequest{}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
 		return
@@ -66,8 +66,8 @@ func (server *Server) GetCandidatesList(c *gin.Context) {
 
 func (server *Server) VoteCandidateBoard(c *gin.Context) {
 	// TODO
-
-	err := server.votingSvc.VoteCandidateBoard()
+	req := serializers.VotingBoardCandidateRequest{}
+	err := server.votingSvc.VoteCandidateBoard(req)
 	if err != nil {
 		server.logger.Error("s.voting.VoteCandidateBoard", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
