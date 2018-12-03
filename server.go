@@ -74,7 +74,7 @@ func main() {
 		votingDao = voting.NewVoting(db)
 		votingSvc = service.NewVotingService(votingDao, bc, walletSvc)
 
-		reserveDAO = reserve.NewReserveDao(db)
+		reserveDAO = reserve.NewReserve(db)
 		reserveSvc = service.NewReserveService(reserveDAO, bc)
 	)
 	gcPubsubClient, err := gcloud.NewClient(context.Background(), "cash-prototype")

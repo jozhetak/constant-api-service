@@ -2,11 +2,11 @@ package models
 
 import "github.com/jinzhu/gorm"
 
-type ContributionRequestStatus int
+type ReserveContributionRequestStatus int
 
 const (
-	ContributionRequestStatusPending ContributionRequestStatus = iota
-	ContributionRequestStatusFilled
+	ReserveContributionRequestStatusPending ReserveContributionRequestStatus = iota
+	ReserveContributionRequestStatusFilled
 )
 
 type ReserveContributionRequest struct {
@@ -16,10 +16,9 @@ type ReserveContributionRequest struct {
 	UserID int
 
 	PartyID        int
-	Status         ContributionRequestStatus
+	Status         ReserveContributionRequestStatus
 	TxID           string
 	PaymentAddress string
-	// TODO
 }
 
 func (*ReserveContributionRequest) TableName() string {
