@@ -93,3 +93,27 @@ func (p *VotingDao) CreateVotingBoardVote(b *models.VotingBoardVote) (*models.Vo
 	}
 	return b, nil
 }
+
+func (p *VotingDao) GetTotalVote(id uint) (int, error) {
+	var result struct {
+		TotalVote int
+	}
+	if err := p.db.Model(&models.VotingBoardVote{}).Where("voting_board_candidate_id = ?", id).Select("count(*) as total_vote").Group("voting_board_candidate_id").Scan(&result).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return 0, nil
+		}
+		return 0, errors.Wrap(err, "p.db.Model")
+	}
+	return result.TotalVote, nil
+}
+
+func (p *VotingDao) FindCandidateByID(id int) (*models.VotingBoardCandidate, error) {
+	var c models.VotingBoardCandidate
+	if err := p.db.First(&c, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "p.db.First")
+	}
+	return &c, nil
+}

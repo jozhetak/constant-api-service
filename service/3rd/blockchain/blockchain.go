@@ -394,7 +394,7 @@ func (b *Blockchain) GetDCBParams() ([]interface{}, error) {
 	return resultResp.([]interface{}), nil
 }
 
-func (b *Blockchain) CreateAndSendVoteGOVBoardTransaction(privkey string, voteAmount uint64) error {
+func (b *Blockchain) CreateAndSendVoteGOVBoardTransaction(privkey string, voteAmount uint64) (string, error) {
 	param := []interface{}{privkey, -1, 8}
 	tokenData := map[string]interface{}{}
 	tokenData["TokenID"] = [32]byte{5} // DCB voting token
@@ -408,24 +408,24 @@ func (b *Blockchain) CreateAndSendVoteGOVBoardTransaction(privkey string, voteAm
 	param = append(param)
 	resp, err := b.blockchainAPI(CreateAndSendVoteGOVBoardTransaction, param)
 	if err != nil {
-		return errors.Wrap(err, "b.blockchainAPI")
+		return "", errors.Wrap(err, "b.blockchainAPI")
 	}
 
-	var (
-		data       = resp.(map[string]interface{})
-		resultResp = data["Result"]
-		errorResp  = data["Error"]
-	)
-	if errorResp != nil {
-		return errors.Errorf("couldn't get result from response data: %+v", errorResp)
+	data := resp.(map[string]interface{})
+	if data["Error"] != nil {
+		return "", errors.Errorf("couldn't get result from response data: %+v", data["Error"])
 	}
-	if resultResp == nil {
-		return errors.Errorf("couldn't get result from response: req: %+v, data: %+v", param, data)
+	if data["Result"] == nil {
+		return "", errors.Errorf("couldn't get result from response: req: %+v, data: %+v", param, data)
 	}
-	return nil
+	txID, ok := data["Result"].(string)
+	if !ok {
+		return "", errors.Errorf("couldn't get txID: param: %+v, resp: %+v", param, data)
+	}
+	return txID, nil
 }
 
-func (b *Blockchain) CreateAndSendVoteDCBBoardTransaction(privkey string, voteAmount uint64) error {
+func (b *Blockchain) CreateAndSendVoteDCBBoardTransaction(privkey string, voteAmount uint64) (string, error) {
 	param := []interface{}{privkey, -1, 8}
 	tokenData := map[string]interface{}{}
 	tokenData["TokenID"] = [32]byte{6} // DCB voting token
@@ -439,19 +439,19 @@ func (b *Blockchain) CreateAndSendVoteDCBBoardTransaction(privkey string, voteAm
 	param = append(param)
 	resp, err := b.blockchainAPI(CreateAndSendVoteDCBBoardTransaction, param)
 	if err != nil {
-		return errors.Wrap(err, "b.blockchainAPI")
+		return "", errors.Wrap(err, "b.blockchainAPI")
 	}
 
-	var (
-		data       = resp.(map[string]interface{})
-		resultResp = data["Result"]
-		errorResp  = data["Error"]
-	)
-	if errorResp != nil {
-		return errors.Errorf("couldn't get result from response data: %+v", errorResp)
+	data := resp.(map[string]interface{})
+	if data["Error"] != nil {
+		return "", errors.Errorf("couldn't get result from response data: %+v", data["Error"])
 	}
-	if resultResp == nil {
-		return errors.Errorf("couldn't get result from response: req: %+v, data: %+v", param, data)
+	if data["Result"] == nil {
+		return "", errors.Errorf("couldn't get result from response: req: %+v, data: %+v", param, data)
 	}
-	return nil
+	txID, ok := data["Result"].(string)
+	if !ok {
+		return "", errors.Errorf("couldn't get txID: param: %+v, resp: %+v", param, data)
+	}
+	return txID, nil
 }
