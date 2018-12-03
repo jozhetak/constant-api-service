@@ -74,7 +74,7 @@ func main() {
 		walletSvc   = service.NewWalletService(bc, exchangeDAO)
 		exchangeSvc = service.NewExchange(exchangeDAO, walletSvc)
 
-		reserveDAO = reserve.NewReserveDao(db)
+		reserveDAO = reserve.NewReserve(db)
 		reserveSvc = service.NewReserveService(reserveDAO, bc)
 	)
 	gcPubsubClient, err := gcloud.NewClient(context.Background(), "cash-prototype")

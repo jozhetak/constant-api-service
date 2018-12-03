@@ -6,6 +6,10 @@ type ReserveDisbursementRequestPaymentPartyStatus int
 
 const (
 	ReserveDisbursementRequestPaymentPartyStatusPending ReserveDisbursementRequestPaymentPartyStatus = iota
+	ReserveDisbursementRequestPaymentPartyStatusAuthorized
+	ReserveDisbursementRequestPaymentPartyStatusSettled
+	ReserveDisbursementRequestPaymentPartyStatusCancelled
+	ReserveDisbursementRequestPaymentPartyStatusInvalid
 )
 
 type ReserveDisbursementRequestPaymentParty struct {
@@ -21,8 +25,25 @@ type ReserveDisbursementRequestPaymentParty struct {
 	ExtID           string
 	ExtResourceID   string
 	ExtResourceType string
+
+	Status ReserveDisbursementRequestPaymentPartyStatus
 }
 
 func (*ReserveDisbursementRequestPaymentParty) TableName() string {
 	return "reserve_disbursement_request_payment_party"
+}
+
+func GetState(s string) ReserveDisbursementRequestPaymentPartyStatus {
+	switch s {
+	case "pending":
+		return ReserveDisbursementRequestPaymentPartyStatusPending
+	case "authorized":
+		return ReserveDisbursementRequestPaymentPartyStatusAuthorized
+	case "settled":
+		return ReserveDisbursementRequestPaymentPartyStatusSettled
+	case "cancelled":
+		return ReserveDisbursementRequestPaymentPartyStatusCancelled
+	default:
+		return ReserveDisbursementRequestPaymentPartyStatusInvalid
+	}
 }
