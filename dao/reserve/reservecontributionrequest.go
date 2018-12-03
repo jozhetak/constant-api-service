@@ -1,4 +1,4 @@
-package exchange
+package reserve
 
 import (
 	"github.com/jinzhu/gorm"
@@ -15,7 +15,7 @@ func (r *Reserve) CreateReserveContributionRequest(rcr *models.ReserveContributi
 }
 
 func (r *Reserve) UpdateReserveContributionRequest(rcr *models.ReserveContributionRequest) (*models.ReserveContributionRequest, error) {
-	if err := r.db.Save(crc).Error; err != nil {
+	if err := r.db.Save(rcr).Error; err != nil {
 		return nil, errors.Wrap(err, "r.db.Update")
 	}
 	return rcr, nil
@@ -30,24 +30,24 @@ func (r *Reserve) DeleteReserveContributionRequest(rcr *models.ReserveContributi
 
 func (r *Reserve) FindReserveContributionRequestByID(id int) (*models.ReserveContributionRequest, error) {
 	var rcr models.ReserveContributionRequest
-	if err := r.db.First(&b, id).Error; err != nil {
+	if err := r.db.First(&rcr, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
 		return nil, errors.Wrap(err, "r.db.First")
 	}
-	return &b, nil
+	return &rcr, nil
 }
 
 func (r *Reserve) FindReserveContributionRequestByExtID(extID string) (*models.ReserveContributionRequest, error) {
 	var rcr models.ReserveContributionRequest
-	if err := r.db.Where("ext_id = ?", extId).First(&b).Error; err != nil {
+	if err := r.db.Where("ext_id = ?", extID).First(&rcr).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
 		return nil, errors.Wrap(err, "r.db.First")
 	}
-	return &b, nil
+	return &rcr, nil
 }
 
 func (r *Reserve) FindAllReserveContributionRequest(filter *map[string]interface{}, page int, limit int) ([]*models.ReserveContributionRequest, error) {

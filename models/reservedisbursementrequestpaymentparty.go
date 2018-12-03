@@ -33,7 +33,7 @@ func (*ReserveDisbursementRequestPaymentParty) TableName() string {
 	return "reserve_disbursement_request_payment_party"
 }
 
-func GetState(s string) ReserveDisbursementRequestPaymentPartyStatus {
+func GetDisbursementState(s string) ReserveDisbursementRequestPaymentPartyStatus {
 	switch s {
 	case "pending":
 		return ReserveDisbursementRequestPaymentPartyStatusPending

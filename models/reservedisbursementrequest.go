@@ -13,9 +13,9 @@ type ReserveDisbursementRequest struct {
 	gorm.Model
 
 	User   *User
-	UserID int
+	UserID uint
 
-	PartyID int
+	PartyID uint
 	Status  DisbursementRequestStatus
 	TxID    string
 }

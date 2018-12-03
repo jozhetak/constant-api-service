@@ -1,4 +1,4 @@
-package exchange
+package reserve
 
 import (
 	"github.com/jinzhu/gorm"
@@ -7,48 +7,52 @@ import (
 	"github.com/ninjadotorg/constant-api-service/models"
 )
 
-func (r *Reserve) CreateReserveDisbursementRequest(rcr *models.ReserveDisbursementRequest) (*models.ReserveDisbursementRequest, error) {
-	if err := r.db.Create(rcr).Error; err != nil {
+func (r *Reserve) CreateReserveDisbursementRequest(rdr *models.ReserveDisbursementRequest) (*models.ReserveDisbursementRequest, error) {
+	if err := r.db.Create(rdr).Error; err != nil {
 		return nil, errors.Wrap(err, "r.db.Create")
 	}
-	return rcr, nil
+	return rdr, nil
 }
 
-func (r *Reserve) UpdateReserveDisbursementRequest(rcr *models.ReserveDisbursementRequest) (*models.ReserveDisbursementRequest, error) {
-	if err := r.db.Save(crc).Error; err != nil {
+func (r *Reserve) UpdateReserveDisbursementRequest(rdr *models.ReserveDisbursementRequest) (*models.ReserveDisbursementRequest, error) {
+	if err := r.db.Save(rdr).Error; err != nil {
 		return nil, errors.Wrap(err, "r.db.Update")
 	}
-	return rcr, nil
+	return rdr, nil
 }
 
-func (r *Reserve) DeleteReserveDisbursementRequest(rcr *models.ReserveDisbursementRequest) error {
-	if err := r.db.Delete(rcr).Error; err != nil {
+func (r *Reserve) DeleteReserveDisbursementRequest(rdr *models.ReserveDisbursementRequest) error {
+	if err := r.db.Delete(rdr).Error; err != nil {
 		return errors.Wrap(err, "r.db.Delete")
 	}
 	return nil
 }
 
 func (r *Reserve) FindReserveDisbursementRequestByID(id int) (*models.ReserveDisbursementRequest, error) {
-	var rcr models.ReserveDisbursementRequest
-	if err := r.db.First(&b, id).Error; err != nil {
+	var rdr models.ReserveDisbursementRequest
+	if err := r.db.First(&rdr, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
 		return nil, errors.Wrap(err, "r.db.First")
 	}
-	return &b, nil
+	return &rdr, nil
 }
 
-func (r *Reserve) FindAllReserveDisbursementRequest(filter *map[string]interface{}) ([]*models.ReserveDisbursementRequest, error) {
-	var rcrs []*models.ReserveDisbursementRequest
+func (r *Reserve) FindAllReserveDisbursementRequest(filter *map[string]interface{}, page, limit int) ([]*models.ReserveDisbursementRequest, error) {
+	var (
+		rdrs   []*models.ReserveDisbursementRequest
+		offset = page*limit - limit
+	)
 
 	query := r.db.Table("reserve_disbursement_request")
+	query = query.Limit(limit).Offset(offset)
 	if filter != nil {
 		query = query.Where(filter)
 	}
 
-	if err := query.Find(&rcrs).Error; err != nil {
+	if err := query.Find(&rdrs).Error; err != nil {
 		return nil, errors.Wrap(err, "r.db.Find")
 	}
-	return rcrs, nil
+	return rdrs, nil
 }

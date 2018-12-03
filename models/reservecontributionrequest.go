@@ -13,7 +13,7 @@ type ReserveContributionRequest struct {
 	gorm.Model
 
 	User   *User
-	UserID int
+	UserID uint
 
 	PartyID        int
 	Status         ReserveContributionRequestStatus

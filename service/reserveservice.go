@@ -2,12 +2,14 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/ninjadotorg/constant-api-service/dao/reserve"
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust"
-	thirdpartymodels "github.com/ninjadotorg/constant-api-service/service/primetrust/models"
+	thirdpartymodels "github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 )
 
 type ReserveService struct {
@@ -15,7 +17,7 @@ type ReserveService struct {
 	b *blockchain.Blockchain
 }
 
-func NewReserveService(r *reserve.ReserveDao, b *blockchain.Blockchain) *ReserveService {
+func NewReserveService(r *reserve.Reserve, b *blockchain.Blockchain) *ReserveService {
 	return &ReserveService{
 		r: r,
 		b: b,
@@ -29,11 +31,11 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 	}
 
 	switch req.PaymentForm.PaymentType {
-	case thirdpartymodels.PaymentTypeAch:
+	case serializers.PaymentTypeAch:
 		if req.PaymentForm.BankAccountName == "" || req.PaymentForm.BankAccountType == "" || req.PaymentForm.BankName == "" {
 			return nil, ErrInvalidArgument
 		}
-	case thirdpartymodels.PaymentTypeCreditCard:
+	case serializers.PaymentTypeCreditCard:
 		if req.PaymentForm.CreditCardCvv == "" || req.PaymentForm.CreditCardExpirationDate == "" || req.PaymentForm.CreditCardNumber == "" {
 			return nil, ErrInvalidArgument
 		}
@@ -58,9 +60,9 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 	requestData, _ := json.Marshal(req.PaymentForm)
 	rcrpp, err := self.r.CreateReserveContributionRequestPaymentParty(&models.ReserveContributionRequestPaymentParty{
 		ReserveContributionRequest: rcr,
-		RequestData:                requestData,
+		RequestData:                string(requestData),
 		Amount:                     req.Amount,
-		Status:                     models.ReserveContributionRequestPaymentPartyStatus,
+		Status:                     models.ReserveContributionRequestPaymentPartyStatusPending,
 	})
 
 	if err != nil {
@@ -78,19 +80,18 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 		}
 
 		contributionAttributes := thirdpartymodels.ContributionAttributes{
-			AccountID:     "", //todo get from config
-			Amount:        rcr.Amount,
-			ContractEmail: user.Email,
-			ContractName:  user.Name,
+			AccountID:    "", //todo get from config
+			Amount:       rcrpp.Amount,
+			ContactEmail: u.Email,
+			ContactName:  fmt.Sprintf("%s %s", u.FirstName, u.LastName),
 			PaymentMethod: thirdpartymodels.PaymentMethodAttributes{
-				PaymentType:              req.PaymentForm.PaymentType,
+				PaymentType:              string(req.PaymentForm.PaymentType),
 				RoutingNumber:            req.PaymentForm.RoutingNumber,
 				Last4:                    req.PaymentForm.Last4,
-				AchCheckType:             req.PaymentForm.AchCheckType,
+				AchCheckType:             string(req.PaymentForm.AchCheckType),
 				BankAccountName:          req.PaymentForm.BankAccountName,
 				BankAccountType:          req.PaymentForm.BankAccountType,
 				BankName:                 req.PaymentForm.BankName,
-				RoutingNumber:            req.PaymentForm.RoutingNumber,
 				CreditCardCvv:            req.PaymentForm.CreditCardCvv,
 				CreditCardExpirationDate: req.PaymentForm.CreditCardExpirationDate,
 				CreditCardNumber:         req.PaymentForm.CreditCardNumber,
@@ -100,12 +101,12 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 			},
 		}
 
-		contribution.Attributes = contributionAttributes
+		contribution.Data.Attributes = contributionAttributes
 
 		extRequestData, _ := json.Marshal(contribution)
 
-		rcrpp.ExtRequestData = extRequestData
-		response, err := primetrust.CreateContribution(contribution)
+		rcrpp.ExtRequestData = string(extRequestData)
+		response, err := primetrust.CreateContribution(&contribution)
 
 		if err != nil {
 			self.r.DeleteReserveContributionRequest(rcr)
@@ -114,11 +115,12 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 		}
 
 		extResponseData, _ := json.Marshal(response)
+		rcrpp.ExtResponseData = string(extResponseData)
 
 		rcrpp.ExtID = response.Data.ID
 	}
 
-	return rcr
+	return rcr, nil
 }
 
 func (self *ReserveService) GetContribution(u *models.User, id int) (*models.ReserveContributionRequest, error) {
@@ -135,16 +137,16 @@ func (self *ReserveService) GetContribution(u *models.User, id int) (*models.Res
 	return rcr, nil
 }
 
-func (self *ReserveService) GetContributions(u *models.User) ([]*models.ReserveContributionRequest, error) {
-	var (
-		page  = c.DefaultQuery("page", "1")
-		limit = c.DefaultQuery("limit", "10")
-	)
-	filter := map[string]interface{}{
-		UserID: u.ID,
+func (self *ReserveService) GetContributions(u *models.User, filter *map[string]interface{}, page, limit int) ([]*models.ReserveContributionRequest, error) {
+	if filter != nil {
+		(*filter)["UserID"] = u.ID
+	} else {
+		filter = &map[string]interface{}{
+			"UserID": u.ID,
+		}
 	}
 
-	rcrs, err := self.r.FindAllReserveContributionRequest(&filter, page, limit)
+	rcrs, err := self.r.FindAllReserveContributionRequest(filter, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +158,7 @@ func (self *ReserveService) CreateDisbursement(req *serializers.ReserveDisbursem
 	// 1. Validate ReserveDisbursementRequest in request
 	// 2. insert db ReserveDisbursementRequest
 	// 3. insert db ReserveDisbursementRequestPaymentParty
-	// 6. TODO call blockchain network to burn constant
+	// 6. call blockchain network to burn constant
 	// 4. call related party: prime trust, eth ... and wait for data
 	// 5. update data ReserveContributionRequestPaymentParty
 }
@@ -176,9 +178,15 @@ func (self *ReserveService) GetDisbursement(u *models.User, id int) (*models.Res
 }
 
 func (self *ReserveService) GetDisbursements(u *models.User, filter *map[string]interface{}, page, limit int) ([]*models.ReserveDisbursementRequest, error) {
-	filter.UserID = u.ID
+	if filter != nil {
+		(*filter)["UserID"] = u.ID
+	} else {
+		filter = &map[string]interface{}{
+			"UserID": u.ID,
+		}
+	}
 
-	rdrs, err := self.r.FindAllReserveDisbursementRequest(&filter, page, limit)
+	rdrs, err := self.r.FindAllReserveDisbursementRequest(filter, page, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -201,5 +209,4 @@ func (self *ReserveService) PrimetrustWebHook(params interface{}) {
 		      "resource_type": "contributions"
 		}
 	*/
-	// TODO call network to create an tx
 }
