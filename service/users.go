@@ -211,7 +211,7 @@ func assembleUser(u *models.User) *serializers.UserResp {
 		ID:             u.ID,
 		UserName:       u.UserName,
 		FirstName:      u.FirstName,
-		LasstName:      u.LastName,
+		LastName:       u.LastName,
 		Email:          u.Email,
 		PaymentAddress: u.PaymentAddress,
 	}

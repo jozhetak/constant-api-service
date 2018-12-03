@@ -8,7 +8,7 @@ type RegisterBoardCandidateRequest struct {
 
 type VotingBoardCandidateRequest struct {
 	BoardType   int    `json:"BoardType"`
-	CandidateId int    `json:"CandidateId"`
+	CandidateID int    `json:"CandidateID"`
 	VoteAmount  uint64 `json:"VoteAmount"`
 }
 

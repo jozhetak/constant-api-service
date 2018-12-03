@@ -4,13 +4,10 @@ import "github.com/ninjadotorg/constant-api-service/models"
 
 type VotingBoardCandidateResp struct {
 	User    *UserResp `json:"User"`
-	UserID  int       `json:"UserID"`
 	DCB     string    `json:"DCB"`
 	CMB     string    `json:"CMB"`
 	GOV     string    `json:"GOV"`
 	VoteNum int       `json:"VoteNum"`
-
-	PaymentAddress string `json:"PaymentAddress"`
 }
 
 func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoardCandidateResp {
@@ -21,7 +18,6 @@ func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoard
 		VoteNum: data.GetVoteNum(),
 	}
 
-	result.UserID = data.UserID
 	result.User = NewUserResp(*data.User)
 	return &result
 }
@@ -31,6 +27,9 @@ type VotingBoardCandidateRespList struct {
 }
 
 func NewVotingBoardCandidateListResp(data []*models.VotingBoardCandidate) *VotingBoardCandidateRespList {
+	if len(data) == 0 {
+		return nil
+	}
 	result := &VotingBoardCandidateRespList{
 		ListBoardCandidates: []VotingBoardCandidateResp{},
 	}
@@ -39,6 +38,20 @@ func NewVotingBoardCandidateListResp(data []*models.VotingBoardCandidate) *Votin
 		result.ListBoardCandidates = append(result.ListBoardCandidates, *temp)
 	}
 	return result
+}
+
+type VotingBoardVoteResp struct {
+	Voter                    *UserResp
+	TxID                     string
+	VotingBoardCandidateResp *VotingBoardCandidateResp
+}
+
+func NewVotingBoardVote(v *models.VotingBoardVote) *VotingBoardVoteResp {
+	return &VotingBoardVoteResp{
+		Voter: NewUserResp(*(v.Voter)),
+		TxID:  v.TxID,
+		VotingBoardCandidateResp: NewVotingBoardCandidateResp(v.VotingBoardCandidate),
+	}
 }
 
 // Proposal

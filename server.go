@@ -67,12 +67,12 @@ func main() {
 		portalDAO = portal.NewPortal(db)
 		portalSvc = service.NewPortal(portalDAO, bc, ethereumService)
 
-		votingDao = voting.NewVoting(db)
-		votingSvc = service.NewVotingService(votingDao, bc)
-
 		exchangeDAO = exchange.NewExchange(db)
 		walletSvc   = service.NewWalletService(bc, exchangeDAO)
 		exchangeSvc = service.NewExchange(exchangeDAO, walletSvc)
+
+		votingDao = voting.NewVoting(db)
+		votingSvc = service.NewVotingService(votingDao, bc, walletSvc)
 
 		reserveDAO = reserve.NewReserve(db)
 		reserveSvc = service.NewReserveService(reserveDAO, bc)

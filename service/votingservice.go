@@ -13,12 +13,14 @@ import (
 
 type VotingService struct {
 	votingDao         *voting.VotingDao
+	walletSvc         *WalletService
 	blockchainService *blockchain.Blockchain
 }
 
-func NewVotingService(r *voting.VotingDao, bc *blockchain.Blockchain) *VotingService {
+func NewVotingService(r *voting.VotingDao, bc *blockchain.Blockchain, walletSvc *WalletService) *VotingService {
 	return &VotingService{
 		votingDao:         r,
+		walletSvc:         walletSvc,
 		blockchainService: bc,
 	}
 }
@@ -68,24 +70,76 @@ func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType mode
 	return candidateCreated, nil
 }
 
-func (self *VotingService) GetCandidatesList(boardType int, paymentAddress string) ([]*models.VotingBoardCandidate, error) {
+func (self *VotingService) GetCandidatesList(boardType int, paymentAddress string) ([]*serializers.VotingBoardCandidateResp, error) {
 	list, err := self.votingDao.Filter(&voting.VotingCandidateFilter{
 		BoardType:      boardType,
 		PaymentAddress: paymentAddress,
 	})
 
-	// TODO get voting number
+	resp := make([]*serializers.VotingBoardCandidateResp, 0, len(list))
+	for _, l := range list {
+		r := serializers.NewVotingBoardCandidateResp(l)
+		totalVote, err := self.votingDao.GetTotalVote(l.ID)
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.GetTotalVote")
+		}
 
-	// TODO get balance of all token for every candidate
+		// get voting number
+		r.VoteNum = totalVote
 
-	return list, err
+		// get balance of all token for every candidate
+		wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(l.User.PaymentAddress)
+		if err != nil {
+			return nil, errors.Wrap(err, "self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress")
+		}
+		r.User.WalletBalances = wallets
+
+		resp = append(resp, r)
+	}
+	return resp, err
 }
 
-func (self *VotingService) VoteCandidateBoard(req *serializers.VotingBoardCandidateRequest) error {
-	// TODO call blockchain network
-	// Update DB
+func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serializers.VotingBoardCandidateRequest) (*serializers.VotingBoardVoteResp, error) {
+	candidate, err := self.votingDao.FindCandidateByID(req.CandidateID)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.FindCandidateByID")
+	}
+	if candidate == nil {
+		return nil, ErrInvalidArgument
+	}
 
-	return nil
+	var txID string
+	switch models.BoardCandidateType(req.BoardType) {
+	case models.DCB:
+		txID, err = self.blockchainService.CreateAndSendVoteDCBBoardTransaction(voter.PrivKey, req.VoteAmount)
+	case models.GOV:
+		txID, err = self.blockchainService.CreateAndSendVoteGOVBoardTransaction(voter.PrivKey, req.VoteAmount)
+	default:
+		err = errors.Errorf("unsupported board type: %v", req.BoardType)
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "self.blockchainService.CreateAndSendVoteDCBBoardTransaction")
+	}
+
+	// tx, err := GetBlockchainTxByHash(txID, 3, self.blockchainService)
+	tx := &blockchain.TransactionDetail{}
+	if err != nil {
+		return nil, errors.Wrap(err, "GetBlockchainTxByHash")
+	}
+	if tx == nil {
+		return nil, errors.Errorf("couldn't get tx by tx ID: %q", txID)
+	}
+	vote, err := self.votingDao.CreateVotingBoardVote(&models.VotingBoardVote{
+		BoardType:            req.BoardType,
+		Voter:                voter,
+		VotingBoardCandidate: candidate,
+		TxID:                 txID,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.CreateVotingBoardVote")
+	}
+
+	return serializers.NewVotingBoardVote(vote), nil
 }
 
 func (self *VotingService) CreateProposal(user *models.User, request *serializers.VotingProposalRequest) (models.ProposalInterface, error) {

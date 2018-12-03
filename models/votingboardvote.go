@@ -8,13 +8,11 @@ type VotingBoardVote struct {
 	VotingBoardCandidate   *VotingBoardCandidate
 	VotingBoardCandidateID int
 
-	User   *User
-	UserID int
-
 	Voter   *User `gorm:"foreignkey:VoterID"`
 	VoterID uint
 
 	BoardType int
+	TxID      string
 }
 
 func (*VotingBoardVote) TableName() string {

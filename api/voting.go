@@ -57,22 +57,29 @@ func (server *Server) GetCandidatesList(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
 	}
-	result := serializers.VotingBoardCandidateRespList{}
-	if len(list) > 0 {
-		result = *(serializers.NewVotingBoardCandidateListResp(list))
-	}
-	c.JSON(http.StatusOK, serializers.Resp{Result: result})
+	c.JSON(http.StatusOK, serializers.Resp{Result: list})
 }
 
 func (server *Server) VoteCandidateBoard(c *gin.Context) {
-	// TODO
-	req := serializers.VotingBoardCandidateRequest{}
-	err := server.votingSvc.VoteCandidateBoard(req)
+	var req serializers.VotingBoardCandidateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
+		return
+	}
+	user, err := server.userFromContext(c)
+	if err != nil {
+		server.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
+	vote, err := server.votingSvc.VoteCandidateBoard(user, &req)
 	if err != nil {
 		server.logger.Error("s.voting.VoteCandidateBoard", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
 	}
+	c.JSON(http.StatusOK, serializers.Resp{Result: vote})
 }
 
 func (server *Server) CreateProposal(c *gin.Context) {
