@@ -156,7 +156,7 @@ func (self *ReserveService) CreateDisbursement(req *serializers.ReserveDisbursem
 	// 1. Validate ReserveDisbursementRequest in request
 	// 2. insert db ReserveDisbursementRequest
 	// 3. insert db ReserveDisbursementRequestPaymentParty
-	// 6. call blockchain network to burn constant
+	// 6. TODO call blockchain network to burn constant
 	// 4. call related party: prime trust, eth ... and wait for data
 	// 5. update data ReserveContributionRequestPaymentParty
 }
@@ -201,4 +201,5 @@ func (self *ReserveService) PrimetrustWebHook(params interface{}) {
 		      "resource_type": "contributions"
 		}
 	*/
+	// TODO call network to create an tx
 }
