@@ -4,6 +4,9 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"errors"
+	"math/big"
+	"strings"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -11,22 +14,20 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ninjadotorg/constant-api-service/conf"
-	"math/big"
-	"strings"
 )
 
 type EthereumService struct {
-	EthChainEnpoint		string
-	SimpleLoanOwner		string
-	SimpleLoadAddr		string
-	client				*ethclient.Client
+	EthChainEnpoint string
+	SimpleLoanOwner string
+	SimpleLoadAddr  string
+	client          *ethclient.Client
 }
 
 func Init(conf *config.Config) *EthereumService {
 	service := &EthereumService{
 		EthChainEnpoint: conf.EthChainEndpoint,
 		SimpleLoanOwner: conf.SimpleLoanOwner,
-		SimpleLoadAddr: conf.SimpleLoanAddr,
+		SimpleLoadAddr:  conf.SimpleLoanAddr,
 	}
 	return service
 }
@@ -81,7 +82,7 @@ func (s *EthereumService) SendSignedTransaction(fromPrvKey string, to string, va
 		return "", err
 	}
 
-	gasLimit := uint64(300000)                // in units
+	gasLimit := uint64(300000) // in units
 	gasPrice, err := s.GetGasPrice()
 	if err != nil {
 		return "", err
@@ -158,8 +159,6 @@ func (s *EthereumService) SimpleLoanAddPayment(lid string, amount *big.Int, offc
 
 	return txHash, nil
 }
-
-
 
 //func Demo() {
 //	key, _ := crypto.GenerateKey()

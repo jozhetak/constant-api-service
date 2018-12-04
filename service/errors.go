@@ -31,6 +31,7 @@ var (
 	// voting api errors
 
 	ErrBoardCandidateExists = &Error{Code: -4000, Message: "board candidate exists"}
+	ErrInvalidBoardType     = &Error{Code: -4001, Message: "invalid board type"}
 
 	// general api errors
 

@@ -115,7 +115,7 @@ func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serialize
 	case models.GOV:
 		txID, err = self.blockchainService.CreateAndSendVoteGOVBoardTransaction(voter.PrivKey, req.VoteAmount)
 	default:
-		err = errors.Errorf("unsupported board type: %v", req.BoardType)
+		err = ErrInvalidBoardType
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "self.blockchainService.CreateAndSendVoteDCBBoardTransaction")
@@ -146,13 +146,12 @@ func (self *VotingService) CreateProposal(user *models.User, request *serializer
 	// TODO
 	switch request.Type {
 	case 1: // DCB
-		dcbParams := request.DCB
 		// TODO call blockchain network rpc function
 		// TODO waiting and check tx with blockchain network
-		dcbParamsStrByte, _ := json.MarshalIndent(dcbParams, "", "\t")
+		params, _ := json.Marshal(request.DCB)
 		proposal := &models.VotingProposalDCB{
 			User: user,
-			Data: string(dcbParamsStrByte),
+			Data: string(params),
 			TxID: "", // get tx above
 		}
 		proposalCreated, err := self.votingDao.CreateVotingProposalDCB(proposal)

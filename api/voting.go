@@ -74,12 +74,15 @@ func (server *Server) VoteCandidateBoard(c *gin.Context) {
 	}
 
 	vote, err := server.votingSvc.VoteCandidateBoard(user, &req)
-	if err != nil {
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrInvalidBoardType, service.ErrInvalidArgument:
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
+	case nil:
+		c.JSON(http.StatusOK, serializers.Resp{Result: vote})
+	default:
 		server.logger.Error("s.voting.VoteCandidateBoard", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
-		return
 	}
-	c.JSON(http.StatusOK, serializers.Resp{Result: vote})
 }
 
 func (server *Server) CreateProposal(c *gin.Context) {
