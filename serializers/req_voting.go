@@ -22,10 +22,10 @@ type RegisterProposalRequest struct {
 	GOV *VotingProposalGOVRequest `json:"GOV"`
 }
 
-type VotingProposalBoardRequest struct {
-	BoardType   int    `json:"BoardType"`
-	CandidateID int    `json:"CandidateID"`
-	VoteAmount  uint64 `json:"VoteAmount"`
+type VotingProposalRequest struct {
+	BoardType  int    `json:"BoardType"`
+	ProposalID int    `json:"CandidateID"`
+	VoteAmount uint64 `json:"VoteAmount"`
 }
 
 type VotingProposalDCBRequest struct {

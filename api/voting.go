@@ -168,6 +168,12 @@ func (server *Server) GetProposal(c *gin.Context) {
 
 func (server *Server) VoteProposal(c *gin.Context) {
 	// TODO
+	var req serializers.VotingProposalRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
+		return
+	}
+
 	err := server.votingSvc.VoteProposal()
 	if err != nil {
 		server.logger.Error("s.voting.VoteProposal", zap.Error(err))
