@@ -121,7 +121,12 @@ func (server *Server) CreateProposal(c *gin.Context) {
 }
 
 func (server *Server) GetProposalsList(c *gin.Context) {
-	vs, err := server.votingSvc.GetProposalsList()
+	var (
+		boardType = c.DefaultQuery("board_type", "1")
+		limit     = c.DefaultQuery("limit", "10")
+		page      = c.DefaultQuery("page", "1")
+	)
+	vs, err := server.votingSvc.GetProposalsList(boardType, limit, page)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return

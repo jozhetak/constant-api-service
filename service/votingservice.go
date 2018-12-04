@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/ninjadotorg/constant-api-service/dao/voting"
 	"github.com/ninjadotorg/constant-api-service/models"
@@ -160,13 +161,12 @@ func (self *VotingService) CreateProposal(user *models.User, request *serializer
 		}
 		return proposalCreated, nil
 	case 2: // GOV
-		govParams := request.GOV
 		// TODO call blockchain network rpc function
 		// TODO waiting and check tx with blockchain network
-		govParamsStrByte, _ := json.MarshalIndent(govParams, "", "\t")
+		params, _ := json.Marshal(request.GOV)
 		proposal := &models.VotingProposalGOV{
 			User: user,
-			Data: string(govParamsStrByte),
+			Data: string(params),
 			TxID: "", // get tx above
 		}
 		proposalCreated, err := self.votingDao.CreateVotingProposalGOV(proposal)
@@ -179,16 +179,59 @@ func (self *VotingService) CreateProposal(user *models.User, request *serializer
 	}
 }
 
-func (self *VotingService) GetProposalsList() ([]models.ProposalInterface, error) {
-	vs, err := self.votingDao.GetDCBProposals(nil, nil)
+func (self *VotingService) getDCBProposals(limit, page *int) ([]models.ProposalInterface, error) {
+	vs, err := self.votingDao.GetDCBProposals(limit, page)
 	if err != nil {
 		return nil, errors.Wrap(err, "self.votingDao.GetDCBProposals")
 	}
 	ret := make([]models.ProposalInterface, 0, len(vs))
 	for _, v := range vs {
+		totalVote, err := self.votingDao.GetProposalDCBVote(v.ID)
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.GetProposalDCBVote")
+		}
+		v.SetVoteNum(totalVote)
+
 		ret = append(ret, v)
 	}
 	return ret, nil
+}
+
+func (self *VotingService) getGOVProposals(limit, page *int) ([]models.ProposalInterface, error) {
+	vs, err := self.votingDao.GetGOVProposals(limit, page)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetDCBProposals")
+	}
+	ret := make([]models.ProposalInterface, 0, len(vs))
+	for _, v := range vs {
+		totalVote, err := self.votingDao.GetProposalGOVVote(v.ID)
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.GetProposalGOVVote")
+		}
+		v.SetVoteNum(totalVote)
+
+		ret = append(ret, v)
+	}
+	return ret, nil
+}
+
+func (self *VotingService) GetProposalsList(boardType, limit, page string) ([]models.ProposalInterface, error) {
+	l, p, err := parsePaginationQuery(limit, page)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsePaginationQuery")
+	}
+	typ, err := strconv.Atoi(boardType)
+	if err != nil {
+		return nil, ErrInvalidBoardType
+	}
+	switch models.BoardCandidateType(typ) {
+	case models.DCB:
+		return self.getDCBProposals(&l, &p)
+	case models.GOV:
+		return self.getGOVProposals(&l, &p)
+	default:
+		return nil, ErrInvalidBoardType
+	}
 }
 
 func (self *VotingService) GetProposal() models.ProposalInterface {
