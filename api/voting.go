@@ -145,8 +145,25 @@ func (server *Server) GetProposalsList(c *gin.Context) {
 }
 
 func (server *Server) GetProposal(c *gin.Context) {
-	// TODO
-	server.votingSvc.GetProposal()
+	var (
+		id        = c.Param("id")
+		boardType = c.DefaultQuery("board_type", "1")
+	)
+	v, err := server.votingSvc.GetProposal(id, boardType)
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrInvalidBoardType, service.ErrInvalidProposal, service.ErrProposalNotFound:
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
+	case nil:
+		switch v.(type) {
+		case *models.VotingProposalDCB:
+			c.JSON(http.StatusOK, serializers.Resp{Result: serializers.NewProposalDCBResp(v.(*models.VotingProposalDCB))})
+		case *models.VotingProposalGOV:
+			c.JSON(http.StatusOK, serializers.Resp{Result: serializers.NewProposalGOVResp(v.(*models.VotingProposalGOV))})
+		}
+	default:
+		server.logger.Error("s.voting.VoteCandidateBoard", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+	}
 }
 
 func (server *Server) VoteProposal(c *gin.Context) {

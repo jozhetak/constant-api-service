@@ -32,6 +32,8 @@ var (
 
 	ErrBoardCandidateExists = &Error{Code: -4000, Message: "board candidate exists"}
 	ErrInvalidBoardType     = &Error{Code: -4001, Message: "invalid board type"}
+	ErrProposalNotFound     = &Error{Code: -4002, Message: "proposal not found"}
+	ErrInvalidProposal      = &Error{Code: -4003, Message: "invalid proposal"}
 
 	// general api errors
 

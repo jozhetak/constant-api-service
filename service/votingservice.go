@@ -234,8 +234,57 @@ func (self *VotingService) GetProposalsList(boardType, limit, page string) ([]mo
 	}
 }
 
-func (self *VotingService) GetProposal() models.ProposalInterface {
-	return nil
+func (self *VotingService) getDCBProposal(id int) (models.ProposalInterface, error) {
+	v, err := self.votingDao.GetDCBProposal(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetDCBProposal")
+	}
+	if v == nil {
+		return nil, ErrProposalNotFound
+	}
+	total, err := self.votingDao.GetProposalDCBVote(v.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetProposalDCBVote")
+	}
+	v.SetVoteNum(total)
+
+	return v, nil
+}
+
+func (self *VotingService) getGOVProposal(id int) (models.ProposalInterface, error) {
+	v, err := self.votingDao.GetGOVProposal(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetGOVProposal")
+	}
+	if v == nil {
+		return nil, ErrProposalNotFound
+	}
+	total, err := self.votingDao.GetProposalGOVVote(v.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetProposalGOVVote")
+	}
+	v.SetVoteNum(total)
+
+	return v, nil
+}
+
+func (self *VotingService) GetProposal(id, boardType string) (models.ProposalInterface, error) {
+	idI, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, ErrInvalidBoardType
+	}
+	typ, err := strconv.Atoi(boardType)
+	if err != nil {
+		return nil, ErrInvalidProposal
+	}
+	switch models.BoardCandidateType(typ) {
+	case models.DCB:
+		return self.getDCBProposal(idI)
+	case models.GOV:
+		return self.getGOVProposal(idI)
+	default:
+		return nil, ErrInvalidBoardType
+	}
 }
 
 func (self *VotingService) VoteProposal() error {

@@ -63,7 +63,7 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		// Proposal
 		voting.POST("/proposal", s.CreateProposal)
 		voting.GET("/proposals", s.GetProposalsList)
-		voting.GET("/proposal", s.GetProposal)
+		voting.GET("/proposal/:id", s.GetProposal)
 		voting.POST("/proposal/vote", s.VoteProposal)
 	}
 

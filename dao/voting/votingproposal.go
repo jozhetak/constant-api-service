@@ -34,6 +34,28 @@ func (p *VotingDao) CreateVotingProposalDCBVote(b *models.VotingProposalDCBVote)
 	return b, nil
 }
 
+func (p *VotingDao) GetDCBProposal(id int) (*models.VotingProposalDCB, error) {
+	var v models.VotingProposalDCB
+	if err := p.db.Preload("User").Preload("VotingProposalDCBVotes").Preload("VotingProposalDCBVotes.Voter").First(&v, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "p.db.Preload")
+	}
+	return &v, nil
+}
+
+func (p *VotingDao) GetGOVProposal(id int) (*models.VotingProposalGOV, error) {
+	var v models.VotingProposalGOV
+	if err := p.db.Preload("User").Preload("VotingProposalGOVVotes").Preload("VotingProposalGOVVotes.Voter").First(&v, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "p.db.Preload")
+	}
+	return &v, nil
+}
+
 func (p *VotingDao) GetDCBProposals(limit, page *int) ([]*models.VotingProposalDCB, error) {
 	var vs []*models.VotingProposalDCB
 
