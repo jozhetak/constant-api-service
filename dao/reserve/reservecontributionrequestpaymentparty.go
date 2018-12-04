@@ -39,6 +39,17 @@ func (r *Reserve) FindReserveContributionRequestPaymentPartyByID(id int) (*model
 	return &rcrpp, nil
 }
 
+func (r *Reserve) FindReserveContributionRequestPaymentPartyByExtID(extID string) (*models.ReserveContributionRequestPaymentParty, error) {
+	var rcrpp models.ReserveContributionRequestPaymentParty
+	if err := r.db.Where("ext_id = ?", extID).First(&rcrpp).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "r.db.First")
+	}
+	return &rcrpp, nil
+}
+
 func (r *Reserve) FindAllReserveContributionRequestPaymentParty(filter *map[string]interface{}) ([]*models.ReserveContributionRequestPaymentParty, error) {
 	var rcrpps []*models.ReserveContributionRequestPaymentParty
 

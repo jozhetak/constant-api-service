@@ -39,17 +39,6 @@ func (r *Reserve) FindReserveContributionRequestByID(id int) (*models.ReserveCon
 	return &rcr, nil
 }
 
-func (r *Reserve) FindReserveContributionRequestByExtID(extID string) (*models.ReserveContributionRequest, error) {
-	var rcr models.ReserveContributionRequest
-	if err := r.db.Where("ext_id = ?", extID).First(&rcr).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, nil
-		}
-		return nil, errors.Wrap(err, "r.db.First")
-	}
-	return &rcr, nil
-}
-
 func (r *Reserve) FindAllReserveContributionRequest(filter *map[string]interface{}, page int, limit int) ([]*models.ReserveContributionRequest, error) {
 	var (
 		rcrs   []*models.ReserveContributionRequest

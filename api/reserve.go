@@ -8,7 +8,6 @@ import (
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service"
-	"github.com/pkg/errors"
 	"go.uber.org/zap"
 )
 
@@ -20,7 +19,7 @@ func (s *Server) GetReserveParty(c *gin.Context) {
 		Name:     "Prime Trust",
 		IsActive: true,
 	})
-	/*list = append(list, models.ReserseParty{
+	/*  list = append(list, models.ReserseParty{
 		ID:       models.ReservePartyEth,
 		Name:     "Ethereum",
 		IsActive: true,
@@ -30,10 +29,6 @@ func (s *Server) GetReserveParty(c *gin.Context) {
 
 // Create a request reserve with related party
 func (s *Server) CreateContribution(c *gin.Context) {
-	// TODO
-	// Validate request
-	// TODO
-
 	user, err := s.userFromContext(c)
 	if err != nil {
 		s.logger.Error("s.userFromContext", zap.Error(err))
@@ -59,18 +54,8 @@ func (s *Server) CreateContribution(c *gin.Context) {
 
 // Get detail data of request reserve
 func (s *Server) GetContribution(c *gin.Context) {
-	user, err := s.userFromContext(c)
-	if err != nil {
-		s.logger.Error("s.userFromContext", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
-		return
-	}
-
-	id := c.Param("id")
-	idi, _ := strconv.Atoi(id)
-
-	contribution, err := s.reserveSvc.GetContribution(user, idi)
-
+	id, _ := strconv.Atoi(c.Param("id"))
+	contribution, err := s.reserveSvc.GetContribution(id)
 	if err != nil {
 		c.JSON(http.StatusOK, serializers.Resp{Error: err})
 		return
@@ -88,36 +73,24 @@ func (s *Server) ContributionHistory(c *gin.Context) {
 		return
 	}
 
-	var (
-		page  = c.DefaultQuery("page", "1")
-		limit = c.DefaultQuery("limit", "10")
-	)
+	page, limit := s.pagingFromContext(c)
 
-	pageI, _ := strconv.Atoi(page)
-	limitI, _ := strconv.Atoi(limit)
+	filter := map[string]interface{}{
+		"UserID": user.ID,
+	}
 
-	var filter map[string]interface{}
-
-	contributions, err := s.reserveSvc.GetContributions(user, &filter, pageI, limitI)
-	switch cErr := errors.Cause(err); cErr {
-	case service.ErrInvalidBorrowState, service.ErrInvalidLimit, service.ErrInvalidPage:
-		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
-	case nil:
-		c.JSON(http.StatusOK, serializers.Resp{Result: contributions})
-	default:
+	contributions, err := s.reserveSvc.GetContributions(&filter, page, limit)
+	if err != nil {
 		s.logger.Error("s.reserveSvc", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
 	}
+
+	c.JSON(http.StatusOK, serializers.Resp{Result: contributions})
 }
 
 // Create a return reserve request with related party
 func (s *Server) CreateDisbursement(c *gin.Context) {
-	// TODO
-	s.reserveSvc.CreateDisbursement(&serializers.ReserveDisbursementRequest{})
-}
-
-// Get detail data of return request reserve
-func (s *Server) GetDisbursement(c *gin.Context) {
 	user, err := s.userFromContext(c)
 	if err != nil {
 		s.logger.Error("s.userFromContext", zap.Error(err))
@@ -125,11 +98,26 @@ func (s *Server) GetDisbursement(c *gin.Context) {
 		return
 	}
 
-	id := c.Param("id")
-	idi, _ := strconv.Atoi(id)
+	var req serializers.ReserveDisbursementRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
+		return
+	}
 
-	disbursement, err := s.reserveSvc.GetDisbursement(user, idi)
+	disbursement, err := s.reserveSvc.CreateDisbursement(user, &req)
 
+	if err != nil {
+		c.JSON(http.StatusOK, serializers.Resp{Error: err})
+		return
+	}
+
+	c.JSON(http.StatusOK, serializers.Resp{Result: disbursement, Error: nil})
+}
+
+// Get detail data of return request reserve
+func (s *Server) GetDisbursement(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	disbursement, err := s.reserveSvc.GetDisbursement(id)
 	if err != nil {
 		c.JSON(http.StatusOK, serializers.Resp{Error: err})
 		return
@@ -146,30 +134,25 @@ func (s *Server) DisbursementHistory(c *gin.Context) {
 		return
 	}
 
-	var (
-		page  = c.DefaultQuery("page", "1")
-		limit = c.DefaultQuery("limit", "10")
-	)
-	var filter map[string]interface{}
+	page, limit := s.pagingFromContext(c)
 
-	pageI, _ := strconv.Atoi(page)
-	limitI, _ := strconv.Atoi(limit)
-
-	disbursements, err := s.reserveSvc.GetDisbursements(user, &filter, limitI, pageI)
-	switch cErr := errors.Cause(err); cErr {
-	case service.ErrInvalidBorrowState, service.ErrInvalidLimit, service.ErrInvalidPage:
-		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
-	case nil:
-		c.JSON(http.StatusOK, serializers.Resp{Result: disbursements})
-	default:
+	filter := map[string]interface{}{
+		"UserID": user.ID,
+	}
+	disbursements, err := s.reserveSvc.GetDisbursements(&filter, limit, page)
+	if err != nil {
 		s.logger.Error("s.reserveSvc", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
 	}
+	c.JSON(http.StatusOK, serializers.Resp{Result: disbursements})
 }
 
 func (s *Server) PrimetrustWebHook(c *gin.Context) {
-	// TODO
-	// get request and update data for payment party
-	// call blockchain network to for contribution case
-	s.reserveSvc.PrimetrustWebHook(nil)
+	var req serializers.PrimetrustChangedRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		return
+	}
+	s.reserveSvc.PrimetrustWebHook(&req)
+	return
 }

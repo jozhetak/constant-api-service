@@ -2,6 +2,10 @@ package models
 
 import "github.com/mongodb/mongo-go-driver/bson/decimal"
 
+const (
+	DisbursementType = "disbursements"
+)
+
 type DisbursementAttributes struct {
 	ID                string                  `json:"id,omitempty"`
 	AccountID         string                  `json:"account-id"`

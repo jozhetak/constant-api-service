@@ -123,29 +123,17 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 	return rcr, nil
 }
 
-func (self *ReserveService) GetContribution(u *models.User, id int) (*models.ReserveContributionRequest, error) {
+func (self *ReserveService) GetContribution(id int) (*models.ReserveContributionRequest, error) {
 	rcr, err := self.r.FindReserveContributionRequestByID(id)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if rcr.UserID != u.ID {
-		return nil, nil
-	}
-
 	return rcr, nil
 }
 
-func (self *ReserveService) GetContributions(u *models.User, filter *map[string]interface{}, page, limit int) ([]*models.ReserveContributionRequest, error) {
-	if filter != nil {
-		(*filter)["UserID"] = u.ID
-	} else {
-		filter = &map[string]interface{}{
-			"UserID": u.ID,
-		}
-	}
-
+func (self *ReserveService) GetContributions(filter *map[string]interface{}, page, limit int) ([]*models.ReserveContributionRequest, error) {
 	rcrs, err := self.r.FindAllReserveContributionRequest(filter, page, limit)
 	if err != nil {
 		return nil, err
@@ -154,38 +142,27 @@ func (self *ReserveService) GetContributions(u *models.User, filter *map[string]
 	return rcrs, nil
 }
 
-func (self *ReserveService) CreateDisbursement(req *serializers.ReserveDisbursementRequest) {
+func (self *ReserveService) CreateDisbursement(u *models.User, req *serializers.ReserveDisbursementRequest) (*models.ReserveDisbursementRequest, error) {
 	// 1. Validate ReserveDisbursementRequest in request
 	// 2. insert db ReserveDisbursementRequest
 	// 3. insert db ReserveDisbursementRequestPaymentParty
 	// 6. call blockchain network to burn constant
 	// 4. call related party: prime trust, eth ... and wait for data
 	// 5. update data ReserveContributionRequestPaymentParty
+	return nil, nil
 }
 
-func (self *ReserveService) GetDisbursement(u *models.User, id int) (*models.ReserveDisbursementRequest, error) {
+func (self *ReserveService) GetDisbursement(id int) (*models.ReserveDisbursementRequest, error) {
 	rdr, err := self.r.FindReserveDisbursementRequestByID(id)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if rdr.UserID != u.ID {
-		return nil, nil
-	}
-
 	return rdr, nil
 }
 
-func (self *ReserveService) GetDisbursements(u *models.User, filter *map[string]interface{}, page, limit int) ([]*models.ReserveDisbursementRequest, error) {
-	if filter != nil {
-		(*filter)["UserID"] = u.ID
-	} else {
-		filter = &map[string]interface{}{
-			"UserID": u.ID,
-		}
-	}
-
+func (self *ReserveService) GetDisbursements(filter *map[string]interface{}, page, limit int) ([]*models.ReserveDisbursementRequest, error) {
 	rdrs, err := self.r.FindAllReserveDisbursementRequest(filter, page, limit)
 	if err != nil {
 		return nil, err
@@ -194,7 +171,78 @@ func (self *ReserveService) GetDisbursements(u *models.User, filter *map[string]
 	return rdrs, nil
 }
 
-func (self *ReserveService) PrimetrustWebHook(params interface{}) {
+func (self *ReserveService) PrimetrustWebHook(req *serializers.PrimetrustChangedRequest) error {
+	if data, ok := req.Data["attributes"]; ok {
+		status, exist := data.(map[string]interface{})["status"]
+		if exist {
+			if req.ResourceType == thirdpartymodels.ContributionType {
+				status := models.GetContributionPaymentPartyState(status.(string))
+				if status != models.ReserveContributionRequestPaymentPartyStatusInvalid {
+					rcrpp, err := self.r.FindReserveContributionRequestPaymentPartyByExtID(req.ResourceID)
+					if err != nil {
+						return err
+					}
+
+					rcrpp.Status = status
+					_, err = self.r.UpdateReserveContributionRequestPaymentParty(rcrpp)
+
+					if err != nil {
+						return err
+					}
+
+					switch rcrpp.Status {
+					case models.ReserveContributionRequestPaymentPartyStatusSettled:
+						// TODO call blockchain send coin
+
+						// update reserve contribution status
+						rcr, err := self.r.FindReserveContributionRequestByID(rcrpp.ReserveContributionRequestID)
+						if err != nil {
+							return err
+						}
+
+						rcr.Status = models.ReserveContributionRequestStatusFilled
+						_, err = self.r.UpdateReserveContributionRequest(rcr)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			} else if req.ResourceType == thirdpartymodels.DisbursementType {
+				status := models.GetDisbursementPaymentPartyState(status.(string))
+				if status != models.ReserveDisbursementRequestPaymentPartyStatusInvalid {
+					rdrpp, err := self.r.FindReserveDisbursementRequestPaymentPartyByExtID(req.ResourceID)
+					if err != nil {
+						return err
+					}
+
+					rdrpp.Status = status
+					_, err = self.r.UpdateReserveDisbursementRequestPaymentParty(rdrpp)
+
+					if err != nil {
+						return err
+					}
+
+					switch rdrpp.Status {
+					case models.ReserveDisbursementRequestPaymentPartyStatusSettled:
+						// TODO call blockchain burn coin
+
+						// update reserve contribution status
+						rdr, err := self.r.FindReserveDisbursementRequestByID(rdrpp.ReserveDisbursementRequestID)
+						if err != nil {
+							return err
+						}
+
+						rdr.Status = models.ReserveDisbursementRequestStatusFilled
+						_, err = self.r.UpdateReserveDisbursementRequest(rdr)
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
 	/*
 		{
 		      "id": "151f0371-d16d-49b4-bc4c-c13788432a58",

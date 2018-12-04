@@ -2,11 +2,11 @@ package models
 
 import "github.com/jinzhu/gorm"
 
-type DisbursementRequestStatus int
+type ReserveDisbursementRequestStatus int
 
 const (
-	DisbursementRequestStatusPending DisbursementRequestStatus = iota
-	DisbursementRequestStatusFilled
+	ReserveDisbursementRequestStatusPending ReserveDisbursementRequestStatus = iota
+	ReserveDisbursementRequestStatusFilled
 )
 
 type ReserveDisbursementRequest struct {
@@ -16,7 +16,7 @@ type ReserveDisbursementRequest struct {
 	UserID uint
 
 	PartyID uint
-	Status  DisbursementRequestStatus
+	Status  ReserveDisbursementRequestStatus
 	TxID    string
 }
 
