@@ -93,7 +93,7 @@ func (server *Server) CreateProposal(c *gin.Context) {
 		return
 	}
 
-	var req serializers.VotingProposalRequest
+	var req serializers.RegisterProposalRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
 		return
