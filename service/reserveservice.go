@@ -210,6 +210,8 @@ func (self *ReserveService) CreateDisbursement(u *models.User, req *serializers.
 		return nil, err
 	}
 
+	// 3. TODO call blockchain network to burn constant & update tx id
+
 	// 4. call related party: prime trust, eth ... and wait for data
 	switch rdr.PartyID {
 	case models.ReservePartyPrimeTrust:
@@ -279,7 +281,6 @@ func (self *ReserveService) CreateDisbursement(u *models.User, req *serializers.
 		}
 	}
 
-	// 5. call blockchain network to burn constant
 	return rdr, nil
 }
 
@@ -352,39 +353,42 @@ func (self *ReserveService) PrimetrustWebHook(req *serializers.PrimetrustChanged
 						}
 					}
 				}
-			} else if req.ResourceType == thirdpartymodels.DisbursementType {
-				status := models.GetDisbursementPaymentPartyState(status.(string))
-				if status != models.ReserveDisbursementRequestPaymentPartyStatusInvalid {
-					rdrpp, err := self.r.FindReserveDisbursementRequestPaymentPartyByExtID(req.ResourceID)
-					if err != nil {
-						return err
-					}
-
-					rdrpp.Status = status
-					_, err = self.r.UpdateReserveDisbursementRequestPaymentParty(rdrpp)
-
-					if err != nil {
-						return err
-					}
-
-					switch rdrpp.Status {
-					case models.ReserveDisbursementRequestPaymentPartyStatusSettled:
-						// TODO call blockchain burn coin
-
-						// update reserve contribution status
-						rdr, err := self.r.FindReserveDisbursementRequestByID(rdrpp.ReserveDisbursementRequestID)
+			}
+			/*
+				else if req.ResourceType == thirdpartymodels.DisbursementType {
+					status := models.GetDisbursementPaymentPartyState(status.(string))
+					if status != models.ReserveDisbursementRequestPaymentPartyStatusInvalid {
+						rdrpp, err := self.r.FindReserveDisbursementRequestPaymentPartyByExtID(req.ResourceID)
 						if err != nil {
 							return err
 						}
 
-						rdr.Status = models.ReserveDisbursementRequestStatusFilled
-						_, err = self.r.UpdateReserveDisbursementRequest(rdr)
+						rdrpp.Status = status
+						_, err = self.r.UpdateReserveDisbursementRequestPaymentParty(rdrpp)
+
 						if err != nil {
 							return err
+						}
+
+						switch rdrpp.Status {
+						case models.ReserveDisbursementRequestPaymentPartyStatusSettled:
+							// todo call blockchain burn coin
+
+							// update reserve contribution status
+							rdr, err := self.r.FindReserveDisbursementRequestByID(rdrpp.ReserveDisbursementRequestID)
+							if err != nil {
+								return err
+							}
+
+							rdr.Status = models.ReserveDisbursementRequestStatusFilled
+							_, err = self.r.UpdateReserveDisbursementRequest(rdr)
+							if err != nil {
+								return err
+							}
 						}
 					}
 				}
-			}
+			*/
 		}
 	}
 	return nil
