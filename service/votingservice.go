@@ -299,7 +299,6 @@ func (self *VotingService) VoteProposal(u *models.User, req *serializers.VotingP
 		if p == nil {
 			return nil, ErrInvalidProposal
 		}
-		fmt.Printf("p = %+v\n", p)
 		v, err := self.votingDao.CreateVotingProposalDCBVote(&models.VotingProposalDCBVote{
 			Voter:             u,
 			VotingProposalDCB: p,
@@ -308,7 +307,6 @@ func (self *VotingService) VoteProposal(u *models.User, req *serializers.VotingP
 		if err != nil {
 			return nil, errors.Wrap(err, "self.votingDao.CreateVotingProposalDCBVote")
 		}
-		fmt.Printf("v = %+v\n", v)
 		return serializers.NewVotingDCBProposal(v), nil
 	case 2: // GOV
 		p, err := self.votingDao.GetGOVProposal(req.ProposalID)
