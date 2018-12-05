@@ -167,18 +167,28 @@ func (server *Server) GetProposal(c *gin.Context) {
 }
 
 func (server *Server) VoteProposal(c *gin.Context) {
-	// TODO
+	user, err := server.userFromContext(c)
+	if err != nil {
+		server.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
 	var req serializers.VotingProposalRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
 		return
 	}
 
-	err := server.votingSvc.VoteProposal()
-	if err != nil {
+	v, err := server.votingSvc.VoteProposal(user, &req)
+	switch cErr := errors.Cause(err); cErr {
+	case service.ErrInvalidProposal:
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
+	case nil:
+		c.JSON(http.StatusOK, serializers.Resp{Result: v})
+	default:
 		server.logger.Error("s.voting.VoteProposal", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
-		return
 	}
 }
 

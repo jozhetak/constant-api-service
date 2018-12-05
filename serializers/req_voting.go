@@ -24,7 +24,7 @@ type RegisterProposalRequest struct {
 
 type VotingProposalRequest struct {
 	BoardType  int    `json:"BoardType"`
-	ProposalID int    `json:"CandidateID"`
+	ProposalID int    `json:"ProposalID"`
 	VoteAmount uint64 `json:"VoteAmount"`
 }
 

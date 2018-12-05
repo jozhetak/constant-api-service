@@ -144,7 +144,6 @@ func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serialize
 }
 
 func (self *VotingService) CreateProposal(user *models.User, request *serializers.RegisterProposalRequest) (models.ProposalInterface, error) {
-	// TODO
 	switch request.Type {
 	case 1: // DCB
 		// TODO call blockchain network rpc function
@@ -287,51 +286,48 @@ func (self *VotingService) GetProposal(id, boardType string) (models.ProposalInt
 	}
 }
 
-func (self *VotingService) VoteProposal() error {
+func (self *VotingService) VoteProposal(u *models.User, req *serializers.VotingProposalRequest) (*serializers.VotingProposalResp, error) {
 	// TODO call blockchain network
 	// TODO waiting tx in block
 	// Update DB
-	return nil
-	// candidate, err := self.votingDao.FindCandidateByID(req.CandidateID)
-	// if err != nil {
-	//         return nil, errors.Wrap(err, "self.votingDao.FindCandidateByID")
-	// }
-	// if candidate == nil {
-	//         return nil, ErrInvalidArgument
-	// }
-	//
-	// var txID string
-	// switch models.BoardCandidateType(req.BoardType) {
-	// case models.DCB:
-	//         txID, err = self.blockchainService.CreateAndSendVoteDCBBoardTransaction(voter.PrivKey, req.VoteAmount)
-	// case models.GOV:
-	//         txID, err = self.blockchainService.CreateAndSendVoteGOVBoardTransaction(voter.PrivKey, req.VoteAmount)
-	// default:
-	//         err = ErrInvalidBoardType
-	// }
-	// if err != nil {
-	//         return nil, errors.Wrap(err, "self.blockchainService.CreateAndSendVoteDCBBoardTransaction")
-	// }
-	//
-	// // tx, err := GetBlockchainTxByHash(txID, 3, self.blockchainService)
-	// tx := &blockchain.TransactionDetail{}
-	// if err != nil {
-	//         return nil, errors.Wrap(err, "GetBlockchainTxByHash")
-	// }
-	// if tx == nil {
-	//         return nil, errors.Errorf("couldn't get tx by tx ID: %q", txID)
-	// }
-	// vote, err := self.votingDao.CreateVotingBoardVote(&models.VotingBoardVote{
-	//         BoardType:            req.BoardType,
-	//         Voter:                voter,
-	//         VotingBoardCandidate: candidate,
-	//         TxID:                 txID,
-	// })
-	// if err != nil {
-	//         return nil, errors.Wrap(err, "self.votingDao.CreateVotingBoardVote")
-	// }
-	//
-	// return serializers.NewVotingBoardVote(vote), nil
+	switch req.BoardType {
+	case 1: // DCB
+		p, err := self.votingDao.GetDCBProposal(req.ProposalID)
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.GetDCBProposal")
+		}
+		if p == nil {
+			return nil, ErrInvalidProposal
+		}
+		v, err := self.votingDao.CreateVotingProposalDCBVote(&models.VotingProposalDCBVote{
+			Voter:             u,
+			VotingProposalDCB: p,
+			TxID:              "", // get from above call
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.CreateVotingProposalDCBVote")
+		}
+		return serializers.NewVotingDCBProposal(v), nil
+	case 2: // GOV
+		p, err := self.votingDao.GetGOVProposal(req.ProposalID)
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.GetDCBProposal")
+		}
+		if p == nil {
+			return nil, ErrInvalidProposal
+		}
+		v, err := self.votingDao.CreateVotingProposalGOVVote(&models.VotingProposalGOVVote{
+			Voter:             u,
+			VotingProposalGOV: p,
+			TxID:              "", // get from above call
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.CreateVotingProposalDCBVote")
+		}
+		return serializers.NewVotingGOVProposal(v), nil
+	default:
+		return nil, ErrInvalidBoardType
+	}
 }
 
 func (self *VotingService) GetBondTypes() (interface{}, error) {

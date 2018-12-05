@@ -85,3 +85,26 @@ func NewProposalGOVResp(data *models.VotingProposalGOV) *ProposalResp {
 	result.User = NewUserResp(*data.User)
 	return result
 }
+
+// Proposal vote
+type VotingProposalResp struct {
+	Voter        *UserResp     `json:"Voter"`
+	TxID         string        `json:"TxID"`
+	ProposalResp *ProposalResp `json:"ProposalResp"`
+}
+
+func NewVotingDCBProposal(data *models.VotingProposalDCBVote) *VotingProposalResp {
+	return &VotingProposalResp{
+		Voter:        NewUserResp(*data.Voter),
+		TxID:         data.TxID,
+		ProposalResp: NewProposalDCBResp(data.VotingProposalDCB),
+	}
+}
+
+func NewVotingGOVProposal(data *models.VotingProposalGOVVote) *VotingProposalResp {
+	return &VotingProposalResp{
+		Voter:        NewUserResp(*data.Voter),
+		TxID:         data.TxID,
+		ProposalResp: NewProposalGOVResp(data.VotingProposalGOV),
+	}
+}
