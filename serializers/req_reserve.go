@@ -18,15 +18,16 @@ const (
 )
 
 type ReserveContributionRequest struct {
-	PartyID        int         `json:"PartyID"`
+	PartyID        uint        `json:"PartyID"`
 	PaymentAddress string      `json:"PaymentAddress"`
 	PaymentForm    PaymentForm `json:"PaymentForm"`
 	Amount         float64     `json:"Amount"`
 }
 
 type ReserveDisbursementRequest struct {
-	PartyID     int         `json:"PartyID"`
+	PartyID     uint        `json:"PartyID"`
 	PaymentForm PaymentForm `json:"PaymentForm"`
+	Amount      float64     `json:"Amount"`
 }
 
 type PaymentForm struct {

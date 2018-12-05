@@ -1,7 +1,5 @@
 package models
 
-import "github.com/mongodb/mongo-go-driver/bson/decimal"
-
 const (
 	DisbursementType = "disbursements"
 )
@@ -9,7 +7,7 @@ const (
 type DisbursementAttributes struct {
 	ID                string                  `json:"id,omitempty"`
 	AccountID         string                  `json:"account-id"`
-	Amount            decimal.Decimal128      `json:"amount"`
+	Amount            float64                 `json:"amount"`
 	CustomerReference string                  `json:"customer-reference"`
 	Description       string                  `json:"description"`
 	PaymentMethodID   string                  `json:"payment-method-id"`

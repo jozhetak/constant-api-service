@@ -66,7 +66,11 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 	})
 
 	if err != nil {
-		self.r.DeleteReserveContributionRequest(rcr)
+		delErr := self.r.DeleteReserveContributionRequest(rcr)
+		if delErr != nil {
+			fmt.Println("ReserveService Delete Error", delErr.Error())
+		}
+
 		return nil, err
 	}
 
@@ -109,8 +113,14 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 		response, err := primetrust.CreateContribution(&contribution)
 
 		if err != nil {
-			self.r.DeleteReserveContributionRequest(rcr)
-			self.r.DeleteReserveContributionRequestPaymentParty(rcrpp)
+			delErr := self.r.DeleteReserveContributionRequestPaymentParty(rcrpp)
+			if delErr != nil {
+				fmt.Println("ReserveService Delete Error", delErr.Error())
+			}
+			delErr2 := self.r.DeleteReserveContributionRequest(rcr)
+			if delErr2 != nil {
+				fmt.Println("ReserveService Delete Error", delErr2.Error())
+			}
 			return nil, err
 		}
 
@@ -118,6 +128,19 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 		rcrpp.ExtResponseData = string(extResponseData)
 
 		rcrpp.ExtID = response.Data.ID
+
+		_, err = self.r.UpdateReserveContributionRequestPaymentParty(rcrpp)
+		if err != nil {
+			delErr := self.r.DeleteReserveContributionRequestPaymentParty(rcrpp)
+			if delErr != nil {
+				fmt.Println("ReserveService Delete Error", delErr.Error())
+			}
+			delErr2 := self.r.DeleteReserveContributionRequest(rcr)
+			if delErr2 != nil {
+				fmt.Println("ReserveService Delete Error", delErr2.Error())
+			}
+			return nil, err
+		}
 	}
 
 	return rcr, nil
@@ -144,12 +167,120 @@ func (self *ReserveService) GetContributions(filter *map[string]interface{}, pag
 
 func (self *ReserveService) CreateDisbursement(u *models.User, req *serializers.ReserveDisbursementRequest) (*models.ReserveDisbursementRequest, error) {
 	// 1. Validate ReserveDisbursementRequest in request
+	if req.PaymentForm.ContactEmail == "" || req.PaymentForm.ContactName == "" {
+		return nil, ErrInvalidArgument
+	}
+
+	switch req.PaymentForm.PaymentType {
+	case serializers.PaymentTypeAch:
+		if req.PaymentForm.BankAccountName == "" || req.PaymentForm.BankAccountType == "" || req.PaymentForm.BankName == "" {
+			return nil, ErrInvalidArgument
+		}
+	case serializers.PaymentTypeCreditCard:
+		if req.PaymentForm.CreditCardCvv == "" || req.PaymentForm.CreditCardExpirationDate == "" || req.PaymentForm.CreditCardNumber == "" {
+			return nil, ErrInvalidArgument
+		}
+	}
+
 	// 2. insert db ReserveDisbursementRequest
+	rdr, err := self.r.CreateReserveDisbursementRequest(&models.ReserveDisbursementRequest{
+		User:    u,
+		PartyID: req.PartyID,
+		Status:  models.ReserveDisbursementRequestStatusPending,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
 	// 3. insert db ReserveDisbursementRequestPaymentParty
-	// 6. call blockchain network to burn constant
+	requestData, _ := json.Marshal(req.PaymentForm)
+	rdrpp, err := self.r.CreateReserveDisbursementRequestPaymentParty(&models.ReserveDisbursementRequestPaymentParty{
+		ReserveDisbursementRequest: rdr,
+		RequestData:                string(requestData),
+		Amount:                     req.Amount,
+		Status:                     models.ReserveDisbursementRequestPaymentPartyStatusPending,
+	})
+
+	if err != nil {
+		delErr := self.r.DeleteReserveDisbursementRequest(rdr)
+		if delErr != nil {
+			fmt.Println("ReserveService Delete Error", delErr.Error())
+		}
+		return nil, err
+	}
+
 	// 4. call related party: prime trust, eth ... and wait for data
-	// 5. update data ReserveContributionRequestPaymentParty
-	return nil, nil
+	switch rdr.PartyID {
+	case models.ReservePartyPrimeTrust:
+		disbursement := thirdpartymodels.Disbursement{
+			Data: thirdpartymodels.DisbursementData{
+				Type: thirdpartymodels.DisbursementType,
+			},
+		}
+
+		disbursementAttributes := thirdpartymodels.DisbursementAttributes{
+			AccountID:    "", //todo get from config
+			Amount:       rdrpp.Amount,
+			ContactEmail: u.Email,
+			ContactName:  fmt.Sprintf("%s %s", u.FirstName, u.LastName),
+			PaymentMethod: thirdpartymodels.PaymentMethodAttributes{
+				PaymentType:              string(req.PaymentForm.PaymentType),
+				RoutingNumber:            req.PaymentForm.RoutingNumber,
+				Last4:                    req.PaymentForm.Last4,
+				AchCheckType:             string(req.PaymentForm.AchCheckType),
+				BankAccountName:          req.PaymentForm.BankAccountName,
+				BankAccountType:          req.PaymentForm.BankAccountType,
+				BankName:                 req.PaymentForm.BankName,
+				CreditCardCvv:            req.PaymentForm.CreditCardCvv,
+				CreditCardExpirationDate: req.PaymentForm.CreditCardExpirationDate,
+				CreditCardNumber:         req.PaymentForm.CreditCardNumber,
+				CreditCardName:           req.PaymentForm.CreditCardName,
+				CreditCardPostalCode:     req.PaymentForm.CreditCardPostalCode,
+				CreditCardType:           req.PaymentForm.CreditCardType,
+			},
+		}
+
+		disbursement.Data.Attributes = disbursementAttributes
+
+		extRequestData, _ := json.Marshal(disbursement)
+
+		rdrpp.ExtRequestData = string(extRequestData)
+		response, err := primetrust.CreateDisbursement(&disbursement)
+
+		if err != nil {
+			delErr := self.r.DeleteReserveDisbursementRequestPaymentParty(rdrpp)
+			if delErr != nil {
+				fmt.Println("ReserveService Delete Error", delErr.Error())
+			}
+			delErr2 := self.r.DeleteReserveDisbursementRequest(rdr)
+			if delErr2 != nil {
+				fmt.Println("ReserveService Delete Error", delErr2.Error())
+			}
+			return nil, err
+		}
+
+		extResponseData, _ := json.Marshal(response)
+		rdrpp.ExtResponseData = string(extResponseData)
+
+		rdrpp.ExtID = response.Data.ID
+
+		_, err = self.r.UpdateReserveDisbursementRequestPaymentParty(rdrpp)
+		if err != nil {
+			delErr := self.r.DeleteReserveDisbursementRequestPaymentParty(rdrpp)
+			if delErr != nil {
+				fmt.Println("ReserveService Delete Error", delErr.Error())
+			}
+			delErr2 := self.r.DeleteReserveDisbursementRequest(rdr)
+			if delErr2 != nil {
+				fmt.Println("ReserveService Delete Error", delErr2.Error())
+			}
+			return nil, err
+		}
+	}
+
+	// 5. call blockchain network to burn constant
+	return rdr, nil
 }
 
 func (self *ReserveService) GetDisbursement(id int) (*models.ReserveDisbursementRequest, error) {
@@ -172,6 +303,20 @@ func (self *ReserveService) GetDisbursements(filter *map[string]interface{}, pag
 }
 
 func (self *ReserveService) PrimetrustWebHook(req *serializers.PrimetrustChangedRequest) error {
+	/*
+		{
+		      "id": "151f0371-d16d-49b4-bc4c-c13788432a58",
+		      "account_id": "1ae0e833-b07b-4d95-a32f-16c86bed539d",
+		      "action": "update",
+		      "data": {
+		        "attributes": {
+		          "status": "settled"
+		        }
+		      },
+		      "resource_id": "fbd8bf30-552c-4d2d-b21c-c78dbc6b05d9",
+		      "resource_type": "contributions"
+		}
+	*/
 	if data, ok := req.Data["attributes"]; ok {
 		status, exist := data.(map[string]interface{})["status"]
 		if exist {
@@ -192,7 +337,7 @@ func (self *ReserveService) PrimetrustWebHook(req *serializers.PrimetrustChanged
 
 					switch rcrpp.Status {
 					case models.ReserveContributionRequestPaymentPartyStatusSettled:
-						// TODO call blockchain send coin
+						// TODO call blockchain send coin & update tx id
 
 						// update reserve contribution status
 						rcr, err := self.r.FindReserveContributionRequestByID(rcrpp.ReserveContributionRequestID)
@@ -243,18 +388,4 @@ func (self *ReserveService) PrimetrustWebHook(req *serializers.PrimetrustChanged
 		}
 	}
 	return nil
-	/*
-		{
-		      "id": "151f0371-d16d-49b4-bc4c-c13788432a58",
-		      "account_id": "1ae0e833-b07b-4d95-a32f-16c86bed539d",
-		      "action": "update",
-		      "data": {
-		        "attributes": {
-		          "status": "settled"
-		        }
-		      },
-		      "resource_id": "fbd8bf30-552c-4d2d-b21c-c78dbc6b05d9",
-		      "resource_type": "contributions"
-		}
-	*/
 }
