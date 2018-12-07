@@ -13,6 +13,9 @@ type VotingBoardCandidateResp struct {
 }
 
 func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoardCandidateResp {
+	if data == nil {
+		return nil
+	}
 	result := VotingBoardCandidateResp{
 		GOV:     data.GOV,
 		CMB:     data.CMB,

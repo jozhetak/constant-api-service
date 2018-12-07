@@ -113,15 +113,15 @@ func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serialize
 	var txID string
 	switch models.BoardCandidateType(req.BoardType) {
 	case models.DCB:
-		txID, err = self.blockchainService.CreateAndSendVoteDCBBoardTransaction(voter.PrivKey, req.VoteAmount)
+		// txID, err = self.blockchainService.CreateAndSendVoteDCBBoardTransaction(voter.PrivKey, req.VoteAmount)
 	case models.GOV:
-		txID, err = self.blockchainService.CreateAndSendVoteGOVBoardTransaction(voter.PrivKey, req.VoteAmount)
+		// txID, err = self.blockchainService.CreateAndSendVoteGOVBoardTransaction(voter.PrivKey, req.VoteAmount)
 	default:
 		err = ErrInvalidBoardType
 	}
-	if err != nil {
-		return nil, errors.Wrap(err, "self.blockchainService.CreateAndSendVoteDCBBoardTransaction")
-	}
+	// if err != nil {
+	//         return nil, errors.Wrap(err, "self.blockchainService.CreateAndSendVoteDCBBoardTransaction")
+	// }
 
 	// tx, err := GetBlockchainTxByHash(txID, 3, self.blockchainService)
 	tx := &blockchain.TransactionDetail{}
