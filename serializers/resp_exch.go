@@ -1,7 +1,7 @@
 package serializers
 
 type MarketResp struct {
-	ID                   uint   `json:"id"`
+	ID                   uint   `json:"ID"`
 	BaseCurrency         string `json:"BaseCurrency"`
 	QuoteCurrency        string `json:"QuoteCurrency"`
 	DisplayName          string `json:"DisplayName"`

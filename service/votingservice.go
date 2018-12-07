@@ -369,3 +369,14 @@ func (self *VotingService) GetDCBParams() (*serializers.VotingProposalDCBRequest
 
 	return &result, nil
 }
+
+func (self *VotingService) GetUserCandidate(u *models.User) (*serializers.VotingBoardCandidateResp, error) {
+	c, err := self.votingDao.FindCandidateByUser(u)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.FindCandidateByUser")
+	}
+	if c == nil {
+		return nil, nil
+	}
+	return serializers.NewVotingBoardCandidateResp(c), nil
+}

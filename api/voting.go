@@ -196,3 +196,20 @@ func (server *Server) GetBondTypes(c *gin.Context) {
 	result, err := server.votingSvc.GetBondTypes()
 	c.JSON(http.StatusOK, serializers.Resp{Error: err, Result: result})
 }
+
+func (server *Server) GetUserCandidate(c *gin.Context) {
+	user, err := server.userFromContext(c)
+	if err != nil {
+		server.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
+	candidate, err := server.votingSvc.GetUserCandidate(user)
+	if err != nil {
+		server.logger.Error("s.voting.VoteProposal", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+	c.JSON(http.StatusOK, serializers.Resp{Result: candidate})
+}
