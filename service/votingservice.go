@@ -89,11 +89,12 @@ func (self *VotingService) GetCandidatesList(boardType int, paymentAddress strin
 		r.VoteNum = totalVote
 
 		// get balance of all token for every candidate
-		wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(l.User.PaymentAddress)
-		if err != nil {
-			return nil, errors.Wrap(err, "self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress")
-		}
-		r.User.WalletBalances = wallets
+		// wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(l.User.PaymentAddress)
+		// if err != nil {
+		//         return nil, errors.Wrap(err, "self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress")
+		// }
+		// r.User.WalletBalances = wallets
+		r.User.WalletBalances = nil
 
 		resp = append(resp, r)
 	}
