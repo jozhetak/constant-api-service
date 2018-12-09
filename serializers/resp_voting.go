@@ -1,6 +1,8 @@
 package serializers
 
-import "github.com/ninjadotorg/constant-api-service/models"
+import (
+	"github.com/ninjadotorg/constant-api-service/models"
+)
 
 type VotingBoardCandidateResp struct {
 	User    *UserResp `json:"User"`
@@ -11,6 +13,9 @@ type VotingBoardCandidateResp struct {
 }
 
 func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoardCandidateResp {
+	if data == nil {
+		return nil
+	}
 	result := VotingBoardCandidateResp{
 		GOV:     data.GOV,
 		CMB:     data.CMB,
@@ -56,9 +61,9 @@ func NewVotingBoardVote(v *models.VotingBoardVote) *VotingBoardVoteResp {
 
 // Proposal
 type ProposalResp struct {
-	User    UserResp `json:"User"`
-	UserID  int
-	VoteNum int `json:"VoteNum"`
+	ID      uint      `json:"ID"`
+	User    *UserResp `json:"User"`
+	VoteNum int       `json:"VoteNum"`
 
 	TxID string `json:"TxID"`
 	Data string `json:"Data"`
@@ -66,20 +71,43 @@ type ProposalResp struct {
 
 func NewProposalDCBResp(data *models.VotingProposalDCB) *ProposalResp {
 	result := &ProposalResp{
+		ID:      data.ID,
 		Data:    data.Data,
 		VoteNum: data.GetVoteNum(),
 	}
-	result.UserID = data.UserID
-	result.User = *(NewUserResp(*data.User))
+	result.User = NewUserResp(*data.User)
 	return result
 }
 
 func NewProposalGOVResp(data *models.VotingProposalGOV) *ProposalResp {
 	result := &ProposalResp{
+		ID:      data.ID,
 		Data:    data.Data,
 		VoteNum: data.GetVoteNum(),
 	}
-	result.UserID = data.UserID
-	result.User = *(NewUserResp(*data.User))
+	result.User = NewUserResp(*data.User)
 	return result
+}
+
+// Proposal vote
+type VotingProposalResp struct {
+	Voter        *UserResp     `json:"Voter"`
+	TxID         string        `json:"TxID"`
+	ProposalResp *ProposalResp `json:"ProposalResp"`
+}
+
+func NewVotingDCBProposal(data *models.VotingProposalDCBVote) *VotingProposalResp {
+	return &VotingProposalResp{
+		Voter:        NewUserResp(*data.Voter),
+		TxID:         data.TxID,
+		ProposalResp: NewProposalDCBResp(data.VotingProposalDCB),
+	}
+}
+
+func NewVotingGOVProposal(data *models.VotingProposalGOVVote) *VotingProposalResp {
+	return &VotingProposalResp{
+		Voter:        NewUserResp(*data.Voter),
+		TxID:         data.TxID,
+		ProposalResp: NewProposalGOVResp(data.VotingProposalGOV),
+	}
 }

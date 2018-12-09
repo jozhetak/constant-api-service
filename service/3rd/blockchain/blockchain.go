@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 
 	"github.com/pkg/errors"
 
@@ -135,6 +136,9 @@ func (b *Blockchain) post(args map[string]interface{}) ([]byte, error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
+	db, _ := httputil.DumpRequest(req, true)
+	fmt.Printf("string(db) = %+v\n", string(db))
+
 	resp, err := b.c.Do(req)
 	if err != nil {
 		return nil, errors.Wrapf(err, "b.c.Do: %q", req.URL.String())
@@ -154,8 +158,6 @@ func (b *Blockchain) blockchainAPI(method string, params interface{}) (interface
 	if err != nil {
 		return nil, errors.Wrap(err, "b.post")
 	}
-
-	fmt.Printf("string(body) = %+v\n", string(body))
 
 	var v interface{}
 	if err := json.Unmarshal(body, &v); err != nil {

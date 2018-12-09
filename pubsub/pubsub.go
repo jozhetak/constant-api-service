@@ -3,6 +3,7 @@ package pubsub
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	gcloud "cloud.google.com/go/pubsub"
 	"github.com/pkg/errors"
@@ -33,6 +34,8 @@ type Pubsub struct {
 }
 
 func New(c *gcloud.Client, exchangeDAO *exchange.Exchange, bc *blockchain.Blockchain, logger *zap.Logger, orderTopic, orderBookTopic, orderBookSubName string) *Pubsub {
+	fmt.Printf("orderTopic = %+v\n", orderTopic)
+	fmt.Printf("orderTopic = %+v\n", orderBookTopic)
 	ps := &Pubsub{
 		c:           c,
 		exchangeDAO: exchangeDAO,
@@ -127,12 +130,12 @@ func (p *Pubsub) handleOrderBookMsg(m []byte) error {
 		p.message <- j
 		return nil
 	case "match":
-		// var msg serializers.OrderBookMatchMsg
-		// if err := json.Unmarshal(j, &msg); err != nil {
-		//         return errors.Wrap(err, "json.Unmarshal")
-		// }
-		// return errors.Wrap(p.handleMatchOrderBook(&msg), "p.handleMatchOrderBook")
-		return nil
+		var msg serializers.OrderBookMatchMsg
+		if err := json.Unmarshal(j, &msg); err != nil {
+			return errors.Wrap(err, "json.Unmarshal")
+		}
+		return errors.Wrap(p.handleMatchOrderBook(&msg), "p.handleMatchOrderBook")
+		// return nil
 	default:
 		return errors.Errorf("unsuppoted type %s", body.Type)
 	}
@@ -166,7 +169,7 @@ func (p *Pubsub) makeTransaction(buyer, seller *models.Order) error {
 			},
 		})
 		if err != nil {
-			return errors.Wrap(err, "p.bc.Createandsendtransaction")
+			return errors.Wrap(err, "p.bc.CreateAndSendConstantTransaction")
 		}
 		tx, err := service.GetBlockchainTxByHash(txID, 3, p.bc)
 		if err != nil {

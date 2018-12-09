@@ -99,6 +99,9 @@ func (e *Exchange) GetLastPrice(symbol string, status *models.OrderStatus, side 
 	query = query.Order("exchange_orders.updated_at DESC").Limit(1).Select("price")
 
 	if err := query.Scan(&result).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return 0, nil
+		}
 		return 0, errors.Wrap(err, "e.db.Table")
 	}
 	return result.Price, nil

@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/ninjadotorg/constant-api-service/dao/voting"
 	"github.com/ninjadotorg/constant-api-service/models"
@@ -88,11 +89,12 @@ func (self *VotingService) GetCandidatesList(boardType int, paymentAddress strin
 		r.VoteNum = totalVote
 
 		// get balance of all token for every candidate
-		wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(l.User.PaymentAddress)
-		if err != nil {
-			return nil, errors.Wrap(err, "self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress")
-		}
-		r.User.WalletBalances = wallets
+		// wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(l.User.PaymentAddress)
+		// if err != nil {
+		//         return nil, errors.Wrap(err, "self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress")
+		// }
+		// r.User.WalletBalances = wallets
+		r.User.WalletBalances = nil
 
 		resp = append(resp, r)
 	}
@@ -111,15 +113,15 @@ func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serialize
 	var txID string
 	switch models.BoardCandidateType(req.BoardType) {
 	case models.DCB:
-		txID, err = self.blockchainService.CreateAndSendVoteDCBBoardTransaction(voter.PrivKey, req.VoteAmount)
+		// txID, err = self.blockchainService.CreateAndSendVoteDCBBoardTransaction(voter.PrivKey, req.VoteAmount)
 	case models.GOV:
-		txID, err = self.blockchainService.CreateAndSendVoteGOVBoardTransaction(voter.PrivKey, req.VoteAmount)
+		// txID, err = self.blockchainService.CreateAndSendVoteGOVBoardTransaction(voter.PrivKey, req.VoteAmount)
 	default:
-		err = errors.Errorf("unsupported board type: %v", req.BoardType)
+		err = ErrInvalidBoardType
 	}
-	if err != nil {
-		return nil, errors.Wrap(err, "self.blockchainService.CreateAndSendVoteDCBBoardTransaction")
-	}
+	// if err != nil {
+	//         return nil, errors.Wrap(err, "self.blockchainService.CreateAndSendVoteDCBBoardTransaction")
+	// }
 
 	// tx, err := GetBlockchainTxByHash(txID, 3, self.blockchainService)
 	tx := &blockchain.TransactionDetail{}
@@ -142,17 +144,15 @@ func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serialize
 	return serializers.NewVotingBoardVote(vote), nil
 }
 
-func (self *VotingService) CreateProposal(user *models.User, request *serializers.VotingProposalRequest) (models.ProposalInterface, error) {
-	// TODO
+func (self *VotingService) CreateProposal(user *models.User, request *serializers.RegisterProposalRequest) (models.ProposalInterface, error) {
 	switch request.Type {
 	case 1: // DCB
-		dcbParams := request.DCB
 		// TODO call blockchain network rpc function
 		// TODO waiting and check tx with blockchain network
-		dcbParamsStrByte, _ := json.MarshalIndent(dcbParams, "", "\t")
+		params, _ := json.Marshal(request.DCB)
 		proposal := &models.VotingProposalDCB{
 			User: user,
-			Data: string(dcbParamsStrByte),
+			Data: string(params),
 			TxID: "", // get tx above
 		}
 		proposalCreated, err := self.votingDao.CreateVotingProposalDCB(proposal)
@@ -161,13 +161,12 @@ func (self *VotingService) CreateProposal(user *models.User, request *serializer
 		}
 		return proposalCreated, nil
 	case 2: // GOV
-		govParams := request.GOV
 		// TODO call blockchain network rpc function
 		// TODO waiting and check tx with blockchain network
-		govParamsStrByte, _ := json.MarshalIndent(govParams, "", "\t")
+		params, _ := json.Marshal(request.GOV)
 		proposal := &models.VotingProposalGOV{
 			User: user,
-			Data: string(govParamsStrByte),
+			Data: string(params),
 			TxID: "", // get tx above
 		}
 		proposalCreated, err := self.votingDao.CreateVotingProposalGOV(proposal)
@@ -180,27 +179,156 @@ func (self *VotingService) CreateProposal(user *models.User, request *serializer
 	}
 }
 
-func (self *VotingService) GetProposalsList() ([]models.ProposalInterface, error) {
-	vs, err := self.votingDao.GetDCBProposals(nil, nil)
+func (self *VotingService) getDCBProposals(limit, page *int) ([]models.ProposalInterface, error) {
+	vs, err := self.votingDao.GetDCBProposals(limit, page)
 	if err != nil {
 		return nil, errors.Wrap(err, "self.votingDao.GetDCBProposals")
 	}
 	ret := make([]models.ProposalInterface, 0, len(vs))
 	for _, v := range vs {
+		totalVote, err := self.votingDao.GetProposalDCBVote(v.ID)
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.GetProposalDCBVote")
+		}
+		v.SetVoteNum(totalVote)
+
 		ret = append(ret, v)
 	}
 	return ret, nil
 }
 
-func (self *VotingService) GetProposal() models.ProposalInterface {
-	return nil
+func (self *VotingService) getGOVProposals(limit, page *int) ([]models.ProposalInterface, error) {
+	vs, err := self.votingDao.GetGOVProposals(limit, page)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetDCBProposals")
+	}
+	ret := make([]models.ProposalInterface, 0, len(vs))
+	for _, v := range vs {
+		totalVote, err := self.votingDao.GetProposalGOVVote(v.ID)
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.GetProposalGOVVote")
+		}
+		v.SetVoteNum(totalVote)
+
+		ret = append(ret, v)
+	}
+	return ret, nil
 }
 
-func (self *VotingService) VoteProposal() error {
+func (self *VotingService) GetProposalsList(boardType, limit, page string) ([]models.ProposalInterface, error) {
+	l, p, err := parsePaginationQuery(limit, page)
+	if err != nil {
+		return nil, errors.Wrap(err, "parsePaginationQuery")
+	}
+	typ, err := strconv.Atoi(boardType)
+	if err != nil {
+		return nil, ErrInvalidBoardType
+	}
+	switch models.BoardCandidateType(typ) {
+	case models.DCB:
+		return self.getDCBProposals(&l, &p)
+	case models.GOV:
+		return self.getGOVProposals(&l, &p)
+	default:
+		return nil, ErrInvalidBoardType
+	}
+}
+
+func (self *VotingService) getDCBProposal(id int) (models.ProposalInterface, error) {
+	v, err := self.votingDao.GetDCBProposal(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetDCBProposal")
+	}
+	if v == nil {
+		return nil, ErrProposalNotFound
+	}
+	total, err := self.votingDao.GetProposalDCBVote(v.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetProposalDCBVote")
+	}
+	v.SetVoteNum(total)
+
+	return v, nil
+}
+
+func (self *VotingService) getGOVProposal(id int) (models.ProposalInterface, error) {
+	v, err := self.votingDao.GetGOVProposal(id)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetGOVProposal")
+	}
+	if v == nil {
+		return nil, ErrProposalNotFound
+	}
+	total, err := self.votingDao.GetProposalGOVVote(v.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.GetProposalGOVVote")
+	}
+	v.SetVoteNum(total)
+
+	return v, nil
+}
+
+func (self *VotingService) GetProposal(id, boardType string) (models.ProposalInterface, error) {
+	idI, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, ErrInvalidBoardType
+	}
+	typ, err := strconv.Atoi(boardType)
+	if err != nil {
+		return nil, ErrInvalidProposal
+	}
+	switch models.BoardCandidateType(typ) {
+	case models.DCB:
+		return self.getDCBProposal(idI)
+	case models.GOV:
+		return self.getGOVProposal(idI)
+	default:
+		return nil, ErrInvalidBoardType
+	}
+}
+
+func (self *VotingService) VoteProposal(u *models.User, req *serializers.VotingProposalRequest) (*serializers.VotingProposalResp, error) {
 	// TODO call blockchain network
 	// TODO waiting tx in block
 	// Update DB
-	return nil
+	switch req.BoardType {
+	case 1: // DCB
+		p, err := self.votingDao.GetDCBProposal(req.ProposalID)
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.GetDCBProposal")
+		}
+		if p == nil {
+			return nil, ErrInvalidProposal
+		}
+		v, err := self.votingDao.CreateVotingProposalDCBVote(&models.VotingProposalDCBVote{
+			Voter:             u,
+			VotingProposalDCB: p,
+			TxID:              "", // get from above call
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.CreateVotingProposalDCBVote")
+		}
+		return serializers.NewVotingDCBProposal(v), nil
+	case 2: // GOV
+		p, err := self.votingDao.GetGOVProposal(req.ProposalID)
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.GetDCBProposal")
+		}
+		if p == nil {
+			return nil, ErrInvalidProposal
+		}
+		v, err := self.votingDao.CreateVotingProposalGOVVote(&models.VotingProposalGOVVote{
+			Voter:             u,
+			VotingProposalGOV: p,
+			TxID:              "", // get from above call
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "self.votingDao.CreateVotingProposalDCBVote")
+		}
+		return serializers.NewVotingGOVProposal(v), nil
+	default:
+		return nil, ErrInvalidBoardType
+	}
 }
 
 func (self *VotingService) GetBondTypes() (interface{}, error) {
@@ -241,4 +369,15 @@ func (self *VotingService) GetDCBParams() (*serializers.VotingProposalDCBRequest
 	}
 
 	return &result, nil
+}
+
+func (self *VotingService) GetUserCandidate(u *models.User) (*serializers.VotingBoardCandidateResp, error) {
+	c, err := self.votingDao.FindCandidateByUser(u)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.FindCandidateByUser")
+	}
+	if c == nil {
+		return nil, nil
+	}
+	return serializers.NewVotingBoardCandidateResp(c), nil
 }

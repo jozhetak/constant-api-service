@@ -1,5 +1,9 @@
 package models
 
+const (
+	DisbursementType = "disbursements"
+)
+
 type DisbursementAttributes struct {
 	ID                string                  `json:"id,omitempty"`
 	AccountID         string                  `json:"account-id"`

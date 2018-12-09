@@ -18,15 +18,16 @@ const (
 )
 
 type ReserveContributionRequest struct {
-	PartyID        int         `json:"PartyID"`
+	PartyID        uint        `json:"PartyID"`
 	PaymentAddress string      `json:"PaymentAddress"`
 	PaymentForm    PaymentForm `json:"PaymentForm"`
 	Amount         float64     `json:"Amount"`
 }
 
 type ReserveDisbursementRequest struct {
-	PartyID     int         `json:"PartyID"`
+	PartyID     uint        `json:"PartyID"`
 	PaymentForm PaymentForm `json:"PaymentForm"`
+	Amount      float64     `json:"Amount"`
 }
 
 type PaymentForm struct {
@@ -50,4 +51,13 @@ type PaymentForm struct {
 	CreditCardType           string `json:"CreditCardType"`
 
 	Last4 string `json:"Last4"`
+}
+
+type PrimetrustChangedRequest struct {
+	ID           string                 `json:"id"`
+	AccountID    string                 `json:"account_id"`
+	Action       string                 `json:"action"`
+	Data         map[string]interface{} `json:"data"`
+	ResourceID   string                 `json:"resource_id"`
+	ResourceType string                 `json:"resource_type"`
 }

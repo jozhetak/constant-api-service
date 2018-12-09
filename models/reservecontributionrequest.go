@@ -15,7 +15,7 @@ type ReserveContributionRequest struct {
 	User   *User
 	UserID uint
 
-	PartyID        int
+	PartyID        uint
 	Status         ReserveContributionRequestStatus
 	TxID           string
 	PaymentAddress string
