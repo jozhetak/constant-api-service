@@ -207,7 +207,16 @@ func (b *Blockchain) GetBalanceByPaymentAddress(paymentAddress string) (uint64, 
 		return 0, err
 	}
 	data := resp.(map[string]interface{})
-	return uint64(data["Result"].(float64)), nil
+	if data["Error"] != nil {
+		return 0, errors.Errorf("couldn't get result from response data: %+v", data["Error"])
+	}
+	if data["Result"] == nil {
+		return 0, errors.Errorf("couldn't get result from response: req: %+v, data: %+v", paymentAddress, data)
+	}
+	if v, ok := data["Result"].(float64); ok {
+		return uint64(v), nil
+	}
+	return 0, nil
 }
 
 func (b *Blockchain) GetListCustomTokenBalance(paymentAddress string) (*ListCustomTokenBalance, error) {

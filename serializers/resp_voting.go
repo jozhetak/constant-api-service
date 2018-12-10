@@ -7,14 +7,17 @@ import (
 )
 
 type VotingBoardCandidateResp struct {
-	User         *UserResp `json:"User"`
-	DCB          string    `json:"DCB"`
-	DCBAppliedAt string    `json:"DCBAppliedAt"`
-	CMB          string    `json:"CMB"`
-	CMBAppliedAt string    `json:"CMBAppliedAt"`
-	GOV          string    `json:"GOV"`
-	GOVAppliedAt string    `json:"GOVAppliedAt"`
-	VoteNum      int       `json:"VoteNum"`
+	User         *UserResp       `json:"User"`
+	DCB          string          `json:"DCB"`
+	DCBAppliedAt string          `json:"DCBAppliedAt"`
+	DCBBalances  *WalletBalances `json:"DCBBalances"`
+	CMB          string          `json:"CMB"`
+	CMBAppliedAt string          `json:"CMBAppliedAt"`
+	CMBBalances  *WalletBalances `json:"CMBBalances"`
+	GOV          string          `json:"GOV"`
+	GOVAppliedAt string          `json:"GOVAppliedAt"`
+	GOVBalances  *WalletBalances `json:"GOVBalances"`
+	VoteNum      int             `json:"VoteNum"`
 }
 
 func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoardCandidateResp {
