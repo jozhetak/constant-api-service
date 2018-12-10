@@ -2,8 +2,8 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/ninjadotorg/constant-api-service/dao/voting"
 	"github.com/ninjadotorg/constant-api-service/models"
@@ -26,7 +26,7 @@ func NewVotingService(r *voting.VotingDao, bc *blockchain.Blockchain, walletSvc 
 	}
 }
 
-func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType models.BoardCandidateType, paymentAddress string) (*models.VotingBoardCandidate, error) {
+func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType models.BoardCandidateType, paymentAddress string) (*serializers.VotingBoardCandidateResp, error) {
 	candidate, _ := self.votingDao.FindVotingBoardCandidateByUser(*u)
 	var exist bool
 
@@ -36,39 +36,46 @@ func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType mode
 		exist = true
 	}
 
+	if paymentAddress == "" {
+		paymentAddress = u.PaymentAddress
+	}
+
+	now := time.Now().UTC()
 	switch boardType {
 	case models.DCB:
 		if candidate.DCB != "" {
 			return nil, ErrBoardCandidateExists
 		}
 		candidate.DCB = paymentAddress
+		candidate.DCBAppliedAt = &now
 	case models.CMB:
 		if candidate.CMB != "" {
 			return nil, ErrBoardCandidateExists
 		}
 		candidate.CMB = paymentAddress
+		candidate.CMBAppliedAt = &now
 	case models.GOV:
 		if candidate.GOV != "" {
 			return nil, ErrBoardCandidateExists
 		}
 		candidate.GOV = paymentAddress
+		candidate.GOVAppliedAt = &now
 	default:
 		return nil, ErrInvalidArgument
 	}
 
+	var err error
 	if exist {
-		candidateUpdated, err := self.votingDao.UpdateVotingBoardCandidate(candidate)
-		if err != nil {
-			return nil, errors.Wrap(err, "self.votingDao.UpdateVotingBoardCandidate")
-		}
-		return candidateUpdated, nil
+		candidate, err = self.votingDao.UpdateVotingBoardCandidate(candidate)
+		err = errors.Wrap(err, "self.votingDao.UpdateVotingBoardCandidate")
+	} else {
+		candidate, err = self.votingDao.CreateVotingBoardCandidate(candidate)
+		err = errors.Wrap(err, "self.votingDao.CreateVotingBoardCandidate")
 	}
-	candidateCreated, err := self.votingDao.CreateVotingBoardCandidate(candidate)
 	if err != nil {
-		return nil, errors.Wrap(err, "self.votingDao.CreateVotingBoardCandidate")
+		return nil, err
 	}
-	fmt.Printf("candidateCreated = %+v\n", candidateCreated)
-	return candidateCreated, nil
+	return serializers.NewVotingBoardCandidateResp(candidate), nil
 }
 
 func (self *VotingService) GetCandidatesList(boardType int, paymentAddress string) ([]*serializers.VotingBoardCandidateResp, error) {

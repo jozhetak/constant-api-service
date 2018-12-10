@@ -1,6 +1,10 @@
 package models
 
-import "github.com/jinzhu/gorm"
+import (
+	"time"
+
+	"github.com/jinzhu/gorm"
+)
 
 type BoardCandidateType int
 
@@ -17,9 +21,14 @@ type VotingBoardCandidate struct {
 	User   *User
 	UserID int
 
-	DCB string
-	CMB string
-	GOV string
+	DCB          string
+	DCBAppliedAt *time.Time
+
+	CMB          string
+	CMBAppliedAt *time.Time
+
+	GOV          string
+	GOVAppliedAt *time.Time
 
 	VotingBoardVotes []*VotingBoardVote
 

@@ -36,7 +36,6 @@ func (s *Server) pagingFromContext(c *gin.Context) (int, int) {
 	page, err = strconv.Atoi(pageS)
 	if err != nil {
 		page = 1
-		err = nil
 	}
 
 	limit, err = strconv.Atoi(limitS)

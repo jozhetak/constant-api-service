@@ -25,16 +25,12 @@ func (server *Server) RegisterBoardCandidate(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
 		return
 	}
-	if req.PaymentAddress == "" {
-		req.PaymentAddress = user.PaymentAddress
-	}
-	votingBoardCandidate, err := server.votingSvc.RegisterBoardCandidate(user, models.BoardCandidateType(req.BoardType), req.PaymentAddress)
+	candidate, err := server.votingSvc.RegisterBoardCandidate(user, models.BoardCandidateType(req.BoardType), req.PaymentAddress)
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrInvalidArgument, service.ErrBoardCandidateExists:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
-		result := serializers.NewVotingBoardCandidateResp(votingBoardCandidate)
-		c.JSON(http.StatusOK, serializers.Resp{Result: result})
+		c.JSON(http.StatusOK, serializers.Resp{Result: candidate})
 	default:
 		server.logger.Error("s.votingSvc.RegisterBoardCandidate", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})

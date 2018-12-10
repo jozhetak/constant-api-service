@@ -175,7 +175,7 @@ func (e *Exchange) MarketRatesBySymbol(symbol string) (*MarketRate, error) {
 		return nil, errors.Wrap(err, "e.GetVolume")
 	}
 
-	from, to := time.Now().Add(-24*time.Hour), time.Now()
+	from, to := time.Now().UTC().Add(-24*time.Hour), time.Now().UTC()
 	high, low, err := e.GetHighLowPrice(symbol, nil, nil, &from, &to)
 	if err != nil {
 		return nil, errors.Wrap(err, "e.GetHighLow")

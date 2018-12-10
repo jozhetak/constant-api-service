@@ -1,15 +1,20 @@
 package serializers
 
 import (
+	"time"
+
 	"github.com/ninjadotorg/constant-api-service/models"
 )
 
 type VotingBoardCandidateResp struct {
-	User    *UserResp `json:"User"`
-	DCB     string    `json:"DCB"`
-	CMB     string    `json:"CMB"`
-	GOV     string    `json:"GOV"`
-	VoteNum int       `json:"VoteNum"`
+	User         *UserResp `json:"User"`
+	DCB          string    `json:"DCB"`
+	DCBAppliedAt string    `json:"DCBAppliedAt"`
+	CMB          string    `json:"CMB"`
+	CMBAppliedAt string    `json:"CMBAppliedAt"`
+	GOV          string    `json:"GOV"`
+	GOVAppliedAt string    `json:"GOVAppliedAt"`
+	VoteNum      int       `json:"VoteNum"`
 }
 
 func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoardCandidateResp {
@@ -21,6 +26,15 @@ func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoard
 		CMB:     data.CMB,
 		DCB:     data.DCB,
 		VoteNum: data.GetVoteNum(),
+	}
+	if data.DCBAppliedAt != nil {
+		result.DCBAppliedAt = data.DCBAppliedAt.Format(time.RFC3339)
+	}
+	if data.CMBAppliedAt != nil {
+		result.CMBAppliedAt = data.CMBAppliedAt.Format(time.RFC3339)
+	}
+	if data.GOVAppliedAt != nil {
+		result.GOVAppliedAt = data.GOVAppliedAt.Format(time.RFC3339)
 	}
 
 	result.User = NewUserResp(*data.User)

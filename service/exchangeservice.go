@@ -162,14 +162,17 @@ func (e *ExchangeService) MarketHistory(symbol, limit, page string) ([]*serializ
 }
 
 func (e *ExchangeService) SymbolRates(timeRange string) ([]serializers.SymbolRate, error) {
-	var from, to time.Time
+	var (
+		from time.Time
+		to   = time.Now().UTC()
+	)
 	switch timeRange {
 	case "1h":
-		from, to = time.Now().Add(-1*time.Hour), time.Now()
+		from = to.Add(-1 * time.Hour)
 	case "4h":
-		from, to = time.Now().Add(-4*time.Hour), time.Now()
+		from = to.Add(-4 * time.Hour)
 	case "24h":
-		from, to = time.Now().Add(-24*time.Hour), time.Now()
+		from = to.Add(-24 * time.Hour)
 	default:
 		return nil, ErrInvalidArgument
 	}
