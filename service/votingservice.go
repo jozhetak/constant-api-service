@@ -390,7 +390,13 @@ func (self *VotingService) GetUserCandidate(u *models.User) (*serializers.Voting
 	if c == nil {
 		return nil, nil
 	}
-	return serializers.NewVotingBoardCandidateResp(c), nil
+
+	resp := serializers.NewVotingBoardCandidateResp(c)
+	// uncomment this to get balances for candidate
+	// if err := self.GetCandidateBalances(resp); err != nil {
+	//         return nil, errors.Wrap(err, "self.GetCandidateBalances")
+	// }
+	return resp, nil
 }
 
 func (self *VotingService) GetCandidateBalances(resp *serializers.VotingBoardCandidateResp) error {
@@ -414,6 +420,21 @@ func (self *VotingService) GetCandidateBalances(resp *serializers.VotingBoardCan
 			return errors.Wrap(err, "self.blockchainService.GetCoinAndCustomTokenBalanceForPaymentAddress")
 		}
 		resp.DCBBalances = wallets
+	}
+	return nil
+}
+
+func (self *VotingService) validateBalance(u *models.User, tokenID string, amount uint64) error {
+	balances, err := self.walletSvc.GetCoinAndCustomTokenBalanceForUser(u)
+	if err != nil {
+		return errors.Wrap(err, "e.w.GetCoinAndCustomTokenBalance")
+	}
+	for _, b := range balances.ListBalances {
+		if b.TokenID == tokenID {
+			if amount > b.AvailableBalance {
+				return ErrInsufficientBalance
+			}
+		}
 	}
 	return nil
 }
