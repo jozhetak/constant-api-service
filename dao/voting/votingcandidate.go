@@ -120,7 +120,7 @@ func (p *VotingDao) FindCandidateByID(id int) (*models.VotingBoardCandidate, err
 
 func (p *VotingDao) FindCandidateByUser(u *models.User) (*models.VotingBoardCandidate, error) {
 	var c models.VotingBoardCandidate
-	if err := p.db.Preload("User").Find(&c).Where("user_id = ?", u.ID).Error; err != nil {
+	if err := p.db.Preload("User").Where("user_id = ?", u.ID).Find(&c).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
