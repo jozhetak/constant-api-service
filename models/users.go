@@ -29,7 +29,7 @@ type User struct {
 	ReadonlyKey    string
 	PrivKey        string
 	IsActive       bool
-	Bio            string
+	Bio            string `gorm:"type:text"`
 }
 
 func GetUserType(kind string) UserType {

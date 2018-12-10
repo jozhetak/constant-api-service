@@ -49,7 +49,7 @@ func (server *Server) GetCandidatesList(c *gin.Context) {
 		return
 	}
 
-	boardQuery := c.DefaultQuery("board", "1")
+	boardQuery := c.DefaultQuery("board_type", "1")
 	board, _ := strconv.Atoi(boardQuery)
 	list, err := server.votingSvc.GetCandidatesList(board, c.Query("payment_address"))
 	if err != nil {
