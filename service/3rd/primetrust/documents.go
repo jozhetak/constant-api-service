@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/BANKEX/go-primetrust/models"
 	"io/ioutil"
 	"net/http"
 	"log"
+	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 )
 
 func UploadDocument(document models.Document) (*models.DocumentResponse, error) {

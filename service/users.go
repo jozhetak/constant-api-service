@@ -137,7 +137,7 @@ func (u *User) ForgotPassword(email string) error {
 		User:      user,
 		Token:     token,
 		IsValid:   true,
-		ExpiredAt: time.Now().Add(verificationTokenExpiredDuration),
+		ExpiredAt: time.Now().UTC().Add(verificationTokenExpiredDuration),
 	}); err != nil {
 		return errors.Wrap(err, "u.portalDao.CreateRecovery")
 	}
@@ -178,7 +178,7 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 	if !v.IsValid {
 		return ErrInvalidVerificationToken
 	}
-	if v.ExpiredAt.Before(time.Now()) {
+	if v.ExpiredAt.Before(time.Now().UTC()) {
 		return ErrInvalidVerificationToken
 	}
 

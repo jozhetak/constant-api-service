@@ -2,8 +2,8 @@ package service
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/ninjadotorg/constant-api-service/dao/voting"
 	"github.com/ninjadotorg/constant-api-service/models"
@@ -26,7 +26,7 @@ func NewVotingService(r *voting.VotingDao, bc *blockchain.Blockchain, walletSvc 
 	}
 }
 
-func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType models.BoardCandidateType, paymentAddress string) (*models.VotingBoardCandidate, error) {
+func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType models.BoardCandidateType, paymentAddress string) (*serializers.VotingBoardCandidateResp, error) {
 	candidate, _ := self.votingDao.FindVotingBoardCandidateByUser(*u)
 	var exist bool
 
@@ -36,39 +36,53 @@ func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType mode
 		exist = true
 	}
 
+	if paymentAddress == "" {
+		paymentAddress = u.PaymentAddress
+	}
+
+	now := time.Now().UTC()
 	switch boardType {
 	case models.DCB:
 		if candidate.DCB != "" {
 			return nil, ErrBoardCandidateExists
 		}
 		candidate.DCB = paymentAddress
+		candidate.DCBAppliedAt = &now
 	case models.CMB:
 		if candidate.CMB != "" {
 			return nil, ErrBoardCandidateExists
 		}
 		candidate.CMB = paymentAddress
+		candidate.CMBAppliedAt = &now
 	case models.GOV:
 		if candidate.GOV != "" {
 			return nil, ErrBoardCandidateExists
 		}
 		candidate.GOV = paymentAddress
+		candidate.GOVAppliedAt = &now
 	default:
 		return nil, ErrInvalidArgument
 	}
 
+	var err error
 	if exist {
-		candidateUpdated, err := self.votingDao.UpdateVotingBoardCandidate(candidate)
-		if err != nil {
-			return nil, errors.Wrap(err, "self.votingDao.UpdateVotingBoardCandidate")
-		}
-		return candidateUpdated, nil
+		candidate, err = self.votingDao.UpdateVotingBoardCandidate(candidate)
+		err = errors.Wrap(err, "self.votingDao.UpdateVotingBoardCandidate")
+	} else {
+		candidate, err = self.votingDao.CreateVotingBoardCandidate(candidate)
+		err = errors.Wrap(err, "self.votingDao.CreateVotingBoardCandidate")
 	}
-	candidateCreated, err := self.votingDao.CreateVotingBoardCandidate(candidate)
 	if err != nil {
-		return nil, errors.Wrap(err, "self.votingDao.CreateVotingBoardCandidate")
+		return nil, err
 	}
-	fmt.Printf("candidateCreated = %+v\n", candidateCreated)
-	return candidateCreated, nil
+
+	resp := serializers.NewVotingBoardCandidateResp(candidate)
+	// uncomment this to get balances for candidate
+	// if err := self.GetCandidateBalances(resp); err != nil {
+	//         return nil, errors.Wrap(err, "self.GetCandidateBalances")
+	// }
+
+	return resp, nil
 }
 
 func (self *VotingService) GetCandidatesList(boardType int, paymentAddress string) ([]*serializers.VotingBoardCandidateResp, error) {
@@ -88,12 +102,10 @@ func (self *VotingService) GetCandidatesList(boardType int, paymentAddress strin
 		// get voting number
 		r.VoteNum = totalVote
 
-		// get balance of all token for every candidate
-		wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(l.User.PaymentAddress)
-		if err != nil {
-			return nil, errors.Wrap(err, "self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress")
-		}
-		r.User.WalletBalances = wallets
+		// uncomment this to get balances for candidate
+		// if err := self.GetCandidateBalances(r); err != nil {
+		//         return nil, errors.Wrap(err, "self.GetCandidateBalances")
+		// }
 
 		resp = append(resp, r)
 	}
@@ -112,15 +124,15 @@ func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serialize
 	var txID string
 	switch models.BoardCandidateType(req.BoardType) {
 	case models.DCB:
-		txID, err = self.blockchainService.CreateAndSendVoteDCBBoardTransaction(voter.PrivKey, req.VoteAmount)
+		// txID, err = self.blockchainService.CreateAndSendVoteDCBBoardTransaction(voter.PrivKey, req.VoteAmount)
 	case models.GOV:
-		txID, err = self.blockchainService.CreateAndSendVoteGOVBoardTransaction(voter.PrivKey, req.VoteAmount)
+		// txID, err = self.blockchainService.CreateAndSendVoteGOVBoardTransaction(voter.PrivKey, req.VoteAmount)
 	default:
 		err = ErrInvalidBoardType
 	}
-	if err != nil {
-		return nil, errors.Wrap(err, "self.blockchainService.CreateAndSendVoteDCBBoardTransaction")
-	}
+	// if err != nil {
+	//         return nil, errors.Wrap(err, "self.blockchainService.CreateAndSendVoteDCBBoardTransaction")
+	// }
 
 	// tx, err := GetBlockchainTxByHash(txID, 3, self.blockchainService)
 	tx := &blockchain.TransactionDetail{}
@@ -368,4 +380,61 @@ func (self *VotingService) GetDCBParams() (*serializers.VotingProposalDCBRequest
 	}
 
 	return &result, nil
+}
+
+func (self *VotingService) GetUserCandidate(u *models.User) (*serializers.VotingBoardCandidateResp, error) {
+	c, err := self.votingDao.FindCandidateByUser(u)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.FindCandidateByUser")
+	}
+	if c == nil {
+		return nil, nil
+	}
+
+	resp := serializers.NewVotingBoardCandidateResp(c)
+	// uncomment this to get balances for candidate
+	// if err := self.GetCandidateBalances(resp); err != nil {
+	//         return nil, errors.Wrap(err, "self.GetCandidateBalances")
+	// }
+	return resp, nil
+}
+
+func (self *VotingService) GetCandidateBalances(resp *serializers.VotingBoardCandidateResp) error {
+	if resp.CMB != "" {
+		wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(resp.CMB)
+		if err != nil {
+			return errors.Wrap(err, "self.blockchainService.GetCoinAndCustomTokenBalanceForPaymentAddress")
+		}
+		resp.CMBBalances = wallets
+	}
+	if resp.GOV != "" {
+		wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(resp.GOV)
+		if err != nil {
+			return errors.Wrap(err, "self.blockchainService.GetCoinAndCustomTokenBalanceForPaymentAddress")
+		}
+		resp.GOVBalances = wallets
+	}
+	if resp.DCB != "" {
+		wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(resp.DCB)
+		if err != nil {
+			return errors.Wrap(err, "self.blockchainService.GetCoinAndCustomTokenBalanceForPaymentAddress")
+		}
+		resp.DCBBalances = wallets
+	}
+	return nil
+}
+
+func (self *VotingService) validateBalance(u *models.User, tokenID string, amount uint64) error {
+	balances, err := self.walletSvc.GetCoinAndCustomTokenBalanceForUser(u)
+	if err != nil {
+		return errors.Wrap(err, "e.w.GetCoinAndCustomTokenBalance")
+	}
+	for _, b := range balances.ListBalances {
+		if b.TokenID == tokenID {
+			if amount > b.AvailableBalance {
+				return ErrInsufficientBalance
+			}
+		}
+	}
+	return nil
 }

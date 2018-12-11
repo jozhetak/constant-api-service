@@ -25,16 +25,12 @@ func (server *Server) RegisterBoardCandidate(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
 		return
 	}
-	if req.PaymentAddress == "" {
-		req.PaymentAddress = user.PaymentAddress
-	}
-	votingBoardCandidate, err := server.votingSvc.RegisterBoardCandidate(user, models.BoardCandidateType(req.BoardType), req.PaymentAddress)
+	candidate, err := server.votingSvc.RegisterBoardCandidate(user, models.BoardCandidateType(req.BoardType), req.PaymentAddress)
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrInvalidArgument, service.ErrBoardCandidateExists:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
-		result := serializers.NewVotingBoardCandidateResp(votingBoardCandidate)
-		c.JSON(http.StatusOK, serializers.Resp{Result: result})
+		c.JSON(http.StatusOK, serializers.Resp{Result: candidate})
 	default:
 		server.logger.Error("s.votingSvc.RegisterBoardCandidate", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
@@ -49,7 +45,7 @@ func (server *Server) GetCandidatesList(c *gin.Context) {
 		return
 	}
 
-	boardQuery := c.DefaultQuery("board", "1")
+	boardQuery := c.DefaultQuery("board_type", "1")
 	board, _ := strconv.Atoi(boardQuery)
 	list, err := server.votingSvc.GetCandidatesList(board, c.Query("payment_address"))
 	if err != nil {
@@ -195,4 +191,21 @@ func (server *Server) VoteProposal(c *gin.Context) {
 func (server *Server) GetBondTypes(c *gin.Context) {
 	result, err := server.votingSvc.GetBondTypes()
 	c.JSON(http.StatusOK, serializers.Resp{Error: err, Result: result})
+}
+
+func (server *Server) GetUserCandidate(c *gin.Context) {
+	user, err := server.userFromContext(c)
+	if err != nil {
+		server.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
+	candidate, err := server.votingSvc.GetUserCandidate(user)
+	if err != nil {
+		server.logger.Error("s.voting.VoteProposal", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+	c.JSON(http.StatusOK, serializers.Resp{Result: candidate})
 }

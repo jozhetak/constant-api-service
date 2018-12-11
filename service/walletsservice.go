@@ -1,13 +1,14 @@
 package service
 
 import (
+	"strings"
+
 	"github.com/pkg/errors"
 
 	"github.com/ninjadotorg/constant-api-service/dao/exchange"
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
 	"github.com/ninjadotorg/constant-api-service/service/3rd/blockchain"
-	"strings"
 )
 
 type WalletService struct {
