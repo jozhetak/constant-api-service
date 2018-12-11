@@ -12,6 +12,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	DCBCandidateToken = "0000000000000000000000000000000000000000000000000000000000000001"
+	GOVCandidateToken = "0000000000000000000000000000000000000000000000000000000000000002"
+	CMBCandidateToken = "0000000000000000000000000000000000000000000000000000000000000003"
+
+	DCBProposalToken = "0000000000000000000000000000000000000000000000000000000000000005"
+	GOVProposalToken = "0000000000000000000000000000000000000000000000000000000000000006"
+)
+
 type VotingService struct {
 	votingDao         *voting.VotingDao
 	walletSvc         *WalletService
@@ -120,10 +129,21 @@ func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serialize
 	if candidate == nil {
 		return nil, ErrInvalidArgument
 	}
-	// uncomment this to validate balance
-	// if err := self.validateBalance(voter, "", req.VoteAmount); err != nil {
-	//         return nil, errors.Wrap(err, "self.validateBalance")
-	// }
+
+	var tokenID string
+	switch models.BoardCandidateType(req.BoardType) {
+	case models.DCB:
+		tokenID = DCBCandidateToken
+	case models.GOV:
+		tokenID = GOVCandidateToken
+	case models.CMB:
+		tokenID = CMBCandidateToken
+	default:
+		return nil, ErrInvalidBoardType
+	}
+	if err := self.validateBalance(voter, tokenID, req.VoteAmount); err != nil {
+		return nil, errors.Wrap(err, "self.validateBalance")
+	}
 
 	var txID string
 	switch models.BoardCandidateType(req.BoardType) {
@@ -306,8 +326,11 @@ func (self *VotingService) VoteProposal(u *models.User, req *serializers.VotingP
 	// TODO call blockchain network
 	// TODO waiting tx in block
 	// Update DB
-	switch req.BoardType {
-	case 1: // DCB
+	switch models.BoardCandidateType(req.BoardType) {
+	case models.DCB:
+		if err := self.validateBalance(u, DCBProposalToken, req.VoteAmount); err != nil {
+			return nil, errors.Wrap(err, "self.validateBalance")
+		}
 		p, err := self.votingDao.GetDCBProposal(req.ProposalID)
 		if err != nil {
 			return nil, errors.Wrap(err, "self.votingDao.GetDCBProposal")
@@ -324,7 +347,10 @@ func (self *VotingService) VoteProposal(u *models.User, req *serializers.VotingP
 			return nil, errors.Wrap(err, "self.votingDao.CreateVotingProposalDCBVote")
 		}
 		return serializers.NewVotingDCBProposal(v), nil
-	case 2: // GOV
+	case models.GOV:
+		if err := self.validateBalance(u, GOVProposalToken, req.VoteAmount); err != nil {
+			return nil, errors.Wrap(err, "self.validateBalance")
+		}
 		p, err := self.votingDao.GetGOVProposal(req.ProposalID)
 		if err != nil {
 			return nil, errors.Wrap(err, "self.votingDao.GetDCBProposal")
@@ -429,16 +455,17 @@ func (self *VotingService) GetCandidateBalances(resp *serializers.VotingBoardCan
 }
 
 func (self *VotingService) validateBalance(u *models.User, tokenID string, amount uint64) error {
-	balances, err := self.walletSvc.GetCoinAndCustomTokenBalanceForUser(u)
-	if err != nil {
-		return errors.Wrap(err, "e.w.GetCoinAndCustomTokenBalance")
-	}
-	for _, b := range balances.ListBalances {
-		if b.TokenID == tokenID {
-			if amount > b.AvailableBalance {
-				return ErrInsufficientBalance
-			}
-		}
-	}
 	return nil
+	// balances, err := self.walletSvc.GetCoinAndCustomTokenBalanceForUser(u)
+	// if err != nil {
+	//         return errors.Wrap(err, "e.w.GetCoinAndCustomTokenBalance")
+	// }
+	// for _, b := range balances.ListBalances {
+	//         if b.TokenID == tokenID {
+	//                 if amount > b.AvailableBalance {
+	//                         return ErrInsufficientBalance
+	//                 }
+	//         }
+	// }
+	// return nil
 }

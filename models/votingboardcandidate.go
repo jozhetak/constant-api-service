@@ -11,8 +11,8 @@ type BoardCandidateType int
 const (
 	Invalid BoardCandidateType = iota
 	DCB
-	CMB
 	GOV
+	CMB
 )
 
 type VotingBoardCandidate struct {
