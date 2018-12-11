@@ -12,6 +12,7 @@ var (
 	portalTables   = []interface{}{(*models.Borrow)(nil)}
 	exchangeTables = []interface{}{(*models.Currency)(nil), (*models.Market)(nil), (*models.Order)(nil)}
 	votingTables   = []interface{}{(*models.VotingBoardCandidate)(nil), (*models.VotingBoardVote)(nil), (*models.VotingProposalDCB)(nil), (*models.VotingProposalDCBVote)(nil), (*models.VotingProposalGOV)(nil), (*models.VotingProposalGOVVote)(nil)}
+	reserveTables  = []interface{}{(*models.ReserveContributionRequest)(nil), (*models.ReserveContributionRequestPaymentParty)(nil), (*models.ReserveDisbursementRequest)(nil), (*models.ReserveDisbursementRequestPaymentParty)(nil)}
 )
 
 func AutoMigrate(db *gorm.DB) error {
@@ -20,6 +21,7 @@ func AutoMigrate(db *gorm.DB) error {
 	allTables = append(allTables, portalTables...)
 	allTables = append(allTables, exchangeTables...)
 	allTables = append(allTables, votingTables...)
+	allTables = append(allTables, reserveTables...)
 	if err := db.AutoMigrate(allTables...).Error; err != nil {
 		return errors.Wrap(err, "db.AutoMigrate")
 	}

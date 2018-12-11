@@ -11,8 +11,10 @@ const (
 	ProductionAPIPrefix = "https://api.primetrust.com/v2"
 )
 
-var _apiPrefix string
-var _authHeader string
+var (
+	_apiPrefix  string
+	_authHeader string
+)
 
 func basicAuth(username string, password string) string {
 	auth := username + ":" + password

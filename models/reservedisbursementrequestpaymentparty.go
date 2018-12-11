@@ -18,10 +18,10 @@ type ReserveDisbursementRequestPaymentParty struct {
 	ReserveDisbursementRequest   *ReserveDisbursementRequest
 	ReserveDisbursementRequestID int
 
-	RequestData     string
+	RequestData     string `gorm:"type:text"`
 	Amount          float64
-	ExtRequestData  string
-	ExtResponseData string
+	ExtRequestData  string `gorm:"type:text"`
+	ExtResponseData string `gorm:"type:text"`
 	ExtID           string
 	ExtResourceID   string
 	ExtResourceType string

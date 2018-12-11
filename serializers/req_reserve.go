@@ -31,26 +31,27 @@ type ReserveDisbursementRequest struct {
 }
 
 type PaymentForm struct {
-	PaymentType   PaymentType `json:"PaymentType"` // required (enum, sql:true): ach, check, credit_card, wire, or wire_international
-	RoutingNumber string      `json:"RoutingNumber"`
+	PaymentType   PaymentType `json:"PaymentType,omitempty"` // required (enum, sql:true): ach, check, credit_card, wire, or wire_international
+	RoutingNumber string      `json:"RoutingNumber,omitempty"`
 
-	ContactEmail string `json:"ContactEmail"` // required
-	ContactName  string `json:"ContactName"`  // required
-	ContactID    string `json:"ContactID"`
+	ContactEmail string `json:"ContactEmail,omitempty"` // required
+	ContactName  string `json:"ContactName,omitempty"`  // required
+	ContactID    string `json:"ContactID,omitempty"`
 
-	AchCheckType    AchCheckType `json:"AchCheckType"`    // (enum): personal or business.
-	BankAccountName string       `json:"BankAccountName"` // required in ACH
-	BankAccountType string       `json:"BankAccountType"` // required in ACH
-	BankName        string       `json:"BankName"`        // required in ACH
+	AchCheckType      AchCheckType `json:"AchCheckType,omitempty"`      // (enum): personal or business.
+	BankAccountName   string       `json:"BankAccountName,omitempty"`   // required in ACH
+	BankAccountType   string       `json:"BankAccountType,omitempty"`   // required in ACH
+	BankAccountNumber string       `json:"BankAccountNumber,omitempty"` // required in ACH
+	BankName          string       `json:"BankName,omitempty"`          // required in ACH
 
-	CreditCardCvv            string `json:"CreditCardCvv"`            // required in CC
-	CreditCardExpirationDate string `json:"CreditCardExpirationDate"` // required in CC
-	CreditCardNumber         string `json:"CreditCardNumber"`         // required in CC
-	CreditCardName           string `json:"CreditCardName"`
-	CreditCardPostalCode     string `json:"CreditCardPostalCode"`
-	CreditCardType           string `json:"CreditCardType"`
+	CreditCardCvv            string `json:"CreditCardCvv,omitempty"`            // required in CC
+	CreditCardExpirationDate string `json:"CreditCardExpirationDate,omitempty"` // required in CC
+	CreditCardNumber         string `json:"CreditCardNumber,omitempty"`         // required in CC
+	CreditCardName           string `json:"CreditCardName,omitempty"`
+	CreditCardPostalCode     string `json:"CreditCardPostalCode,omitempty"`
+	CreditCardType           string `json:"CreditCardType,omitempty"`
 
-	Last4 string `json:"Last4"`
+	Last4 string `json:"Last4,omitempty"`
 }
 
 type PrimetrustChangedRequest struct {

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ninjadotorg/constant-api-service/service/3rd/ethereum"
+	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust"
 
 	gcloud "cloud.google.com/go/pubsub"
 	"github.com/gin-contrib/cors"
@@ -52,6 +53,8 @@ func main() {
 	if err := dao.AutoMigrate(db); err != nil {
 		logger.Fatal("failed to auto migrate", zap.Error(err))
 	}
+
+	primetrust.Init(conf.PrimetrustPrefix, conf.PrimetrustEmail, conf.PrimetrustPassword)
 
 	var (
 		client = &http.Client{}

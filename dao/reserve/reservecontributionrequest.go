@@ -48,7 +48,7 @@ func (r *Reserve) FindAllReserveContributionRequest(filter *map[string]interface
 	query := r.db.Table("reserve_contribution_request")
 	query = query.Limit(limit).Offset(offset)
 	if filter != nil {
-		query = query.Where(filter)
+		query = query.Where(*filter)
 	}
 
 	if err := query.Find(&rcrs).Error; err != nil {

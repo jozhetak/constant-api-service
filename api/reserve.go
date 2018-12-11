@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -45,7 +46,8 @@ func (s *Server) CreateContribution(c *gin.Context) {
 	contribution, err := s.reserveSvc.CreateContribution(user, &req)
 
 	if err != nil {
-		c.JSON(http.StatusOK, serializers.Resp{Error: err})
+		fmt.Println("create contribution fail", err)
+		c.JSON(http.StatusOK, serializers.Resp{Error: err.Error()})
 		return
 	}
 
@@ -76,7 +78,7 @@ func (s *Server) ContributionHistory(c *gin.Context) {
 	page, limit := s.pagingFromContext(c)
 
 	filter := map[string]interface{}{
-		"UserID": user.ID,
+		"user_id": user.ID,
 	}
 
 	contributions, err := s.reserveSvc.GetContributions(&filter, page, limit)
@@ -137,7 +139,7 @@ func (s *Server) DisbursementHistory(c *gin.Context) {
 	page, limit := s.pagingFromContext(c)
 
 	filter := map[string]interface{}{
-		"UserID": user.ID,
+		"user_id": user.ID,
 	}
 	disbursements, err := s.reserveSvc.GetDisbursements(&filter, limit, page)
 	if err != nil {
@@ -153,6 +155,9 @@ func (s *Server) PrimetrustWebHook(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		return
 	}
-	s.reserveSvc.PrimetrustWebHook(&req)
+	err := s.reserveSvc.PrimetrustWebHook(&req)
+	if err != nil {
+		fmt.Println("s.reserveSvc.PrimetrustWebHook err", err.Error())
+	}
 	return
 }

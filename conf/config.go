@@ -41,4 +41,8 @@ type Config struct {
 	OrderTopic            string `json:"order_topic"`
 	OrderBookTopic        string `json:"order_book_topic"`
 	OrderBookSubName      string `json:"order_book_sub_name"`
+	PrimetrustPrefix      string `json:"primetrust_prefix"`
+	PrimetrustEmail       string `json:"primetrust_email"`
+	PrimetrustPassword    string `json:"primetrust_password"`
+	PrimetrustAccountID   string `json:"primetrust_account_id"`
 }

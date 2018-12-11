@@ -10,5 +10,9 @@
   "simpleloan_owner": "",
   "order_topic": "",
   "order_book_topic": "",
-  "order_book_sub_name": ""
+  "order_book_sub_name": "",
+  "primetrust_prefix": "",
+  "primetrust_email": "",
+  "primetrust_password": "",
+  "primetrust_account_id": ""
 }

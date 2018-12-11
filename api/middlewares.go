@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -23,7 +24,9 @@ func AuthMiddleware(key string, authenticator func(c *gin.Context) (interface{},
 		MaxRefresh:  time.Hour,
 		IdentityKey: userIDKey,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
+			fmt.Println("Payload func", data)
 			if v, ok := data.(*serializers.UserResp); ok {
+				fmt.Println("parse token", v, ok)
 				return jwt.MapClaims{
 					userIDKey:    v.ID,
 					userEmailKey: v.Email,
@@ -33,6 +36,8 @@ func AuthMiddleware(key string, authenticator func(c *gin.Context) (interface{},
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			user, err := authenticator(c)
+			fmt.Println("is err authenticator", err)
+			fmt.Println("user", user)
 			if err != nil {
 				// return nil, jwt.ErrFailedAuthentication
 				return nil, err

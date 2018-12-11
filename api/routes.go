@@ -70,7 +70,7 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 	// reserve API group
 	reserve := s.g.Group("/reserve")
 	reserve.GET("/primetrust", s.PrimetrustWebHook)
-	voting.Use(authMw.MiddlewareFunc())
+	reserve.Use(authMw.MiddlewareFunc())
 	{
 		reserve.GET("/getreserveparty", s.GetReserveParty)
 		reserve.POST("/contribution", s.CreateContribution)
