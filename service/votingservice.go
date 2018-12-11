@@ -120,6 +120,10 @@ func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serialize
 	if candidate == nil {
 		return nil, ErrInvalidArgument
 	}
+	// uncomment this to validate balance
+	// if err := self.validateBalance(voter, "", req.VoteAmount); err != nil {
+	//         return nil, errors.Wrap(err, "self.validateBalance")
+	// }
 
 	var txID string
 	switch models.BoardCandidateType(req.BoardType) {

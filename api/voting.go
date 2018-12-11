@@ -71,7 +71,7 @@ func (server *Server) VoteCandidateBoard(c *gin.Context) {
 
 	vote, err := server.votingSvc.VoteCandidateBoard(user, &req)
 	switch cErr := errors.Cause(err); cErr {
-	case service.ErrInvalidBoardType, service.ErrInvalidArgument:
+	case service.ErrInvalidBoardType, service.ErrInvalidArgument, service.ErrInsufficientBalance:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
 		c.JSON(http.StatusOK, serializers.Resp{Result: vote})
@@ -208,4 +208,22 @@ func (server *Server) GetUserCandidate(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, serializers.Resp{Result: candidate})
+}
+
+func (server *Server) GetDCBParams(c *gin.Context) {
+	p, err := server.votingSvc.GetDCBParams()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+	c.JSON(http.StatusOK, serializers.Resp{Result: p})
+}
+
+func (server *Server) GetGOVParams(c *gin.Context) {
+	p, err := server.votingSvc.GetGOVParams()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+	c.JSON(http.StatusOK, serializers.Resp{Result: p})
 }
