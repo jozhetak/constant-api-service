@@ -129,6 +129,11 @@ func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serialize
 	if candidate == nil {
 		return nil, ErrInvalidArgument
 	}
+	for _, v := range candidate.VotingBoardVotes {
+		if voter.ID == v.Voter.ID {
+			return nil, ErrAlreadyVoted
+		}
+	}
 
 	var tokenID string
 	switch models.BoardCandidateType(req.BoardType) {
@@ -338,6 +343,11 @@ func (self *VotingService) VoteProposal(u *models.User, req *serializers.VotingP
 		if p == nil {
 			return nil, ErrInvalidProposal
 		}
+		for _, v := range p.VotingProposalDCBVotes {
+			if u.ID == v.Voter.ID {
+				return nil, ErrAlreadyVoted
+			}
+		}
 		v, err := self.votingDao.CreateVotingProposalDCBVote(&models.VotingProposalDCBVote{
 			Voter:             u,
 			VotingProposalDCB: p,
@@ -357,6 +367,11 @@ func (self *VotingService) VoteProposal(u *models.User, req *serializers.VotingP
 		}
 		if p == nil {
 			return nil, ErrInvalidProposal
+		}
+		for _, v := range p.VotingProposalGOVVotes {
+			if u.ID == v.Voter.ID {
+				return nil, ErrAlreadyVoted
+			}
 		}
 		v, err := self.votingDao.CreateVotingProposalGOVVote(&models.VotingProposalGOVVote{
 			Voter:             u,

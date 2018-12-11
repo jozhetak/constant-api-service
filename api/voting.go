@@ -71,7 +71,7 @@ func (server *Server) VoteCandidateBoard(c *gin.Context) {
 
 	vote, err := server.votingSvc.VoteCandidateBoard(user, &req)
 	switch cErr := errors.Cause(err); cErr {
-	case service.ErrInvalidBoardType, service.ErrInvalidArgument, service.ErrInsufficientBalance:
+	case service.ErrInvalidBoardType, service.ErrInvalidArgument, service.ErrInsufficientBalance, service.ErrAlreadyVoted:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
 		c.JSON(http.StatusOK, serializers.Resp{Result: vote})
@@ -178,7 +178,7 @@ func (server *Server) VoteProposal(c *gin.Context) {
 
 	v, err := server.votingSvc.VoteProposal(user, &req)
 	switch cErr := errors.Cause(err); cErr {
-	case service.ErrInvalidProposal:
+	case service.ErrInvalidProposal, service.ErrAlreadyVoted:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
 	case nil:
 		c.JSON(http.StatusOK, serializers.Resp{Result: v})

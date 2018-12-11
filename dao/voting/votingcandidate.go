@@ -109,7 +109,7 @@ func (p *VotingDao) GetTotalVote(id uint) (int, error) {
 
 func (p *VotingDao) FindCandidateByID(id int) (*models.VotingBoardCandidate, error) {
 	var c models.VotingBoardCandidate
-	if err := p.db.Preload("User").First(&c, id).Error; err != nil {
+	if err := p.db.Preload("User").Preload("VotingBoardVotes").Preload("VotingBoardVotes.Voter").First(&c, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}

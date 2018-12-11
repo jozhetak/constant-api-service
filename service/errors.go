@@ -18,6 +18,7 @@ var (
 
 	ErrBorrowNotFound     = &Error{Code: -2000, Message: "borrow not found"}
 	ErrInvalidBorrowState = &Error{Code: -2001, Message: "invalid borrow state"}
+	ErrAlreadyVoted       = &Error{Code: -2002, Message: "already voted"}
 
 	// exchange api errors
 
