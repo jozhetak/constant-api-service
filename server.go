@@ -54,15 +54,14 @@ func main() {
 		logger.Fatal("failed to auto migrate", zap.Error(err))
 	}
 
-	primetrust.Init(conf.PrimetrustPrefix, conf.PrimetrustEmail, conf.PrimetrustPassword)
-
 	var (
 		client = &http.Client{}
 		bc     = blockchain.New(client, conf.ConstantChainEndpoint)
 
-		mailClient      = sendgrid.Init(conf)
-		ethereumService = ethereum.Init(conf)
-		emailHelper     = email.New(mailClient)
+		mailClient        = sendgrid.Init(conf)
+		ethereumService   = ethereum.Init(conf)
+		emailHelper       = email.New(mailClient)
+		primetrustService = primetrust.Init(conf.PrimetrustPrefix, conf.PrimetrustEmail, conf.PrimetrustPassword)
 
 		userDAO = dao.NewUser(db)
 		userSvc = service.NewUserService(userDAO, bc, emailHelper)
@@ -78,7 +77,7 @@ func main() {
 		votingSvc = service.NewVotingService(votingDao, bc, walletSvc)
 
 		reserveDAO = reserve.NewReserve(db)
-		reserveSvc = service.NewReserveService(reserveDAO, bc)
+		reserveSvc = service.NewReserveService(reserveDAO, bc, primetrustService)
 	)
 	gcPubsubClient, err := gcloud.NewClient(context.Background(), "cash-prototype")
 	if err != nil {

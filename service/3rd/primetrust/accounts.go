@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
 	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 )
 
-func GetAccounts() (*models.AccountsResponse, error) {
-	apiUrl := fmt.Sprintf("%s/accounts", _apiPrefix)
+func (p *Primetrust) GetAllAccounts() (*models.AccountsResponse, error) {
+	apiUrl := fmt.Sprintf("%s/accounts", p.Endpoint)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -38,10 +39,10 @@ func GetAccounts() (*models.AccountsResponse, error) {
 	return &response, nil
 }
 
-func GetAccount(accountId string) (*models.Account, error) {
-	apiUrl := fmt.Sprintf("%s/accounts/%s", _apiPrefix, accountId)
+func (p *Primetrust) GetAccountByID(accountId string) (*models.Account, error) {
+	apiUrl := fmt.Sprintf("%s/accounts/%s", p.Endpoint, accountId)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

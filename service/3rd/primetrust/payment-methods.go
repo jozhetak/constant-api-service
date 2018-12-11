@@ -2,22 +2,23 @@ package primetrust
 
 import (
 	"bytes"
-	"io/ioutil"
-	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 )
 
-func CreatePaymentMethod(contact *models.PaymentMethod) (*models.PaymentMethod, error) {
+func (p *Primetrust) CreatePaymentMethod(contact *models.PaymentMethod) (*models.PaymentMethod, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(contact)
 
-	apiUrl := fmt.Sprintf("%s/payment-methods", _apiPrefix)
+	apiUrl := fmt.Sprintf("%s/payment-methods", p.Endpoint)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -43,10 +44,10 @@ func CreatePaymentMethod(contact *models.PaymentMethod) (*models.PaymentMethod, 
 	return &response, nil
 }
 
-func GetPaymentMethods() (*models.PaymentMethodsResponse, error) {
-	apiUrl := fmt.Sprintf("%s/payment-methods", _apiPrefix)
+func (p *Primetrust) GetPaymentMethods() (*models.PaymentMethodsResponse, error) {
+	apiUrl := fmt.Sprintf("%s/payment-methods", p.Endpoint)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

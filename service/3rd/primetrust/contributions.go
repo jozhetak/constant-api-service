@@ -2,22 +2,26 @@ package primetrust
 
 import (
 	"bytes"
-	"io/ioutil"
-	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 )
 
-func CreateContribution(contribution *models.Contribution) (*models.Contribution, error) {
+func (p *Primetrust) CreateContribution(contribution *models.Contribution) (*models.Contribution, error) {
 	jsonData := new(bytes.Buffer)
-	json.NewEncoder(jsonData).Encode(contribution)
+	err := json.NewEncoder(jsonData).Encode(contribution)
+	if err != nil {
+		return nil, err
+	}
 
-	apiUrl := fmt.Sprintf("%s/contributions", _apiPrefix)
+	apiUrl := fmt.Sprintf("%s/contributions", p.Endpoint)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -43,10 +47,10 @@ func CreateContribution(contribution *models.Contribution) (*models.Contribution
 	return &response, nil
 }
 
-func GetContributions() (*models.ContributionsResponse, error) {
-	apiUrl := fmt.Sprintf("%s/contributions", _apiPrefix)
+func (p *Primetrust) GetAllContributions() (*models.ContributionsResponse, error) {
+	apiUrl := fmt.Sprintf("%s/contributions", p.Endpoint)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -54,7 +58,6 @@ func GetContributions() (*models.ContributionsResponse, error) {
 		return nil, err
 	}
 	defer res.Body.Close()
-
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New(res.Status)
 	}
@@ -71,10 +74,10 @@ func GetContributions() (*models.ContributionsResponse, error) {
 	return &response, nil
 }
 
-func AuthorizeContribution(contributionId string) (error) {
-	apiUrl := fmt.Sprintf("%s/contributions/%s/sandbox/authorize", _apiPrefix, contributionId)
+func (p *Primetrust) AuthorizeContribution(contributionId string) error {
+	apiUrl := fmt.Sprintf("%s/contributions/%s/sandbox/authorize", p.Endpoint, contributionId)
 	req, err := http.NewRequest("POST", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

@@ -11,17 +11,18 @@ const (
 	ProductionAPIPrefix = "https://api.primetrust.com/v2"
 )
 
-var (
-	_apiPrefix  string
-	_authHeader string
-)
-
-func basicAuth(username string, password string) string {
-	auth := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(auth))
+type Primetrust struct {
+	Endpoint      string
+	Authorization string
 }
 
-func Init(apiPrefix string, login string, password string) {
-	_apiPrefix = apiPrefix
-	_authHeader = fmt.Sprintf("Basic %s", basicAuth(login, password))
+func Init(apiPrefix string, email string, password string) *Primetrust {
+	authorization := fmt.Sprintf("Basic %s", base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", email, password))))
+
+	primetrust := &Primetrust{
+		Endpoint:      apiPrefix,
+		Authorization: authorization,
+	}
+
+	return primetrust
 }
