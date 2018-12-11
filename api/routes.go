@@ -61,7 +61,10 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		voting.GET("/my_candidate", s.GetUserCandidate)
 		voting.GET("/candidates", s.GetCandidatesList)
 		voting.POST("/candidate/vote", s.VoteCandidateBoard)
+
 		// Proposal
+		voting.GET("/dcbparams", s.GetDCBParams)
+		voting.GET("/govparams", s.GetGOVParams)
 		voting.POST("/proposal", s.CreateProposal)
 		voting.GET("/proposals", s.GetProposalsList)
 		voting.GET("/proposal/:id", s.GetProposal)

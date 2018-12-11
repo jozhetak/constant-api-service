@@ -377,32 +377,44 @@ func (b *Blockchain) GetBondTypes() ([]interface{}, error) {
 	return resultResp.([]interface{}), nil
 }
 
-func (b *Blockchain) GetGOVParams() ([]interface{}, error) {
+func (b *Blockchain) GetGOVParams() (interface{}, error) {
 	param := []interface{}{}
 	resp, err := b.blockchainAPI(GetGOVParams, param)
 	if err != nil {
 		return nil, err
 	}
 	data := resp.(map[string]interface{})
-	resultResp := data["Result"]
-	if resultResp == nil {
-		return nil, errors.New("Fail")
+	if data["Error"] != nil {
+		return nil, errors.Errorf("couldn't get result from response data: %+v", data["Error"])
 	}
-	return resultResp.([]interface{}), nil
+	if data["Result"] == nil {
+		return nil, errors.Errorf("couldn't get result from response: req: %+v, data: %+v", param, data)
+	}
+	ret, ok := data["Result"].(map[string]interface{})
+	if !ok {
+		return nil, errors.Errorf("couldn't get gov params: resp: %+v", data)
+	}
+	return ret, nil
 }
 
-func (b *Blockchain) GetDCBParams() ([]interface{}, error) {
+func (b *Blockchain) GetDCBParams() (interface{}, error) {
 	param := []interface{}{}
 	resp, err := b.blockchainAPI(GetDCBParams, param)
 	if err != nil {
 		return nil, err
 	}
 	data := resp.(map[string]interface{})
-	resultResp := data["Result"]
-	if resultResp == nil {
-		return nil, errors.New("Fail")
+	if data["Error"] != nil {
+		return nil, errors.Errorf("couldn't get result from response data: %+v", data["Error"])
 	}
-	return resultResp.([]interface{}), nil
+	if data["Result"] == nil {
+		return nil, errors.Errorf("couldn't get result from response: req: %+v, data: %+v", param, data)
+	}
+	ret, ok := data["Result"].(map[string]interface{})
+	if !ok {
+		return nil, errors.Errorf("couldn't get dcb params: resp: %+v", data)
+	}
+	return ret, nil
 }
 
 func (b *Blockchain) CreateAndSendVoteGOVBoardTransaction(privkey string, voteAmount uint64) (string, error) {
