@@ -16,9 +16,10 @@ import (
 type ReserveService struct {
 	r *reserve.Reserve
 	b *blockchain.Blockchain
+	p *primetrust.Primetrust
 }
 
-func NewReserveService(r *reserve.Reserve, b *blockchain.Blockchain) *ReserveService {
+func NewReserveService(r *reserve.Reserve, b *blockchain.Blockchain, p *primetrust.Primetrust) *ReserveService {
 	return &ReserveService{
 		r: r,
 		b: b,
@@ -131,7 +132,7 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 		extRequestData, _ := json.Marshal(contribution)
 
 		rcrpp.ExtRequestData = string(extRequestData)
-		response, err := primetrust.CreateContribution(&contribution)
+		response, err := self.p.CreateContribution(&contribution)
 
 		if err != nil {
 			delErr := self.r.DeleteReserveContributionRequestPaymentParty(rcrpp)
@@ -271,7 +272,7 @@ func (self *ReserveService) CreateDisbursement(u *models.User, req *serializers.
 		extRequestData, _ := json.Marshal(disbursement)
 
 		rdrpp.ExtRequestData = string(extRequestData)
-		response, err := primetrust.CreateDisbursement(&disbursement)
+		response, err := self.p.CreateDisbursement(&disbursement)
 
 		if err != nil {
 			delErr := self.r.DeleteReserveDisbursementRequestPaymentParty(rdrpp)

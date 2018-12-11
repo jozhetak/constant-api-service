@@ -2,22 +2,23 @@ package primetrust
 
 import (
 	"bytes"
-	"io/ioutil"
-	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 )
 
-func CreateUser(user *models.User) (*models.User, error) {
+func (p *Primetrust) CreateUser(user *models.User) (*models.User, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(user)
 
-	apiUrl := fmt.Sprintf("%s/users", _apiPrefix)
+	apiUrl := fmt.Sprintf("%s/users", p.Endpoint)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -43,10 +44,10 @@ func CreateUser(user *models.User) (*models.User, error) {
 	return &response, nil
 }
 
-func GetUser(userId string) (*models.User, error) {
-	apiUrl := fmt.Sprintf("%s/users/%s", _apiPrefix, userId)
+func (p *Primetrust) GetUser(userId string) (*models.User, error) {
+	apiUrl := fmt.Sprintf("%s/users/%s", p.Endpoint, userId)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -72,10 +73,10 @@ func GetUser(userId string) (*models.User, error) {
 	return &response, nil
 }
 
-func GetUsers() (*models.UsersResponse, error) {
-	apiUrl := fmt.Sprintf("%s/users", _apiPrefix)
+func (p *Primetrust) GetUsers() (*models.UsersResponse, error) {
+	apiUrl := fmt.Sprintf("%s/users", p.Endpoint)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -101,10 +102,10 @@ func GetUsers() (*models.UsersResponse, error) {
 	return &response, nil
 }
 
-func GetCurrentUser() (*models.User, error) {
-	apiUrl := fmt.Sprintf("%s/users/current", _apiPrefix)
+func (p *Primetrust) GetCurrentUser() (*models.User, error) {
+	apiUrl := fmt.Sprintf("%s/users/current", p.Endpoint)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -130,7 +131,7 @@ func GetCurrentUser() (*models.User, error) {
 	return &response, nil
 }
 
-func UpdateUserEmail(userId string, email string) (*models.User, error) {
+func (p *Primetrust) UpdateUserEmail(userId string, email string) (*models.User, error) {
 	user := models.User{
 		Data: models.UserData{
 			Type: models.UserType,
@@ -143,10 +144,10 @@ func UpdateUserEmail(userId string, email string) (*models.User, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(user)
 
-	apiUrl := fmt.Sprintf("%s/users/%s", _apiPrefix, userId)
+	apiUrl := fmt.Sprintf("%s/users/%s", p.Endpoint, userId)
 	req, err := http.NewRequest("PATCH", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -172,7 +173,7 @@ func UpdateUserEmail(userId string, email string) (*models.User, error) {
 	return &response, nil
 }
 
-func UpdateUserPassword(userId string, currentPassword string, password string) (*models.User, error) {
+func (p *Primetrust) UpdateUserPassword(userId string, currentPassword string, password string) (*models.User, error) {
 	user := models.User{
 		Data: models.UserData{
 			Type: models.UserType,
@@ -186,10 +187,10 @@ func UpdateUserPassword(userId string, currentPassword string, password string) 
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(user)
 
-	apiUrl := fmt.Sprintf("%s/users/%s/password", _apiPrefix, userId)
+	apiUrl := fmt.Sprintf("%s/users/%s/password", p.Endpoint, userId)
 	req, err := http.NewRequest("PATCH", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

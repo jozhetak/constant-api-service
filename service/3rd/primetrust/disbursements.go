@@ -2,22 +2,26 @@ package primetrust
 
 import (
 	"bytes"
-	"io/ioutil"
-	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 )
 
-func CreateDisbursement(disbursement *models.Disbursement) (*models.Disbursement, error) {
+func (p *Primetrust) CreateDisbursement(disbursement *models.Disbursement) (*models.Disbursement, error) {
 	jsonData := new(bytes.Buffer)
-	json.NewEncoder(jsonData).Encode(disbursement)
+	err := json.NewEncoder(jsonData).Encode(disbursement)
+	if err != nil {
+		return nil, err
+	}
 
-	apiUrl := fmt.Sprintf("%s/disbursements", _apiPrefix)
+	apiUrl := fmt.Sprintf("%s/disbursements", p.Endpoint)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -43,10 +47,10 @@ func CreateDisbursement(disbursement *models.Disbursement) (*models.Disbursement
 	return &response, nil
 }
 
-func GetDisbursement(disbursementId string) (*models.Disbursement, error) {
-	apiUrl := fmt.Sprintf("%s/disbursements/%s", _apiPrefix, disbursementId)
+func (p *Primetrust) GetDisbursementByID(disbursementId string) (*models.Disbursement, error) {
+	apiUrl := fmt.Sprintf("%s/disbursements/%s", p.Endpoint, disbursementId)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -72,10 +76,10 @@ func GetDisbursement(disbursementId string) (*models.Disbursement, error) {
 	return &response, nil
 }
 
-func GetDisbursements() (*models.DisbursementsResponse, error) {
-	apiUrl := fmt.Sprintf("%s/disbursements", _apiPrefix)
+func (p *Primetrust) GetAllDisbursements() (*models.DisbursementsResponse, error) {
+	apiUrl := fmt.Sprintf("%s/disbursements", p.Endpoint)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -101,10 +105,10 @@ func GetDisbursements() (*models.DisbursementsResponse, error) {
 	return &response, nil
 }
 
-func DeleteDisbursement(disbursementId string) (error) {
-	apiUrl := fmt.Sprintf("%s/disbursements/%s", _apiPrefix, disbursementId)
+func (p *Primetrust) DeleteDisbursement(disbursementId string) error {
+	apiUrl := fmt.Sprintf("%s/disbursements/%s", p.Endpoint, disbursementId)
 	req, err := http.NewRequest("DELETE", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -120,10 +124,10 @@ func DeleteDisbursement(disbursementId string) (error) {
 	return nil
 }
 
-func AuthorizeDisbursement(disbursementId string) (error) {
-	apiUrl := fmt.Sprintf("%s/disbursements/%s/sandbox/authorize", _apiPrefix, disbursementId)
+func (p *Primetrust) AuthorizeDisbursement(disbursementId string) error {
+	apiUrl := fmt.Sprintf("%s/disbursements/%s/sandbox/authorize", p.Endpoint, disbursementId)
 	req, err := http.NewRequest("POST", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -138,4 +142,3 @@ func AuthorizeDisbursement(disbursementId string) (error) {
 
 	return nil
 }
-

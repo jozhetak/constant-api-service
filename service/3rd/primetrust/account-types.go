@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
 	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 )
 
-func GetAccountTypes() (*models.AccountTypesResponse, error) {
-	apiUrl := fmt.Sprintf("%s/account-types", _apiPrefix)
+func (p *Primetrust) GetAllAccountTypies() (*models.AccountTypesResponse, error) {
+	apiUrl := fmt.Sprintf("%s/account-types", p.Endpoint)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -38,10 +39,10 @@ func GetAccountTypes() (*models.AccountTypesResponse, error) {
 	return &response, nil
 }
 
-func GetAccountType(accountTypeId string) (*models.AccountType, error) {
-	apiUrl := fmt.Sprintf("%s/account-types/%s", _apiPrefix, accountTypeId)
+func (p *Primetrust) GetAccountTypeByID(accountTypeId string) (*models.AccountType, error) {
+	apiUrl := fmt.Sprintf("%s/account-types/%s", p.Endpoint, accountTypeId)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

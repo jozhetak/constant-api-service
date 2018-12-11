@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
 	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 )
 
-func GetContacts() (*models.ContactsResponse, error) {
-	apiUrl := fmt.Sprintf("%s/contacts", _apiPrefix)
+func (p *Primetrust) GetAllContacts() (*models.ContactsResponse, error) {
+	apiUrl := fmt.Sprintf("%s/contacts", p.Endpoint)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -35,10 +36,10 @@ func GetContacts() (*models.ContactsResponse, error) {
 	return &response, nil
 }
 
-func GetContact(contactId string) (*models.Contact, error) {
-	apiUrl := fmt.Sprintf("%s/contacts/%s", _apiPrefix, contactId)
+func (p *Primetrust) GetContactByID(contactId string) (*models.Contact, error) {
+	apiUrl := fmt.Sprintf("%s/contacts/%s", p.Endpoint, contactId)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -64,14 +65,14 @@ func GetContact(contactId string) (*models.Contact, error) {
 	return &response, nil
 }
 
-func CreateContact(contact *models.Contact) (*models.Contact, error) {
+func (p *Primetrust) CreateContact(contact *models.Contact) (*models.Contact, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(contact)
 
-	apiUrl := fmt.Sprintf("%s/contacts", _apiPrefix)
+	apiUrl := fmt.Sprintf("%s/contacts", p.Endpoint)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)

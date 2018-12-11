@@ -6,19 +6,20 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"log"
+	"net/http"
+
 	"github.com/ninjadotorg/constant-api-service/service/3rd/primetrust/models"
 )
 
-func CreateNewWebhook(webhook *models.Webhook) (*models.Webhook, error) {
+func (p *Primetrust) CreateNewWebhook(webhook *models.Webhook) (*models.Webhook, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(webhook)
 
-	apiUrl := fmt.Sprintf("%s/webhook-configs", _apiPrefix)
+	apiUrl := fmt.Sprintf("%s/webhook-configs", p.Endpoint)
 	req, err := http.NewRequest("POST", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -44,16 +45,16 @@ func CreateNewWebhook(webhook *models.Webhook) (*models.Webhook, error) {
 	return &response, nil
 }
 
-func UpdateWebhook(webhook *models.Webhook) (*models.Webhook, error) {
+func (p *Primetrust) UpdateWebhook(webhook *models.Webhook) (*models.Webhook, error) {
 	jsonData := new(bytes.Buffer)
 	json.NewEncoder(jsonData).Encode(webhook)
 
-	apiUrl := fmt.Sprintf("%s/webhook-configs/%s", _apiPrefix, webhook.Data.ID)
+	apiUrl := fmt.Sprintf("%s/webhook-configs/%s", p.Endpoint, webhook.Data.ID)
 	log.Println(apiUrl)
 	log.Println(jsonData)
 	req, err := http.NewRequest("PATCH", apiUrl, jsonData)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -79,10 +80,10 @@ func UpdateWebhook(webhook *models.Webhook) (*models.Webhook, error) {
 	return &response, nil
 }
 
-func GetWebhooks() (*models.WebhooksResponse, error) {
-	apiUrl := fmt.Sprintf("%s/webhooks", _apiPrefix)
+func (p *Primetrust) GetWebhooks() (*models.WebhooksResponse, error) {
+	apiUrl := fmt.Sprintf("%s/webhooks", p.Endpoint)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
@@ -108,10 +109,10 @@ func GetWebhooks() (*models.WebhooksResponse, error) {
 	return &response, nil
 }
 
-func GetWebhook(webhookId string) (*models.Webhook, error) {
-	apiUrl := fmt.Sprintf("%s/webhooks/%s", _apiPrefix, webhookId)
+func (p *Primetrust) GetWebhook(webhookId string) (*models.Webhook, error) {
+	apiUrl := fmt.Sprintf("%s/webhooks/%s", p.Endpoint, webhookId)
 	req, err := http.NewRequest("GET", apiUrl, nil)
-	req.Header.Add("Authorization", _authHeader)
+	req.Header.Add("Authorization", p.Authorization)
 
 	client := &http.Client{}
 	res, err := client.Do(req)
