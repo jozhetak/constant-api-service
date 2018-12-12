@@ -83,16 +83,18 @@ type ProposalResp struct {
 	User    *UserResp `json:"User"`
 	VoteNum int       `json:"VoteNum"`
 
-	TxID string `json:"TxID"`
-	Data string `json:"Data"`
+	TxID      string `json:"TxID"`
+	Data      string `json:"Data"`
+	CreatedAt string `json:"CreatedAt"`
 }
 
 func NewProposalDCBResp(data *models.VotingProposalDCB) *ProposalResp {
 	result := &ProposalResp{
-		ID:      data.ID,
-		Name:    data.Name,
-		Data:    data.Data,
-		VoteNum: data.GetVoteNum(),
+		ID:        data.ID,
+		Name:      data.Name,
+		Data:      data.Data,
+		VoteNum:   data.GetVoteNum(),
+		CreatedAt: data.CreatedAt.Format(time.RFC3339),
 	}
 	result.User = NewUserResp(*data.User)
 	return result
@@ -100,10 +102,11 @@ func NewProposalDCBResp(data *models.VotingProposalDCB) *ProposalResp {
 
 func NewProposalGOVResp(data *models.VotingProposalGOV) *ProposalResp {
 	result := &ProposalResp{
-		ID:      data.ID,
-		Name:    data.Name,
-		Data:    data.Data,
-		VoteNum: data.GetVoteNum(),
+		ID:        data.ID,
+		Name:      data.Name,
+		Data:      data.Data,
+		VoteNum:   data.GetVoteNum(),
+		CreatedAt: data.CreatedAt.Format(time.RFC3339),
 	}
 	result.User = NewUserResp(*data.User)
 	return result
@@ -114,12 +117,14 @@ type VotingProposalResp struct {
 	Voter        *UserResp     `json:"Voter"`
 	TxID         string        `json:"TxID"`
 	ProposalResp *ProposalResp `json:"ProposalResp"`
+	CreatedAt    string        `json:"CreatedAt"`
 }
 
 func NewVotingDCBProposal(data *models.VotingProposalDCBVote) *VotingProposalResp {
 	return &VotingProposalResp{
 		Voter:        NewUserResp(*data.Voter),
 		TxID:         data.TxID,
+		CreatedAt:    data.CreatedAt.Format(time.RFC3339),
 		ProposalResp: NewProposalDCBResp(data.VotingProposalDCB),
 	}
 }
@@ -128,6 +133,7 @@ func NewVotingGOVProposal(data *models.VotingProposalGOVVote) *VotingProposalRes
 	return &VotingProposalResp{
 		Voter:        NewUserResp(*data.Voter),
 		TxID:         data.TxID,
+		CreatedAt:    data.CreatedAt.Format(time.RFC3339),
 		ProposalResp: NewProposalGOVResp(data.VotingProposalGOV),
 	}
 }
