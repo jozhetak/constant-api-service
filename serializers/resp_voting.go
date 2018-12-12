@@ -94,7 +94,7 @@ func NewProposalDCBResp(data *models.VotingProposalDCB) *ProposalResp {
 		Name:      data.Name,
 		Data:      data.Data,
 		VoteNum:   data.GetVoteNum(),
-		CreatedAt: data.CreatedAt.Format(time.RFC3339),
+		CreatedAt: data.CreatedAt.UTC().Format(time.RFC3339),
 	}
 	result.User = NewUserResp(*data.User)
 	return result
@@ -106,7 +106,7 @@ func NewProposalGOVResp(data *models.VotingProposalGOV) *ProposalResp {
 		Name:      data.Name,
 		Data:      data.Data,
 		VoteNum:   data.GetVoteNum(),
-		CreatedAt: data.CreatedAt.Format(time.RFC3339),
+		CreatedAt: data.CreatedAt.UTC().Format(time.RFC3339),
 	}
 	result.User = NewUserResp(*data.User)
 	return result
@@ -124,7 +124,7 @@ func NewVotingDCBProposal(data *models.VotingProposalDCBVote) *VotingProposalRes
 	return &VotingProposalResp{
 		Voter:        NewUserResp(*data.Voter),
 		TxID:         data.TxID,
-		CreatedAt:    data.CreatedAt.Format(time.RFC3339),
+		CreatedAt:    data.CreatedAt.UTC().Format(time.RFC3339),
 		ProposalResp: NewProposalDCBResp(data.VotingProposalDCB),
 	}
 }
@@ -133,7 +133,7 @@ func NewVotingGOVProposal(data *models.VotingProposalGOVVote) *VotingProposalRes
 	return &VotingProposalResp{
 		Voter:        NewUserResp(*data.Voter),
 		TxID:         data.TxID,
-		CreatedAt:    data.CreatedAt.Format(time.RFC3339),
+		CreatedAt:    data.CreatedAt.UTC().Format(time.RFC3339),
 		ProposalResp: NewProposalGOVResp(data.VotingProposalGOV),
 	}
 }
