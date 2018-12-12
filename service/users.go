@@ -196,10 +196,18 @@ func (u *User) ResetPassword(token, password, confirmPassword string) error {
 }
 
 func (u *User) Update(user *models.User, req *serializers.UserReq) error {
-	user.UserName = req.UserName
-	user.Bio = req.Bio
-	user.FirstName = req.FirstName
-	user.LastName = req.LastName
+	if req.UserName != "" {
+		user.UserName = req.UserName
+	}
+	if req.Bio != "" {
+		user.Bio = req.Bio
+	}
+	if req.FirstName != "" {
+		user.FirstName = req.FirstName
+	}
+	if req.LastName != "" {
+		user.LastName = req.LastName
+	}
 	if err := u.r.Update(user); err != nil {
 		return errors.Wrap(err, "u.r.Update")
 	}
