@@ -5,6 +5,8 @@ import "github.com/jinzhu/gorm"
 type VotingProposalGOV struct {
 	gorm.Model
 
+	Name string
+
 	User   *User
 	UserID int
 

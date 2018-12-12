@@ -79,6 +79,7 @@ func NewVotingBoardVote(v *models.VotingBoardVote) *VotingBoardVoteResp {
 // Proposal
 type ProposalResp struct {
 	ID      uint      `json:"ID"`
+	Name    string    `json:"Name"`
 	User    *UserResp `json:"User"`
 	VoteNum int       `json:"VoteNum"`
 
@@ -89,6 +90,7 @@ type ProposalResp struct {
 func NewProposalDCBResp(data *models.VotingProposalDCB) *ProposalResp {
 	result := &ProposalResp{
 		ID:      data.ID,
+		Name:    data.Name,
 		Data:    data.Data,
 		VoteNum: data.GetVoteNum(),
 	}
@@ -99,6 +101,7 @@ func NewProposalDCBResp(data *models.VotingProposalDCB) *ProposalResp {
 func NewProposalGOVResp(data *models.VotingProposalGOV) *ProposalResp {
 	result := &ProposalResp{
 		ID:      data.ID,
+		Name:    data.Name,
 		Data:    data.Data,
 		VoteNum: data.GetVoteNum(),
 	}

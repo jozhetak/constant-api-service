@@ -185,35 +185,37 @@ func (self *VotingService) VoteCandidateBoard(voter *models.User, req *serialize
 }
 
 func (self *VotingService) CreateProposal(user *models.User, request *serializers.RegisterProposalRequest) (models.ProposalInterface, error) {
-	switch request.Type {
-	case 1: // DCB
+	switch models.BoardCandidateType(request.Type) {
+	case models.DCB:
 		// TODO call blockchain network rpc function
 		// TODO waiting and check tx with blockchain network
 		params, _ := json.Marshal(request.DCB)
 		proposal := &models.VotingProposalDCB{
+			Name: request.Name,
 			User: user,
 			Data: string(params),
 			TxID: "", // get tx above
 		}
-		proposalCreated, err := self.votingDao.CreateVotingProposalDCB(proposal)
+		p, err := self.votingDao.CreateVotingProposalDCB(proposal)
 		if err != nil {
-			return proposalCreated, err
+			return nil, errors.Wrap(err, "self.votingDao.CreateVotingProposalDCB")
 		}
-		return proposalCreated, nil
-	case 2: // GOV
+		return p, nil
+	case models.GOV:
 		// TODO call blockchain network rpc function
 		// TODO waiting and check tx with blockchain network
 		params, _ := json.Marshal(request.GOV)
 		proposal := &models.VotingProposalGOV{
+			Name: request.Name,
 			User: user,
 			Data: string(params),
 			TxID: "", // get tx above
 		}
-		proposalCreated, err := self.votingDao.CreateVotingProposalGOV(proposal)
+		p, err := self.votingDao.CreateVotingProposalGOV(proposal)
 		if err != nil {
-			return proposalCreated, err
+			return nil, errors.Wrap(err, "self.votingDao.CreateVotingProposalGOV")
 		}
-		return proposalCreated, nil
+		return p, nil
 	default:
 		return nil, errors.Errorf("unsupported proposal type: %v", request.Type)
 	}
