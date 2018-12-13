@@ -17,6 +17,7 @@ type VotingBoardCandidateRequest struct {
 // Proposal
 type RegisterProposalRequest struct {
 	Type int `json:"Type"` // 1: DCB, 2 GOV
+	Name string
 
 	DCB *VotingProposalDCBRequest `json:"DCB"`
 	GOV *VotingProposalGOVRequest `json:"GOV"`
