@@ -114,11 +114,11 @@ func (self *VotingService) GetCandidatesList(user *models.User, boardType int, p
 			bt := models.BoardCandidateType(v.BoardType)
 			switch bt {
 			case models.DCB:
-				r.IsVoted = (l.DCB != "")
+				r.IsVotedDCB = (l.DCB != "")
 			case models.GOV:
-				r.IsVoted = (l.GOV != "")
+				r.IsVotedGOV = (l.GOV != "")
 			case models.CMB:
-				r.IsVoted = (l.CMB != "")
+				r.IsVotedCMB = (l.CMB != "")
 			}
 		}
 

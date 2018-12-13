@@ -18,7 +18,9 @@ type VotingBoardCandidateResp struct {
 	GOVAppliedAt string          `json:"GOVAppliedAt"`
 	GOVBalances  *WalletBalances `json:"GOVBalances"`
 	VoteNum      int             `json:"VoteNum"`
-	IsVoted      bool            `json:"IsVoted"`
+	IsVotedDCB   bool            `json:"IsVotedDCB"`
+	IsVotedGOV   bool            `json:"IsVotedGOV"`
+	IsVotedCMB   bool            `json:"IsVotedCMB"`
 }
 
 func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoardCandidateResp {
