@@ -125,7 +125,6 @@ func (self *VotingService) GetCandidatesList(user *models.User, boardType int, p
 		if err := self.GetCandidateBalances(r); err != nil {
 			return nil, errors.Wrap(err, "self.GetCandidateBalances")
 		}
-
 		resp = append(resp, r)
 	}
 	return resp, err
@@ -471,10 +470,9 @@ func (self *VotingService) GetUserCandidate(u *models.User) (*serializers.Voting
 	}
 
 	resp := serializers.NewVotingBoardCandidateResp(c)
-	// uncomment this to get balances for candidate
-	// if err := self.GetCandidateBalances(resp); err != nil {
-	//         return nil, errors.Wrap(err, "self.GetCandidateBalances")
-	// }
+	if err := self.GetCandidateBalances(resp); err != nil {
+		return nil, errors.Wrap(err, "self.GetCandidateBalances")
+	}
 	return resp, nil
 }
 
@@ -482,21 +480,21 @@ func (self *VotingService) GetCandidateBalances(resp *serializers.VotingBoardCan
 	if resp.CMB != "" {
 		wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(resp.CMB)
 		if err != nil {
-			return errors.Wrap(err, "self.blockchainService.GetCoinAndCustomTokenBalanceForPaymentAddress")
+			return errors.Wrapf(err, "self.blockchainService.GetCoinAndCustomTokenBalanceForPaymentAddress: %q", resp.CMB)
 		}
 		resp.CMBBalances = wallets
 	}
 	if resp.GOV != "" {
 		wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(resp.GOV)
 		if err != nil {
-			return errors.Wrap(err, "self.blockchainService.GetCoinAndCustomTokenBalanceForPaymentAddress")
+			return errors.Wrapf(err, "self.blockchainService.GetCoinAndCustomTokenBalanceForPaymentAddress: %q", resp.GOV)
 		}
 		resp.GOVBalances = wallets
 	}
 	if resp.DCB != "" {
 		wallets, err := self.walletSvc.GetCoinAndCustomTokenBalanceForPaymentAddress(resp.DCB)
 		if err != nil {
-			return errors.Wrap(err, "self.blockchainService.GetCoinAndCustomTokenBalanceForPaymentAddress")
+			return errors.Wrapf(err, "self.blockchainService.GetCoinAndCustomTokenBalanceForPaymentAddress: %q", resp.DCB)
 		}
 		resp.DCBBalances = wallets
 	}
