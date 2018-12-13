@@ -80,9 +80,9 @@ func (s *Server) Routes(authMw *jwt.GinJWTMiddleware) {
 		reserve.POST("/contribution", s.CreateContribution)
 		reserve.GET("/contribution", s.ContributionHistory)
 		reserve.GET("/contribution/:id", s.GetContribution)
-		reserve.POST("/disbursemnet", s.CreateDisbursement)
-		reserve.GET("/disbursemnet", s.DisbursementHistory)
-		reserve.GET("/disbursemnet/:id", s.GetDisbursement)
+		reserve.POST("/disbursement", s.CreateDisbursement)
+		reserve.GET("/disbursement", s.DisbursementHistory)
+		reserve.GET("/disbursement/:id", s.GetDisbursement)
 
 	}
 

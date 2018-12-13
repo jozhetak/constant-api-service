@@ -54,6 +54,8 @@ func main() {
 		logger.Fatal("failed to auto migrate", zap.Error(err))
 	}
 
+	fmt.Println("test primetrust conf", conf.PrimetrustPrefix, conf.PrimetrustEmail, conf.PrimetrustPassword, conf.PrimetrustAccountID)
+
 	var (
 		client = &http.Client{}
 		bc     = blockchain.New(client, conf.ConstantChainEndpoint)
@@ -61,7 +63,7 @@ func main() {
 		mailClient        = sendgrid.Init(conf)
 		ethereumService   = ethereum.Init(conf)
 		emailHelper       = email.New(mailClient)
-		primetrustService = primetrust.Init(conf.PrimetrustPrefix, conf.PrimetrustEmail, conf.PrimetrustPassword)
+		primetrustService = primetrust.Init(conf.PrimetrustPrefix, conf.PrimetrustEmail, conf.PrimetrustPassword, conf.PrimetrustAccountID)
 
 		userDAO = dao.NewUser(db)
 		userSvc = service.NewUserService(userDAO, bc, emailHelper)

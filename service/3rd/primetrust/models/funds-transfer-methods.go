@@ -1,21 +1,21 @@
 package models
 
 const (
-	PaymentMethodType                         = "payment-methods"
-	PaymentMethodAchCheckTypePersonal         = "personal"
-	PaymentMethodAchCheckTypeBusiness         = "business"
-	PaymentMethodBankAccountTypeChecking      = "checking"
-	PaymentMethodBankAccountTypeSavings       = "savings"
-	PaymentMethodPaymentTypeAch               = "ach"
-	PaymentMethodPaymentTypeCheck             = "check"
-	PaymentMethodPaymentTypeCreditCard        = "credit_card"
-	PaymentMethodPaymentTypeWire              = "wire"
-	PaymentMethodPaymentTypeWireInternational = "wire_international"
-	PaymentMethodCreditCardTypeMC             = "MC"
-	PaymentMethodCreditCardTypeVI             = "VI"
+	FundsTransferMethodType                               = "payment-methods"
+	FundsTransferMethodAchCheckTypePersonal               = "personal"
+	FundsTransferMethodAchCheckTypeBusiness               = "business"
+	FundsTransferMethodBankAccountTypeChecking            = "checking"
+	FundsTransferMethodBankAccountTypeSavings             = "savings"
+	FundsTransferMethodFundsTransferTypeAch               = "ach"
+	FundsTransferMethodFundsTransferTypeCheck             = "check"
+	FundsTransferMethodFundsTransferTypeCreditCard        = "credit_card"
+	FundsTransferMethodFundsTransferTypeWire              = "wire"
+	FundsTransferMethodFundsTransferTypeWireInternational = "wire_international"
+	FundsTransferMethodCreditCardTypeMC                   = "MC"
+	FundsTransferMethodCreditCardTypeVI                   = "VI"
 )
 
-type PaymentMethodAttributes struct {
+type FundsTransferMethodAttributes struct {
 	ID                        string `json:"id,omitempty"`
 	ContactID                 string `json:"contact-id,omitempty"`
 	AchCheckType              string `json:"ach-check-type,omitempty"` // (enum): personal or business.
@@ -32,7 +32,7 @@ type PaymentMethodAttributes struct {
 	IntermediaryBankName      string `json:"intermediary-bank-name,omitempty"`
 	IntermediaryBankReference string `json:"intermediary-bank-reference,omitempty"`
 	Last4                     string `json:"last-4,omitempty"`
-	PaymentType               string `json:"payment-type"` // (enum, sql:true): ach, check, credit_card, wire, or wire_international
+	FundsTransferType         string `json:"funds-transfer-type"` // (enum, sql:true): ach, check, credit_card, wire, or wire_international
 	RoutingNumber             string `json:"routing-number,omitempty"`
 	SwiftCode                 string `json:"swift-code,omitempty"`
 	IpAddress                 string `json:"ip-address,omitempty"`
@@ -42,19 +42,19 @@ type PaymentMethodAttributes struct {
 	CreditCardNumber          string `json:"credit-card-number,omitempty"`
 }
 
-type PaymentMethodData struct {
-	ID            string                  `json:"id,omitempty"`
-	Type          string                  `json:"type,omitempty"`
-	Attributes    PaymentMethodAttributes `json:"attributes"`
-	Links         Links                   `json:"links"`
-	Relationships Relationships           `json:"relationships"`
+type FundsTransferMethodData struct {
+	ID            string                        `json:"id,omitempty"`
+	Type          string                        `json:"type,omitempty"`
+	Attributes    FundsTransferMethodAttributes `json:"attributes"`
+	Links         Links                         `json:"links,omitempty"`
+	Relationships Relationships                 `json:"relationships,omitempty"`
 }
 
-type PaymentMethod struct {
-	Data PaymentMethodData `json:"data"`
+type FundsTransferMethod struct {
+	Data FundsTransferMethodData `json:"data"`
 }
 
-type PaymentMethodsResponse struct {
+type FundsTransferMethodsResponse struct {
 	CollectionResponse
-	Data []PaymentMethodData `json:"data"`
+	Data []FundsTransferMethodData `json:"data"`
 }

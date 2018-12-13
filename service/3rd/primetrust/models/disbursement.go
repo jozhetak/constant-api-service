@@ -5,29 +5,29 @@ const (
 )
 
 type DisbursementAttributes struct {
-	ID                string                  `json:"id,omitempty"`
-	AccountID         string                  `json:"account-id"`
-	Amount            float64                 `json:"amount"`
-	CustomerReference string                  `json:"customer-reference"`
-	Description       string                  `json:"description"`
-	PaymentMethodID   string                  `json:"payment-method-id"`
-	PaymentMethod     PaymentMethodAttributes `json:"payment-method"`
-	SpecialType       string                  `json:"contact-email"`
-	Status            string                  `json:"status"`
-	ContactEmail      string                  `json:"contact-email"`
-	ContactName       string                  `json:"contact-name"`
+	ID                    string                         `json:"id,omitempty"`
+	AccountID             string                         `json:"account-id,omitempty"`
+	Amount                float64                        `json:"amount,omitempty"`
+	CustomerReference     string                         `json:"customer-reference,omitempty"`
+	Description           string                         `json:"description,omitempty"`
+	FundsTransferMethodID string                         `json:"funds-transfer-method-id,omitempty"`
+	FundsTransferMethod   *FundsTransferMethodAttributes `json:"funds-transfer-method,omitempty"`
+	SpecialType           string                         `json:"special-type,omitempty"`
+	Status                string                         `json:"status,omitempty"`
+	ContactEmail          string                         `json:"contact-email,omitempty"`
+	ContactName           string                         `json:"contact-name,omitempty"`
 }
 
 type DisbursementData struct {
-	ID            string                 `json:"id,omitempty"`
-	Type          string                 `json:"type,omitempty"`
-	Attributes    DisbursementAttributes `json:"attributes"`
-	Links         Links                  `json:"links"`
-	Relationships Relationships          `json:"relationships"`
+	ID            string                  `json:"id,omitempty"`
+	Type          string                  `json:"type,omitempty"`
+	Attributes    *DisbursementAttributes `json:"attributes,omitempty"`
+	Links         *Links                  `json:"links,omitempty"`
+	Relationships *Relationships          `json:"relationships,omitempty"`
 }
 
 type Disbursement struct {
-	Data DisbursementData `json:"data"`
+	Data *DisbursementData `json:"data"`
 }
 
 type DisbursementsResponse struct {

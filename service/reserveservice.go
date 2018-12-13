@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ninjadotorg/constant-api-service/conf"
 	"github.com/ninjadotorg/constant-api-service/dao/reserve"
 	"github.com/ninjadotorg/constant-api-service/models"
 	"github.com/ninjadotorg/constant-api-service/serializers"
@@ -23,26 +22,18 @@ func NewReserveService(r *reserve.Reserve, b *blockchain.Blockchain, p *primetru
 	return &ReserveService{
 		r: r,
 		b: b,
+		p: p,
 	}
 }
 
 func (self *ReserveService) CreateContribution(u *models.User, req *serializers.ReserveContributionRequest) (*models.ReserveContributionRequest, error) {
-	conf := config.GetConfig()
-
 	// 1. Validate ReserveContributionRequest in request
 	if req.PaymentForm.ContactEmail == "" || req.PaymentForm.ContactName == "" {
 		return nil, ErrInvalidArgument
 	}
 
-	switch req.PaymentForm.PaymentType {
-	case serializers.PaymentTypeAch:
-		if req.PaymentForm.BankAccountName == "" || req.PaymentForm.BankAccountType == "" || req.PaymentForm.BankName == "" {
-			return nil, ErrInvalidArgument
-		}
-	case serializers.PaymentTypeCreditCard:
-		if req.PaymentForm.CreditCardCvv == "" || req.PaymentForm.CreditCardExpirationDate == "" || req.PaymentForm.CreditCardNumber == "" {
-			return nil, ErrInvalidArgument
-		}
+	if req.PaymentForm.BankAccountName == "" || req.PaymentForm.BankAccountType == "" || req.PaymentForm.BankName == "" {
+		return nil, ErrInvalidArgument
 	}
 
 	if req.PaymentAddress == "" {
@@ -61,7 +52,7 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 	}
 
 	// 3. insert db ReserveContributionRequestPaymentParty
-	requestData, _ := json.Marshal(req.PaymentForm)
+	requestData, _ := json.Marshal(req)
 	rcrpp, err := self.r.CreateReserveContributionRequestPaymentParty(&models.ReserveContributionRequestPaymentParty{
 		ReserveContributionRequest: rcr,
 		RequestData:                string(requestData),
@@ -81,53 +72,34 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 	// 4. call related party: prime trust, eth ...
 	switch rcr.PartyID {
 	case models.ReservePartyPrimeTrust:
-		contribution := thirdpartymodels.Contribution{
-			Data: thirdpartymodels.ContributionData{
-				Type: thirdpartymodels.ContributionType,
-			},
+		contributionData := thirdpartymodels.ContributionData{
+			Type: thirdpartymodels.ContributionType,
 		}
-
-		/*
-			currentUser, err := primetrust.CurrentUser()
-			if err != nil {
-				return err
-			}
-		*/
 
 		contributionAttributes := thirdpartymodels.ContributionAttributes{
-			AccountID:    conf.PrimetrustAccountID,
-			Amount:       rcrpp.Amount,
-			ContactEmail: u.Email,
-			ContactName:  fmt.Sprintf("%s %s", u.FirstName, u.LastName),
+			AccountID: self.p.AccountID,
+			Amount:    rcrpp.Amount,
 		}
 
-		paymentMethod := thirdpartymodels.PaymentMethodAttributes{
-			PaymentType:  string(req.PaymentForm.PaymentType),
-			ContactEmail: u.Email,
-			ContactName:  fmt.Sprintf("%s %s", u.FirstName, u.LastName),
+		fundsTransferMethod := thirdpartymodels.FundsTransferMethodAttributes{
+			FundsTransferType: thirdpartymodels.FundsTransferMethodFundsTransferTypeAch,
+			ContactEmail:      u.Email,
+			ContactName:       fmt.Sprintf("%s %s", u.FirstName, u.LastName),
+			AchCheckType:      string(req.PaymentForm.AchCheckType),
+			BankAccountName:   req.PaymentForm.BankAccountName,
+			BankAccountType:   req.PaymentForm.BankAccountType,
+			BankAccountNumber: req.PaymentForm.BankAccountNumber,
+			BankName:          req.PaymentForm.BankName,
+			RoutingNumber:     req.PaymentForm.RoutingNumber,
 		}
 
-		switch req.PaymentForm.PaymentType {
-		case serializers.PaymentTypeAch:
-		case serializers.PaymentTypeCheck:
-			paymentMethod.AchCheckType = string(req.PaymentForm.AchCheckType)
-			paymentMethod.BankAccountName = req.PaymentForm.BankAccountName
-			paymentMethod.BankAccountType = req.PaymentForm.BankAccountType
-			paymentMethod.BankAccountNumber = req.PaymentForm.BankAccountNumber
-			paymentMethod.BankName = req.PaymentForm.BankName
-		case serializers.PaymentTypeCreditCard:
-			paymentMethod.CreditCardCvv = req.PaymentForm.CreditCardCvv
-			paymentMethod.CreditCardExpirationDate = req.PaymentForm.CreditCardExpirationDate
-			paymentMethod.CreditCardNumber = req.PaymentForm.CreditCardNumber
-			paymentMethod.CreditCardName = req.PaymentForm.CreditCardName
-			paymentMethod.CreditCardPostalCode = req.PaymentForm.CreditCardPostalCode
-			paymentMethod.CreditCardType = req.PaymentForm.CreditCardType
-			paymentMethod.Last4 = req.PaymentForm.Last4
+		contributionAttributes.FundsTransferMethod = &fundsTransferMethod
+
+		contributionData.Attributes = &contributionAttributes
+
+		contribution := thirdpartymodels.Contribution{
+			Data: &contributionData,
 		}
-
-		contributionAttributes.PaymentMethod = paymentMethod
-
-		contribution.Data.Attributes = contributionAttributes
 
 		extRequestData, _ := json.Marshal(contribution)
 
@@ -135,6 +107,8 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 		response, err := self.p.CreateContribution(&contribution)
 
 		if err != nil {
+			contributionBytes, _ := json.Marshal(contribution)
+			fmt.Println("Call API error", string(contributionBytes))
 			delErr := self.r.DeleteReserveContributionRequestPaymentParty(rcrpp)
 			if delErr != nil {
 				fmt.Println("ReserveService Delete Error", delErr.Error())
@@ -148,6 +122,7 @@ func (self *ReserveService) CreateContribution(u *models.User, req *serializers.
 
 		extResponseData, _ := json.Marshal(response)
 		rcrpp.ExtResponseData = string(extResponseData)
+		fmt.Println("dump response", string(extResponseData))
 
 		rcrpp.ExtID = response.Data.ID
 
@@ -188,21 +163,13 @@ func (self *ReserveService) GetContributions(filter *map[string]interface{}, pag
 }
 
 func (self *ReserveService) CreateDisbursement(u *models.User, req *serializers.ReserveDisbursementRequest) (*models.ReserveDisbursementRequest, error) {
-	conf := config.GetConfig()
 	// 1. Validate ReserveDisbursementRequest in request
 	if req.PaymentForm.ContactEmail == "" || req.PaymentForm.ContactName == "" {
 		return nil, ErrInvalidArgument
 	}
 
-	switch req.PaymentForm.PaymentType {
-	case serializers.PaymentTypeAch:
-		if req.PaymentForm.BankAccountName == "" || req.PaymentForm.BankAccountType == "" || req.PaymentForm.BankName == "" {
-			return nil, ErrInvalidArgument
-		}
-	case serializers.PaymentTypeCreditCard:
-		if req.PaymentForm.CreditCardCvv == "" || req.PaymentForm.CreditCardExpirationDate == "" || req.PaymentForm.CreditCardNumber == "" {
-			return nil, ErrInvalidArgument
-		}
+	if req.PaymentForm.BankAccountName == "" || req.PaymentForm.BankAccountType == "" || req.PaymentForm.BankName == "" {
+		return nil, ErrInvalidArgument
 	}
 
 	// 2. insert db ReserveDisbursementRequest
@@ -238,36 +205,34 @@ func (self *ReserveService) CreateDisbursement(u *models.User, req *serializers.
 	// 4. call related party: prime trust, eth ... and wait for data
 	switch rdr.PartyID {
 	case models.ReservePartyPrimeTrust:
-		disbursement := thirdpartymodels.Disbursement{
-			Data: thirdpartymodels.DisbursementData{
-				Type: thirdpartymodels.DisbursementType,
-			},
+		disbursementData := thirdpartymodels.DisbursementData{
+			Type: thirdpartymodels.DisbursementType,
 		}
 
 		disbursementAttributes := thirdpartymodels.DisbursementAttributes{
-			AccountID:    conf.PrimetrustAccountID,
-			Amount:       rdrpp.Amount,
-			ContactEmail: u.Email,
-			ContactName:  fmt.Sprintf("%s %s", u.FirstName, u.LastName),
-			PaymentMethod: thirdpartymodels.PaymentMethodAttributes{
-				PaymentType:              string(req.PaymentForm.PaymentType),
-				RoutingNumber:            req.PaymentForm.RoutingNumber,
-				Last4:                    req.PaymentForm.Last4,
-				AchCheckType:             string(req.PaymentForm.AchCheckType),
-				BankAccountName:          req.PaymentForm.BankAccountName,
-				BankAccountType:          req.PaymentForm.BankAccountType,
-				BankAccountNumber:        req.PaymentForm.BankAccountNumber,
-				BankName:                 req.PaymentForm.BankName,
-				CreditCardCvv:            req.PaymentForm.CreditCardCvv,
-				CreditCardExpirationDate: req.PaymentForm.CreditCardExpirationDate,
-				CreditCardNumber:         req.PaymentForm.CreditCardNumber,
-				CreditCardName:           req.PaymentForm.CreditCardName,
-				CreditCardPostalCode:     req.PaymentForm.CreditCardPostalCode,
-				CreditCardType:           req.PaymentForm.CreditCardType,
-			},
+			AccountID: self.p.AccountID,
+			Amount:    rdrpp.Amount,
 		}
 
-		disbursement.Data.Attributes = disbursementAttributes
+		fundsTransferMethod := thirdpartymodels.FundsTransferMethodAttributes{
+			FundsTransferType: thirdpartymodels.FundsTransferMethodFundsTransferTypeAch,
+			ContactEmail:      u.Email,
+			ContactName:       fmt.Sprintf("%s %s", u.FirstName, u.LastName),
+			AchCheckType:      string(req.PaymentForm.AchCheckType),
+			BankAccountName:   req.PaymentForm.BankAccountName,
+			BankAccountType:   req.PaymentForm.BankAccountType,
+			BankAccountNumber: req.PaymentForm.BankAccountNumber,
+			BankName:          req.PaymentForm.BankName,
+			RoutingNumber:     req.PaymentForm.RoutingNumber,
+		}
+
+		disbursementAttributes.FundsTransferMethod = &fundsTransferMethod
+
+		disbursementData.Attributes = &disbursementAttributes
+
+		disbursement := thirdpartymodels.Disbursement{
+			Data: &disbursementData,
+		}
 
 		extRequestData, _ := json.Marshal(disbursement)
 

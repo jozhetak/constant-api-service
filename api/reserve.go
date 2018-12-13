@@ -109,7 +109,8 @@ func (s *Server) CreateDisbursement(c *gin.Context) {
 	disbursement, err := s.reserveSvc.CreateDisbursement(user, &req)
 
 	if err != nil {
-		c.JSON(http.StatusOK, serializers.Resp{Error: err})
+		fmt.Println("create disbursement fail", err)
+		c.JSON(http.StatusOK, serializers.Resp{Error: err.Error()})
 		return
 	}
 
