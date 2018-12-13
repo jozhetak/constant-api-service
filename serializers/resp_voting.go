@@ -18,6 +18,7 @@ type VotingBoardCandidateResp struct {
 	GOVAppliedAt string          `json:"GOVAppliedAt"`
 	GOVBalances  *WalletBalances `json:"GOVBalances"`
 	VoteNum      int             `json:"VoteNum"`
+	IsVoted      bool            `json:"IsVoted"`
 }
 
 func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoardCandidateResp {
@@ -25,6 +26,7 @@ func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoard
 		return nil
 	}
 	result := VotingBoardCandidateResp{
+		User:    NewUserResp(*data.User),
 		GOV:     data.GOV,
 		CMB:     data.CMB,
 		DCB:     data.DCB,
@@ -40,7 +42,6 @@ func NewVotingBoardCandidateResp(data *models.VotingBoardCandidate) *VotingBoard
 		result.GOVAppliedAt = data.GOVAppliedAt.Format(time.RFC3339)
 	}
 
-	result.User = NewUserResp(*data.User)
 	return &result
 }
 
@@ -82,6 +83,7 @@ type ProposalResp struct {
 	Name    string    `json:"Name"`
 	User    *UserResp `json:"User"`
 	VoteNum int       `json:"VoteNum"`
+	IsVoted bool      `json:"IsVoted"`
 
 	TxID      string `json:"TxID"`
 	Data      string `json:"Data"`
@@ -89,27 +91,27 @@ type ProposalResp struct {
 }
 
 func NewProposalDCBResp(data *models.VotingProposalDCB) *ProposalResp {
-	result := &ProposalResp{
+	return &ProposalResp{
 		ID:        data.ID,
 		Name:      data.Name,
 		Data:      data.Data,
 		VoteNum:   data.GetVoteNum(),
+		IsVoted:   data.IsVoted(),
 		CreatedAt: data.CreatedAt.UTC().Format(time.RFC3339),
+		User:      NewUserResp(*data.User),
 	}
-	result.User = NewUserResp(*data.User)
-	return result
 }
 
 func NewProposalGOVResp(data *models.VotingProposalGOV) *ProposalResp {
-	result := &ProposalResp{
+	return &ProposalResp{
 		ID:        data.ID,
 		Name:      data.Name,
 		Data:      data.Data,
 		VoteNum:   data.GetVoteNum(),
+		IsVoted:   data.IsVoted(),
 		CreatedAt: data.CreatedAt.UTC().Format(time.RFC3339),
+		User:      NewUserResp(*data.User),
 	}
-	result.User = NewUserResp(*data.User)
-	return result
 }
 
 // Proposal vote

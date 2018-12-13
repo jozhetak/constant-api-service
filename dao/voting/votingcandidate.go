@@ -56,7 +56,7 @@ type VotingCandidateFilter struct {
 
 func (p *VotingDao) Filter(filter *VotingCandidateFilter) ([]*models.VotingBoardCandidate, error) {
 	var b []*models.VotingBoardCandidate
-	query := p.db.Preload("User")
+	query := p.db.Preload("User").Preload("VotingBoardVotes").Preload("VotingBoardVotes.Voter")
 
 	switch models.BoardCandidateType(filter.BoardType) {
 	case models.DCB:

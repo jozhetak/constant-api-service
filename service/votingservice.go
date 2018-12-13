@@ -36,15 +36,17 @@ func NewVotingService(r *voting.VotingDao, bc *blockchain.Blockchain, walletSvc 
 }
 
 func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType models.BoardCandidateType, paymentAddress string) (*serializers.VotingBoardCandidateResp, error) {
-	candidate, _ := self.votingDao.FindVotingBoardCandidateByUser(*u)
-	var exist bool
+	candidate, err := self.votingDao.FindVotingBoardCandidateByUser(*u)
+	if err != nil {
+		return nil, errors.Wrap(err, "self.votingDao.FindVotingBoardCandidateByUser")
+	}
 
+	var exist bool
 	if candidate == nil {
 		candidate = &models.VotingBoardCandidate{User: u}
 	} else {
 		exist = true
 	}
-
 	if paymentAddress == "" {
 		paymentAddress = u.PaymentAddress
 	}
@@ -73,7 +75,6 @@ func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType mode
 		return nil, ErrInvalidArgument
 	}
 
-	var err error
 	if exist {
 		candidate, err = self.votingDao.UpdateVotingBoardCandidate(candidate)
 		err = errors.Wrap(err, "self.votingDao.UpdateVotingBoardCandidate")
@@ -86,15 +87,14 @@ func (self *VotingService) RegisterBoardCandidate(u *models.User, boardType mode
 	}
 
 	resp := serializers.NewVotingBoardCandidateResp(candidate)
-	// uncomment this to get balances for candidate
-	// if err := self.GetCandidateBalances(resp); err != nil {
-	//         return nil, errors.Wrap(err, "self.GetCandidateBalances")
-	// }
+	if err := self.GetCandidateBalances(resp); err != nil {
+		return nil, errors.Wrap(err, "self.GetCandidateBalances")
+	}
 
 	return resp, nil
 }
 
-func (self *VotingService) GetCandidatesList(boardType int, paymentAddress string) ([]*serializers.VotingBoardCandidateResp, error) {
+func (self *VotingService) GetCandidatesList(user *models.User, boardType int, paymentAddress string) ([]*serializers.VotingBoardCandidateResp, error) {
 	list, err := self.votingDao.Filter(&voting.VotingCandidateFilter{
 		BoardType:      boardType,
 		PaymentAddress: paymentAddress,
@@ -110,11 +110,21 @@ func (self *VotingService) GetCandidatesList(boardType int, paymentAddress strin
 
 		// get voting number
 		r.VoteNum = totalVote
+		for _, v := range l.VotingBoardVotes {
+			bt := models.BoardCandidateType(v.BoardType)
+			switch bt {
+			case models.DCB:
+				r.IsVoted = (l.DCB != "")
+			case models.GOV:
+				r.IsVoted = (l.GOV != "")
+			case models.CMB:
+				r.IsVoted = (l.CMB != "")
+			}
+		}
 
-		// uncomment this to get balances for candidate
-		// if err := self.GetCandidateBalances(r); err != nil {
-		//         return nil, errors.Wrap(err, "self.GetCandidateBalances")
-		// }
+		if err := self.GetCandidateBalances(r); err != nil {
+			return nil, errors.Wrap(err, "self.GetCandidateBalances")
+		}
 
 		resp = append(resp, r)
 	}
@@ -221,7 +231,25 @@ func (self *VotingService) CreateProposal(user *models.User, request *serializer
 	}
 }
 
-func (self *VotingService) getDCBProposals(limit, page *int) ([]models.ProposalInterface, error) {
+func (self *VotingService) isVoted(votes interface{}, user *models.User) bool {
+	switch v := votes.(type) {
+	case []*models.VotingProposalDCBVote:
+		for _, vote := range v {
+			if vote.Voter.ID == user.ID {
+				return true
+			}
+		}
+	case []*models.VotingProposalGOVVote:
+		for _, vote := range v {
+			if vote.Voter.ID == user.ID {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (self *VotingService) getDCBProposals(user *models.User, limit, page *int) ([]models.ProposalInterface, error) {
 	vs, err := self.votingDao.GetDCBProposals(limit, page)
 	if err != nil {
 		return nil, errors.Wrap(err, "self.votingDao.GetDCBProposals")
@@ -233,13 +261,14 @@ func (self *VotingService) getDCBProposals(limit, page *int) ([]models.ProposalI
 			return nil, errors.Wrap(err, "self.votingDao.GetProposalDCBVote")
 		}
 		v.SetVoteNum(totalVote)
+		v.SetIsVoted(self.isVoted(v.VotingProposalDCBVotes, user))
 
 		ret = append(ret, v)
 	}
 	return ret, nil
 }
 
-func (self *VotingService) getGOVProposals(limit, page *int) ([]models.ProposalInterface, error) {
+func (self *VotingService) getGOVProposals(user *models.User, limit, page *int) ([]models.ProposalInterface, error) {
 	vs, err := self.votingDao.GetGOVProposals(limit, page)
 	if err != nil {
 		return nil, errors.Wrap(err, "self.votingDao.GetDCBProposals")
@@ -251,13 +280,14 @@ func (self *VotingService) getGOVProposals(limit, page *int) ([]models.ProposalI
 			return nil, errors.Wrap(err, "self.votingDao.GetProposalGOVVote")
 		}
 		v.SetVoteNum(totalVote)
+		v.SetIsVoted(self.isVoted(v.VotingProposalGOVVotes, user))
 
 		ret = append(ret, v)
 	}
 	return ret, nil
 }
 
-func (self *VotingService) GetProposalsList(boardType, limit, page string) ([]models.ProposalInterface, error) {
+func (self *VotingService) GetProposalsList(user *models.User, boardType, limit, page string) ([]models.ProposalInterface, error) {
 	l, p, err := parsePaginationQuery(limit, page)
 	if err != nil {
 		return nil, errors.Wrap(err, "parsePaginationQuery")
@@ -268,15 +298,15 @@ func (self *VotingService) GetProposalsList(boardType, limit, page string) ([]mo
 	}
 	switch models.BoardCandidateType(typ) {
 	case models.DCB:
-		return self.getDCBProposals(&l, &p)
+		return self.getDCBProposals(user, &l, &p)
 	case models.GOV:
-		return self.getGOVProposals(&l, &p)
+		return self.getGOVProposals(user, &l, &p)
 	default:
 		return nil, ErrInvalidBoardType
 	}
 }
 
-func (self *VotingService) getDCBProposal(id int) (models.ProposalInterface, error) {
+func (self *VotingService) getDCBProposal(id int, user *models.User) (models.ProposalInterface, error) {
 	v, err := self.votingDao.GetDCBProposal(id)
 	if err != nil {
 		return nil, errors.Wrap(err, "self.votingDao.GetDCBProposal")
@@ -289,11 +319,12 @@ func (self *VotingService) getDCBProposal(id int) (models.ProposalInterface, err
 		return nil, errors.Wrap(err, "self.votingDao.GetProposalDCBVote")
 	}
 	v.SetVoteNum(total)
+	v.SetIsVoted(self.isVoted(v.VotingProposalDCBVotes, user))
 
 	return v, nil
 }
 
-func (self *VotingService) getGOVProposal(id int) (models.ProposalInterface, error) {
+func (self *VotingService) getGOVProposal(id int, user *models.User) (models.ProposalInterface, error) {
 	v, err := self.votingDao.GetGOVProposal(id)
 	if err != nil {
 		return nil, errors.Wrap(err, "self.votingDao.GetGOVProposal")
@@ -306,11 +337,12 @@ func (self *VotingService) getGOVProposal(id int) (models.ProposalInterface, err
 		return nil, errors.Wrap(err, "self.votingDao.GetProposalGOVVote")
 	}
 	v.SetVoteNum(total)
+	v.SetIsVoted(self.isVoted(v.VotingProposalGOVVotes, user))
 
 	return v, nil
 }
 
-func (self *VotingService) GetProposal(id, boardType string) (models.ProposalInterface, error) {
+func (self *VotingService) GetProposal(id, boardType string, user *models.User) (models.ProposalInterface, error) {
 	idI, err := strconv.Atoi(id)
 	if err != nil {
 		return nil, ErrInvalidBoardType
@@ -321,9 +353,9 @@ func (self *VotingService) GetProposal(id, boardType string) (models.ProposalInt
 	}
 	switch models.BoardCandidateType(typ) {
 	case models.DCB:
-		return self.getDCBProposal(idI)
+		return self.getDCBProposal(idI, user)
 	case models.GOV:
-		return self.getGOVProposal(idI)
+		return self.getGOVProposal(idI, user)
 	default:
 		return nil, ErrInvalidBoardType
 	}
@@ -472,17 +504,16 @@ func (self *VotingService) GetCandidateBalances(resp *serializers.VotingBoardCan
 }
 
 func (self *VotingService) validateBalance(u *models.User, tokenID string, amount uint64) error {
-	return nil
-	// balances, err := self.walletSvc.GetCoinAndCustomTokenBalanceForUser(u)
-	// if err != nil {
-	//         return errors.Wrap(err, "e.w.GetCoinAndCustomTokenBalance")
-	// }
-	// for _, b := range balances.ListBalances {
-	//         if b.TokenID == tokenID {
-	//                 if amount > b.AvailableBalance {
-	//                         return ErrInsufficientBalance
-	//                 }
-	//         }
-	// }
-	// return nil
+	balances, err := self.walletSvc.GetCoinAndCustomTokenBalanceForUser(u)
+	if err != nil {
+		return errors.Wrap(err, "e.w.GetCoinAndCustomTokenBalance")
+	}
+	for _, b := range balances.ListBalances {
+		if b.TokenID == tokenID {
+			if amount > b.AvailableBalance {
+				return ErrInsufficientBalance
+			}
+		}
+	}
+	return ErrInsufficientBalance
 }

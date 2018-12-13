@@ -145,7 +145,10 @@ func (w *WalletService) GetCoinAndCustomTokenBalanceForPaymentAddress(paymentAdd
 				AvailableBalance: item.Amount,
 				ConstantValue:    0,
 				InOrder:          0,
+				TokenID:          item.TokenID,
 			}
+
+			result.ListBalances = append(result.ListBalances, balanceCoin)
 		}
 	}
 	return result, nil

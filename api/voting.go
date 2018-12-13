@@ -45,9 +45,20 @@ func (server *Server) GetCandidatesList(c *gin.Context) {
 		return
 	}
 
+	user, err := server.userFromContext(c)
+	if err != nil {
+		server.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
 	boardQuery := c.DefaultQuery("board_type", "1")
-	board, _ := strconv.Atoi(boardQuery)
-	list, err := server.votingSvc.GetCandidatesList(board, c.Query("payment_address"))
+	board, err := strconv.Atoi(boardQuery)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, serializers.Resp{Error: service.ErrInvalidArgument})
+	}
+
+	list, err := server.votingSvc.GetCandidatesList(user, board, c.Query("payment_address"))
 	if err != nil {
 		server.logger.Error("s.votingSvc.GetCandidatesList", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
@@ -122,7 +133,15 @@ func (server *Server) GetProposalsList(c *gin.Context) {
 		limit     = c.DefaultQuery("limit", "10")
 		page      = c.DefaultQuery("page", "1")
 	)
-	vs, err := server.votingSvc.GetProposalsList(boardType, limit, page)
+
+	user, err := server.userFromContext(c)
+	if err != nil {
+		server.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
+	vs, err := server.votingSvc.GetProposalsList(user, boardType, limit, page)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
 		return
@@ -145,7 +164,15 @@ func (server *Server) GetProposal(c *gin.Context) {
 		id        = c.Param("id")
 		boardType = c.DefaultQuery("board_type", "1")
 	)
-	v, err := server.votingSvc.GetProposal(id, boardType)
+
+	user, err := server.userFromContext(c)
+	if err != nil {
+		server.logger.Error("s.userFromContext", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, serializers.Resp{Error: service.ErrInternalServerError})
+		return
+	}
+
+	v, err := server.votingSvc.GetProposal(id, boardType, user)
 	switch cErr := errors.Cause(err); cErr {
 	case service.ErrInvalidBoardType, service.ErrInvalidProposal, service.ErrProposalNotFound:
 		c.JSON(http.StatusBadRequest, serializers.Resp{Error: cErr.(*service.Error)})
